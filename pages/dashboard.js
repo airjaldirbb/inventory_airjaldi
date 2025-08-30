@@ -1,36 +1,143 @@
-import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/router';
-import { useEffect } from 'react';
-import { Button } from '@mui/material';
-import { toggleTheme } from '@/store/themeSlice';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import Layout from './components/Layout';
+import { useState } from "react";
+import { Box, Tabs, Tab, IconButton, Container, Typography, Paper, Grid } from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
+import Layout from "./components/Layout";
+import ItemMaster from "./components/Inventory/ItemMaster";
+import KendoGrid from "./KendoGrid";
+import PieCharts from "./PieCharts";
+import BardCharts from "./BardCharts";
+import MaterialIssue from "./components/Inventory/MaterialIssue";
+import MaterialReceipt from "./components/Inventory/MaterialReceipt";
+
 export default function Dashboard() {
-    const { user } = useSelector((state) => state.auth);
-    const router = useRouter();
-    const dispatch = useDispatch();
-    const mode = useSelector((state) => state.theme.mode)
+  const [tabs, setTabs] = useState([
+    { id: "analytics", label: "Dashboard Analytics", content: <AnalyticsContent /> },
+  ]);
+  const [activeTab, setActiveTab] = useState("analytics");
 
+  const addTab = (id, label, content) => {
+    if (!tabs.find((tab) => tab.id === id)) {
+      setTabs([...tabs, { id, label, content }]);
+    }
+    setActiveTab(id);
+  };
 
-    useEffect(() => {
-        if (!user) {
-            router.push('/login');
+  const closeTab = (id) => {
+    const newTabs = tabs.filter((tab) => tab.id !== id);
+    setTabs(newTabs);
+    if (activeTab === id && newTabs.length > 0) {
+      setActiveTab(newTabs[0].id);
+    }
+  };
+
+  return (
+    <Layout
+      onMenuClick={(menuItem) => {
+        if (menuItem.path === "/ItemMaster") {
+          addTab("itemMaster", "Item Master", <ItemMaster />);
         }
-    }, [user]);
+         if (menuItem.path === "/MaterialIssue") {
+          addTab("materialissue", "Material Issue", <MaterialIssue />);
+        }
+            if (menuItem.path === "/MaterialReceipt") {
+          addTab("materialReceipt", "Material Receipt", <MaterialReceipt />);
+        }
+       
+      }}
+    >
+      <Box sx={{ p: 3 }}>
+        <Tabs
+          value={activeTab}
+          onChange={(e, val) => setActiveTab(val)}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
+          {tabs.map((tab) => (
+            <Tab
+              key={tab.id}
+              value={tab.id}
+              label={
+                <Box sx={{ display: "flex", alignItems: "center" }}>
+                  {tab.label}
+                  {tab.id !== "analytics" && (
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        closeTab(tab.id);
+                      }}
+                    >
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+              }
+            />
+          ))}
+        </Tabs>
 
-    if (!user) return null;
+        <Box sx={{ mt: 2 }}>
+          {tabs.find((tab) => tab.id === activeTab)?.content}
+        </Box>
+      </Box>
+    </Layout>
+  );
+}
 
-    return (
-        <>
-            <Layout>
-                
-                <div>Welcome {user.name}</div>
-            </Layout>
+function AnalyticsContent() {
+  return (
+    <Box sx={{ p: 3, backgroundColor: "rgba(240, 245, 250, 1)", minHeight: "100%" }}>
+      <Container maxWidth="xl">
+        <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 600 }}>
+          Dashboard Analytics
+        </Typography>
 
+        <Paper elevation={3} sx={{ p: 3, borderRadius: 3, mb: 2 }}>
+          <Typography variant="h6" gutterBottom>
+            Bar Chart Insights
+          </Typography>
+          <Grid container spacing={3} justifyContent="center" alignItems="center">
+            <Grid item xs={12} sm={6}>
+              <KendoGrid />
+            </Grid>
+          </Grid>
+        </Paper>
 
-        </>
-    )
+        <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Distribution Overview
+          </Typography>
+          <Grid container spacing={3} justifyContent="center" alignItems="center">
+            <Grid item xs={12} sm={4}>
+              <PieCharts type="donut" />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <PieCharts type="donut" />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <PieCharts type="donut" />
+            </Grid>
+          </Grid>
+        </Paper>
 
-
+        <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
+          <Typography variant="h6" gutterBottom>
+            Pie Chart Analysis
+          </Typography>
+          <Grid container spacing={3} justifyContent="center" alignItems="center">
+            <Grid item xs={12} sm={4}>
+              <BardCharts type="pie" />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <BardCharts type="pie" />
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <BardCharts type="pie" />
+            </Grid>
+          </Grid>
+        </Paper>
+      </Container>
+    
+    </Box>
+  );
 }

@@ -1,52 +1,39 @@
-import { useEffect, useState } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from '../store/authSlice';
+import { loginUser } from '@/store/authSlice';
 import { useRouter } from 'next/router';
-Image
-import { Box, Card, Typography, CardContent, TextField, CardActions, Button } from '@mui/material';
+import { Box, Card, Typography, CardContent, TextField, CardActions, Button, Alert } from '@mui/material';
 import Image from 'next/image';
-export default function Login() {
-  const router = useRouter();
+
+const LoginPage = () => {
   const dispatch = useDispatch();
-  const { user, loading, error } = useSelector((state) => state.auth);
+  const router = useRouter();
+  const { loading, error } = useSelector((state) => state.auth);
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-
-  const handleSubmit = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    dispatch(loginUser({ email, password }));
-  };
-  useEffect(() => {
-    if (user) {
-      const role = user.role;
-
-      if (role === 'admin') {
-        alert('Admin login successful!');
-        router.push('/dashboard');
-      } else if (role === 'manager') {
-        alert('Manager login successful!');
-        // stay on page or navigate if needed
-      } else if (role === 'staff') {
-        alert('Staff login successful!');
-        // stay on page or navigate if needed
-      } else {
-        alert('Unknown role');
-      }
+    const credentials = {
+      email: e.target.email.value,
+      password: e.target.password.value,
+    };
+    const result = await dispatch(loginUser(credentials));
+    if (loginUser.fulfilled.match(result)) {
+      const token = result.payload.token;
+      const decoded = jwtDecode(token);
+      console.log('User role:', decoded.role);
+      router.push('/dashboard');
     }
-  }, [user]);
+  };
 
   return (
-    <div>
- 
-      <Box 
+    <>
+      <Box
         sx={{
           position: 'relative',
-          height: '100vh', // adjust as needed
+          height: '100vh', 
           overflow: 'hidden'
         }}
       >
-        {/* Background layer */}
         <Box
           sx={{
             position: 'absolute',
@@ -74,7 +61,7 @@ export default function Login() {
             filter: 'blur(1px)',
             right: 500,
             top: 40,
-            transform: 'rotate(10deg)', // rotate diagonally
+            transform: 'rotate(10deg)',
           }}
         >
           <Image
@@ -84,6 +71,7 @@ export default function Login() {
             alt='Bird'
           />
         </Box>
+
         <Box
           sx={{
             position: 'relative',
@@ -92,65 +80,71 @@ export default function Login() {
             p: 4, justifyContent: 'center', alignItems: 'center', textAlign: 'center', display: 'flex', minHeight: '100vh',
           }}
         >
-          <Card sx={{ maxWidth: 600, p: 2, bgcolor: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(4px)', boxShadow: 5, minHeight: 400 }}>
+          <Typography
+            variant="h5"
+            gutterBottom
+            sx={{ color: '#fff', fontWeight: 500, fontSize: '1.5rem', mt: 6, textAlign: 'center', fontFamily: 'Montserrat, sans-serif', }}
+          >
+            Let’s Jaldify It — Manage Smarter, Not Harder!
+          </Typography>
+          <Box
+            component="form"
+            onSubmit={handleLogin}
+            sx={{
+              width: '100%',
+              maxWidth: 400,
+              mx: 'auto',
+              p: 3,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 2,
+              boxShadow: 3,
+              borderRadius: 2,
+              backgroundColor: 'background.paper'
+            }}
+          >
 
-            <Box
-              sx={{
-                width: 200,
-                height: 80,
-                boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.2)', // subtle shadow
-                borderRadius: '8px', // rounded corners
-                overflow: 'hidden', // ensures image follows the border radius
-                display: 'inline-block',
-              }}
+
+            <TextField
+              name="email"
+              type="email"
+              label="Email"
+              fullWidth
+              required
+            />
+
+            <TextField
+              name="password"
+              type="password"
+              label="Password"
+              fullWidth
+              required
+            />
+
+            <Button
+              type="submit"
+              variant="contained"
+              color="primary"
+              disabled={loading} sx={{ backgroundColor: '#0086c7' }}
             >
-              <Image
-                src='/images/airjaldi_logo.png'
-                width={150}
-                height={60}
-                alt='AirJaldi Logo'
-                style={{ objectFit: 'cover' }}
-              />
-            </Box>
-            <Typography
-              variant="h5"
-              gutterBottom
-              sx={{ color: '#fff', fontWeight: 500, fontSize: '1.5rem', mt: 6, textAlign: 'center', fontFamily: 'Montserrat, sans-serif', }}
-            >
-              Let’s Jaldify It — Manage Smarter, Not Harder!
-            </Typography>
-            <CardContent>
-              <Box sx={{ maxWidth: 400, mx: 'auto', mt: 10, p: 3, boxShadow: 3 }}>
-                <Typography variant="h5" mb={2}>Login</Typography>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  margin="normal"
-                />
-                <TextField
-                  fullWidth
-                  label="Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  margin="normal"
-                />
-              </Box>
-            </CardContent>
-            <CardActions sx={{ textAlign: 'center', justifyContent: 'center' }}>
-              <Button variant='outlined' size="small" sx={{ color: '#fff' }} onClick={handleSubmit} >{loading ? 'Logging in...' : 'Login'}</Button>
-              <Button variant='outlined' size="small" sx={{ color: '#fff' }}>Forgot Password</Button>
-            </CardActions>
-          </Card>
+              {loading ? 'Logging in...' : 'Login'}
+            </Button>
+
+            {error && (
+              <Typography variant="body2" color="error" textAlign="center">
+                {error}
+              </Typography>
+            )}
+          </Box>
         </Box>
+
       </Box>
 
-    </div>
 
+
+    </>
 
   );
-}
+};
 
-
+export default LoginPage;
