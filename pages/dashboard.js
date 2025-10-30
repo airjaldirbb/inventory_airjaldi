@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState,useEffect } from "react";
 import { Box, Tabs, Tab, IconButton, Container, Typography, Paper, Grid } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Layout from "./components/Layout";
@@ -23,21 +23,81 @@ export default function Dashboard() {
   ]);
   const [activeTab, setActiveTab] = useState("analytics");
 
-  const addTab = (id, label, content) => {
+  // const addTab = (id, label, content) => {
+  //   if (!tabs.find((tab) => tab.id === id)) {
+  //     setTabs([...tabs, { id, label, content }]);
+  //   }
+  //   setActiveTab(id);
+  // };
+
+  // const closeTab = (id) => {
+  //   const newTabs = tabs.filter((tab) => tab.id !== id);
+  //   setTabs(newTabs);
+  //   if (activeTab === id && newTabs.length > 0) {
+  //     setActiveTab(newTabs[0].id);
+  //   }
+  // };
+
+
+   useEffect(() => {
+    const savedTabs = sessionStorage.getItem("dashboardTabs");
+    const savedActiveTab = sessionStorage.getItem("activeDashboardTab");
+
+    if (savedTabs) {
+      const parsedTabs = JSON.parse(savedTabs);
+
+      // Rebuild the React components (content can’t be stored directly)
+      const restoredTabs = parsedTabs.map((tab) => ({
+        ...tab,
+        content: getTabContent(tab.id),
+      }));
+
+      setTabs(restoredTabs);
+      if (savedActiveTab) setActiveTab(savedActiveTab);
+    }
+  }, []);
+
+   useEffect(() => {
+    const tabsToSave = tabs.map(({ id, label }) => ({ id, label }));
+    sessionStorage.setItem("dashboardTabs", JSON.stringify(tabsToSave));
+    sessionStorage.setItem("activeDashboardTab", activeTab);
+  }, [tabs, activeTab]);
+    const getTabContent = (id) => {
+    switch (id) {
+      case "analytics": return <AnalyticsContent />;
+      case "itemMaster": return <ItemMaster />;
+      case "materialissue": return <MaterialIssue />;
+      case "materialReceipt": return <MaterialReceipt />;
+      case "Stock Management": return <StockManagment />;
+      case "Sales Invoice": return <SalesInvoice />;
+      case "Customer": return <Customer />;
+      case "Payment Receipt": return <PaymentReceipt />;
+      case "Vendor": return <Vendor />;
+      case "Purchase Order": return <PurchaseOrder />;
+      case "Purchase Bill": return <PurchaseBill />;
+      case "Bill Payment": return <BillPayment />;
+      default: return null;
+    }
+  };
+
+   const addTab = (id, label, content) => {
     if (!tabs.find((tab) => tab.id === id)) {
       setTabs([...tabs, { id, label, content }]);
     }
     setActiveTab(id);
   };
 
+  
   const closeTab = (id) => {
     const newTabs = tabs.filter((tab) => tab.id !== id);
     setTabs(newTabs);
+
     if (activeTab === id && newTabs.length > 0) {
       setActiveTab(newTabs[0].id);
     }
   };
 
+  
   return (
     <Layout
       onMenuClick={(menuItem) => {

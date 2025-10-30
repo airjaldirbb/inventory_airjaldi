@@ -3,6 +3,7 @@ import { styled } from '@mui/material/styles';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
+import { TextField } from '@mui/material';
 export default function SalesInvoice() {
   
 const Item = styled(Paper)(({ theme }) => ({
@@ -20,7 +21,14 @@ const Item = styled(Paper)(({ theme }) => ({
     <Box sx={{ width: '100%' }}>
       <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
         <Grid size={6}>
-         
+         <TextField
+                       key=""
+                       margin="dense"
+                       label=""
+                       fullWidth
+                       value=""
+                   
+                     />
         </Grid>
         <Grid size={6}>
           <Item>2</Item>
