@@ -13,7 +13,7 @@ export default function CreateUser() {
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
 
-  // Only allow admin
+
   if (adminRole !== 'admin') {
     return (
       <Box sx={{ p: 4 }}>
@@ -29,13 +29,15 @@ export default function CreateUser() {
     setSuccess('');
 
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await fetch('api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`, 
+      
         },
         body: JSON.stringify({ name, email, password, role }),
+        
       });
 
       const data = await res.json();
@@ -52,7 +54,8 @@ export default function CreateUser() {
     } finally {
       setLoading(false);
     }
-  };
+  }; 
+  
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>

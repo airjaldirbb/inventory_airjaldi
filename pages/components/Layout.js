@@ -30,8 +30,9 @@ const menuItems = [
         icon: <DashboardIcon />,
         path: "/dashboard",
         subMenu: [
-            { label: "Item Master", path: "/ItemMaster" },
-            { label: "Subitem B", path: "/dashboard/subB" }
+            { label: "Customer", path: "/Customer" },
+            { label: "Sales Invoice", path: "/SalesInvoice" },
+            { label: "Payment Receipt", path: "/PaymentReceipt" },
         ],
     },
     {
@@ -39,8 +40,10 @@ const menuItems = [
         icon: <InventoryIcon />,
         path: "/purchase",
         subMenu: [
-            { label: "Subitem A", path: "/purchase/subA" },
-            { label: "Subitem B", path: "/purchase/subB" }
+            { label: "Vendor", path: "/Vendor" },
+            { label: "Purchase Order", path: "/PurchaseOrder" },
+            { label: "Purchase Bill", path: "/PurchaseBill" },
+            { label: "Bill Payment", path: "/BillPayment" }
         ],
     },
     {
@@ -50,27 +53,21 @@ const menuItems = [
         subMenu: [
             { label: "Item Master", path: "/ItemMaster" },
             { label: "Material Issue", path: "/MaterialIssue" },
-            { label: "Materila Receipt", path: "/MaterialReceipt" },
-
-
+            { label: "Material Receipt", path: "/MaterialReceipt" },
+            { label: "Stock Management", path: "/StockManagement" },
         ],
     },
+
     {
-        text: "Inbox",
-        icon: <DashboardIcon />,
-        path: "/inbox",
-        subMenu: [
-            { label: "Subitem A", path: "/inbox/subA" },
-            { label: "Subitem B", path: "/inbox/subB" }
-        ],
-    },
-    {
-        text: "Mail",
+        text: "Reports",
         icon: <InventoryIcon />,
-        path: "/mail",
+        path: "/reports",
         subMenu: [
-            { label: "Subitem C", path: "/mail/subC" },
-            { label: "Subitem D", path: "/mail/subD" }
+            { label: "All Reports", path: "/AllReports" },
+            { label: "Trial Balance", path: "/TrailBalance" },
+            { label: "Customer Trial", path: "/CustomerTrial" },
+            { label: "Vendor Trial", path: "/VendorTrial" },
+            { label: "Stock Trial", path: "/StockTrial" },
         ],
     },
 ];
@@ -80,19 +77,16 @@ const menuItems = [
 export default function Layout({ children, onMenuClick }) {
     const [showCreateUser, setShowCreateUser] = useState(false);
     const { user } = useSelector((state) => state.auth);
-
     const [open, setOpen] = useState(false);
     const dispatch = useDispatch();
     const mode = useSelector((state) => state.theme.mode)
     const router = useRouter();
     const { role } = useSelector((state) => state.auth);
-
     const [anchorEl, setAnchorEl] = useState(null);
     const [anchorE2, setAnchorE2] = useState(null);
-
     const [submenu, setSubmenu] = useState([]);
     const open1 = Boolean(anchorEl);
-
+    const drawerWidth = 140
     const [tabs, setTabs] = useState([
         { label: "Dashboard", component: "Dashboard" }
     ]);
@@ -228,12 +222,12 @@ export default function Layout({ children, onMenuClick }) {
             {/* Sidebar Drawer */}
             <Drawer
                 variant="permanent"
-                // open={open}
+                open={open}
                 PaperProps={{
                     sx: {
                         backgroundColor: "#0086c7",
                         color: "#fff",
-                        width: 250,
+
                     },
                 }}
                 sx={{
@@ -301,8 +295,8 @@ export default function Layout({ children, onMenuClick }) {
                                 sx={{
                                     display: "flex",
                                     flexDirection: "column",
-                                    alignItems: "center",
-                                    justifyContent: "center",
+                                    alignItems: "left",
+                                    justifyContent: "left",
                                     py: 2,
                                     color: "#fff",
                                     "&:hover": {
@@ -323,7 +317,7 @@ export default function Layout({ children, onMenuClick }) {
                                 <ListItemText
                                     primary={text}
                                     primaryTypographyProps={{
-                                        sx: { fontSize: "0.8rem", textAlign: "center", color: "#fff" },
+                                        sx: { fontSize: "0.8rem", textAlign: "left", color: "#fff" },
                                     }}
                                 />
                             </ListItem>

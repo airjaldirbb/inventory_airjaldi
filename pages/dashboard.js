@@ -8,6 +8,14 @@ import PieCharts from "./PieCharts";
 import BardCharts from "./BardCharts";
 import MaterialIssue from "./components/Inventory/MaterialIssue";
 import MaterialReceipt from "./components/Inventory/MaterialReceipt";
+import SalesInvoice from "./components/Inventory/SalesInvoice";
+import StockManagment from "./components/Inventory/StockManagment";
+import Customer from "./components/Inventory/Customer";
+import PaymentReceipt from "./components/Inventory/PaymentReceipt";
+import Vendor from "./components/Inventory/Vendor";
+import PurchaseOrder from "./components/Inventory/PurchaseOrder";
+import PurchaseBill from "./components/Inventory/PurchaseBill";
+import BillPayment from "./components/Inventory/BillPayment";
 
 export default function Dashboard() {
   const [tabs, setTabs] = useState([
@@ -36,16 +44,41 @@ export default function Dashboard() {
         if (menuItem.path === "/ItemMaster") {
           addTab("itemMaster", "Item Master", <ItemMaster />);
         }
-         if (menuItem.path === "/MaterialIssue") {
+        if (menuItem.path === "/MaterialIssue") {
           addTab("materialissue", "Material Issue", <MaterialIssue />);
         }
-            if (menuItem.path === "/MaterialReceipt") {
+        if (menuItem.path === "/MaterialReceipt") {
           addTab("materialReceipt", "Material Receipt", <MaterialReceipt />);
         }
-       
+        if (menuItem.path === "/StockManagement") {
+          addTab("Stock Management", "Stock Managment", <StockManagment />);
+        }
+        if (menuItem.path === "/SalesInvoice") {
+          addTab("Sales Invoice", "Sales Invoice", <SalesInvoice />);
+        }
+        if (menuItem.path === "/Customer") {
+          addTab("Customer", "Customer", <Customer />);
+        }
+        if (menuItem.path === "/PaymentReceipt") {
+          addTab("Payment Receipt", "Payment Receipt", <PaymentReceipt />);
+        }
+
+        //purchase
+        if (menuItem.path === "/Vendor") {
+          addTab("Vendor", "Vendor", <Vendor />);
+        }
+            if (menuItem.path === "/PurchaseOrder") {
+          addTab("Purchase Order", "Purchase Order", <PurchaseOrder />);
+        }
+            if (menuItem.path === "/PurchaseBill") {
+          addTab("Purchase Bill", "Purchase Bill", <PurchaseBill />);
+        }
+            if (menuItem.path === "/BillPayment") {
+          addTab("Bill Payment", "Bill Payment", <BillPayment />);
+        }
       }}
     >
-      <Box sx={{ p: 3 }}>
+      <Box sx={{ p: 1 }}>
         <Tabs
           value={activeTab}
           onChange={(e, val) => setActiveTab(val)}
@@ -137,7 +170,7 @@ function AnalyticsContent() {
           </Grid>
         </Paper>
       </Container>
-    
+
     </Box>
   );
 }
