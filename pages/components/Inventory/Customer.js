@@ -1,3 +1,5 @@
+
+"use client"
 import React, { useState, useEffect } from "react";
 import {
   DataGrid,
@@ -216,9 +218,33 @@ const handleConfirm = async () => {
     { field: "user", headerName: "User", width: 120 },
   ];
 
+ const [balance, setBalance] = useState(null);
+  const [userId, setUserId] = useState("");
+
+  const fetchBalance = async () => {
+    const res = await fetch(`/api/jaze?userId=${userId}`);
+    const data = await res.json();
+    console.log("Jaze data:", data);
+    setBalance(data);
+  };
+
   return (
     <>
       {/* Toolbar */}
+
+       <div>
+      <h2>Check User Balance</h2>
+      <input
+        type="text"
+        placeholder="Enter userId"
+        value={userId}
+        onChange={(e) => setUserId(e.target.value)}
+      />
+      <button onClick={fetchBalance}>Get Balance</button>
+      {balance && (
+        <pre>{JSON.stringify(balance, null, 2)}</pre>
+      )}
+    </div>
       <Box sx={{ mb: 2 }}>
         <Stack direction="row" spacing={2}>
           <Button variant="contained" onClick={() => setAddOpen(true)}>
