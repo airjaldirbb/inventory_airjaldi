@@ -3,12 +3,13 @@ import { styled } from '@mui/material/styles';
 import Grid from '@mui/material/Grid';
 import Paper from '@mui/material/Paper';
 import Box from '@mui/material/Box';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { TextField, MenuItem, Typography, Button } from '@mui/material';
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
-
+import axios from 'axios';
 import { DataGrid } from "@mui/x-data-grid";
+import BarcodeForm from './BarCode';
 
 export default function SalesInvoice() {
   // const [rows, setRows] = useState([]);
@@ -24,6 +25,7 @@ export default function SalesInvoice() {
     }),
   }));
 
+   const [rows, setRows] = useState([]);
   const [formState, setFormState] = useState({
     gstType: "",
     taxInvoice: "",
@@ -80,47 +82,32 @@ export default function SalesInvoice() {
     { field: "openingStock", headerName: "Opening Stock", width: 150 },
   ];
 
-  const [rows, setRows] = useState([
-    {
-      _id: "1",
-      itemName: "Fiber Cable 100m",
-      itemCode: "ITM001",
-      underGroup: "Fiber Equipment",
-      stockUnit: "Piece",
-      gstClassification: "18%",
-      openingStock: "25",
-    },
-    {
-      _id: "2",
-      itemName: "Wireless Router",
-      itemCode: "ITM002",
-      underGroup: "Wireless CPE",
-      stockUnit: "Box",
-      gstClassification: "12%",
-      openingStock: "40",
-    },
-    {
-      _id: "3",
-      itemName: "PVC Pipe",
-      itemCode: "ITM003",
-      underGroup: "Consumption",
-      stockUnit: "Meter",
-      gstClassification: "5%",
-      openingStock: "150",
-    },
-    {
-      _id: "4",
-      itemName: "Network Switch 8 Port",
-      itemCode: "ITM004",
-      underGroup: "Assets",
-      stockUnit: "Piece",
-      gstClassification: "18%",
-      openingStock: "10",
-    },
-  ]);
+
+    const [formStateBranch, setFormStateBranch] = useState({ branch: "" });
+  const [branches, setBranches] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  
+  useEffect(() => {
+    // Replace with your actual API endpoint
+    axios
+      .get("/api/branch") 
+      .then((response) => {
+        setBranches(response.data); 
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching branches:", error);
+        setLoading(false);
+      });
+  }, []);
+
+
+
 
   return (
     <>
+    <BarcodeForm/>
       <Box sx={{ width: '100%', borderRadius: '2px', boxShadow: 'black', borderColor: 'red' }}>
         <Grid container rowSpacing={1} columnSpacing={{ xs: 1, sm: 2, md: 3 }}>
           <Grid size={6} container spacing={2}>
@@ -133,24 +120,7 @@ export default function SalesInvoice() {
                 value={formState.gstType || ""}
                 onChange={(e) => setFormState({ ...formState, gstType: e.target.value })}
               >
-                {["Registered", "Unregistered", "Composition"].map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            {/* Tax Invoice */}
-            <Grid size={12}>
-              <TextField
-                select
-                fullWidth
-                label="Tax Invoice"
-                value={formState.taxInvoice || ""}
-                onChange={(e) => setFormState({ ...formState, taxInvoice: e.target.value })}
-              >
-                {["Yes", "No"].map((option) => (
+                {["TaxInvoice", "Registered", "Composition"].map((option) => (
                   <MenuItem key={option} value={option}>
                     {option}
                   </MenuItem>
@@ -185,9 +155,9 @@ export default function SalesInvoice() {
                 value={formState.branch || ""}
                 onChange={(e) => setFormState({ ...formState, branch: e.target.value })}
               >
-                {["Delhi", "Mumbai", "Bangalore", "Kolkata"].map((option) => (
-                  <MenuItem key={option} value={option}>
-                    {option}
+                {branches.map((branch) => (
+                  <MenuItem key={branch._id} value={branch._id}>
+                    {branch.name}
                   </MenuItem>
                 ))}
               </TextField>

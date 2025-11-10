@@ -9,8 +9,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField, Snackbar, Alert,
-  Typography, MenuItem,Switch
+  TextField,
+  Snackbar,
+  Typography,
+  MenuItem,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditIcon from "@mui/icons-material/Edit";
@@ -20,128 +22,149 @@ export default function ItemMaster() {
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [formState, setFormState] = useState({});
-  const [confirmMode, setConfirmMode] = useState(null); 
-  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, id: null });
-  // Snackbar feedback
-  const [snackbar, setSnackbar] = useState({
-    open: false,
-    message: "",
-    severity: "success", 
-  });
+  const [confirmMode, setConfirmMode] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({ open: false, _id: null });
+  const [editOpen, setEditOpen] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
   const [newRowData, setNewRowData] = useState({
+    Name: "",
+    Code: "",
+    HSN_Code: "Default",
+    Category_Name: "",
+    Group: "Assets",
+    BAR_CODE_TRACKING: "DISABLE",
+  });
+
+  const [editData, setEditData] = useState({
+    _id: "",
     itemName: "",
     itemCode: "",
+    hsnCode: "",
+    categoryName: "",
     underGroup: "",
-    stockUnit: "",
-    gstClassification: "",
-    openingStock: "",
+    barcodeTracking: "",
   });
 
 
-  // ✅ Fetch all users on load
+  const [groups, setGroups] = useState([]);
+  const [barcodeOptions, setBarcodeOptions] = useState(["DISABLE", "ENABLE"]);
+
+  // 🔹 Fetch items + dropdown enums
   useEffect(() => {
-    async function fetchUsers() {
-      try {
-        const response = await axios.get("/api/users");
-        setRows(response.data);
-      } catch (error) {
-        console.error("Failed to fetch users", error);
-      }
-    }
-    fetchUsers();
+    axios
+      .get("/api/item")
+      .then((response) => {
+        const { data, enums } = response.data;
+
+        if (Array.isArray(data)) setRows(data);
+
+        if (enums) {
+          setGroups(enums.underGroup || []);
+          setBarcodeOptions(enums.barcodeTracking || ["DISABLE", "ENABLE"]);
+        }
+      })
+      .catch((err) => console.error("Error fetching items:", err));
   }, []);
 
-  // ✅ Add new user
-  // const handleSaveAdd = async () => {
-  //   try {
-  //     const res = await axios.post("/api/users", {
-  //       firstName: newRowData.firstName,
-  //       lastName: newRowData.lastName,
-  //       age: Number(newRowData.age),
-  //     });
-
-  //     setRows((prev) => [...prev, res.data]);
-
-  //     // ✅ Clear the form after successful save
-  //     setNewRowData({ firstName: "", lastName: "", age: "" });
-
-  //     // ✅ Close the dialog
-  //     setAddOpen(false);
-
-  //     // ✅ Optional: show snackbar feedback
-  //     setSnackbar({
-  //       open: true,
-  //       message: "User added successfully!",
-  //       severity: "success",
-  //     });
-
-  //   } catch (error) {
-  //     console.error("Error adding user:", error);
-  //     setSnackbar({
-  //       open: true,
-  //       message: "Failed to add user.",
-  //       severity: "error",
-  //     });
-  //   }
-  // };
-
+  // 🔹 Add item
   const handleSaveAdd = async () => {
     try {
-      const res = await axios.post("/api/item", {
-        itemName: newRowData.itemName,
-        itemCode: newRowData.itemCode,
-        underGroup: newRowData.underGroup,
-        stockUnit: newRowData.stockUnit,
-        gstClassification: newRowData.gstClassification,
-        openingStock: newRowData.openingStock,
-      });
+      // Build payload consistent with backend
+      const payload = {
+        Name: newRowData.Name.trim(),
+        Code: newRowData.Code.trim(),
+        HSN_Code: newRowData.HSN_Code.trim() || "Default",
+        Category_Name: newRowData.Category_Name.trim(),
+        Group: newRowData.Group,
+        BAR_CODE_TRACKING: newRowData.BAR_CODE_TRACKING,
+      };
 
-      setRows((prev) => [...prev, res.data]);
-    
+      const res = await axios.post("/api/item", payload);
+
+      // Backend returns { message, data: [items] }
+      const newItems = Array.isArray(res.data.data) ? res.data.data : [res.data.data];
+
+      setRows((prev) => [...prev, ...newItems]);
+
+      // Reset form
       setNewRowData({
-        itemName: "",
-        itemCode: "",
-        underGroup: "",
-        stockUnit: "",
-        gstClassification: "",
-        openingStock: "",
+        Name: "",
+        Code: "",
+        HSN_Code: "Default",
+        Category_Name: "",
+        Group: "Assets",
+        BAR_CODE_TRACKING: "DISABLE",
       });
 
       setAddOpen(false);
-
-
-      setSnackbar({
-        open: true,
-        message: "Item added successfully!",
-        severity: "success",
-      });
+      setSnackbar({ open: true, message: "Item added successfully!", severity: "success" });
     } catch (error) {
-      console.error("Error adding item:", error);
-      setSnackbar({
-        open: true,
-        message: "Failed to add item.",
-        severity: "error",
-      });
+      console.error("Error adding item:", error.response?.data || error.message);
+      setSnackbar({ open: true, message: "Failed to add item.", severity: "error" });
     }
   };
 
-  // ✅ Edit user
-  const handleEditRow = (row) => {
-    setEditRow(row);
-    setFormState(row);
-  };
+  const handleSaveEdit = async () => {
+    try {
+      const payload = {
+        _id: editData._id,
+        itemName: editData.itemName.trim(),
+        itemCode: editData.itemCode.trim(),
+        hsnCode: editData.hsnCode.trim() || "Default",
+        categoryName: editData.categoryName.trim(),
+        underGroup: editData.underGroup,
+        barcodeTracking: editData.barcodeTracking,
+      };
 
-  // ✅ Confirm save or cancel
+      const res = await axios.put("/api/item", payload);
+      const updatedItem = res.data.data;
+
+      setRows((prev) => prev.map((r) => (r._id === updatedItem._id ? updatedItem : r)));
+      setEditOpen(false);
+      setSnackbar({ open: true, message: "Item updated successfully!", severity: "success" });
+    } catch (error) {
+      console.error("Error updating item:", error.response?.data || error.message);
+      setSnackbar({ open: true, message: "Failed to update item.", severity: "error" });
+    }
+  };
+  const handleEditRow = (row) => {
+    setEditData({
+      _id: row._id,
+      itemName: row.itemName,
+      itemCode: row.itemCode,
+      hsnCode: row.hsnCode,
+      categoryName: row.categoryName,
+      underGroup: row.underGroup,
+      barcodeTracking: row.barcodeTracking,
+    });
+    setEditOpen(true);
+  };
+  const handleOpenDeleteConfirm = (_id) => setDeleteConfirm({ open: true, _id });
+
+  const handleConfirmDelete = async () => {
+    try {
+      const res = await axios.delete("/api/item", { data: { _id: deleteConfirm._id } });
+      setRows((prev) => prev.filter((r) => r._id !== deleteConfirm._id));
+      setSnackbar({ open: true, message: "Item deleted successfully!", severity: "success" });
+    } catch (error) {
+      console.error("Error deleting item:", error.response?.data || error.message);
+      setSnackbar({ open: true, message: "Failed to delete item.", severity: "error" });
+    } finally {
+      setDeleteConfirm({ open: false, _id: null });
+    }
+  };
+  // 🔹 Confirm save on edit
   const handleConfirm = async () => {
     if (confirmMode === "save") {
       try {
-        const res = await axios.put("/api/users", formState);
-        setRows((prev) =>
-          prev.map((row) => (row._id === res.data._id ? res.data : row))
-        );
+        const res = await axios.put("/api/item", formState);
+        const updatedItem = res.data.data;
+        setRows((prev) => prev.map((row) => (row._id === updatedItem._id ? updatedItem : row)));
+        setSnackbar({ open: true, message: "Item updated successfully!", severity: "success" });
       } catch (error) {
         console.error("Save failed:", error);
+        setSnackbar({ open: true, message: "Failed to update item.", severity: "error" });
       }
     }
     setEditRow(null);
@@ -149,67 +172,13 @@ export default function ItemMaster() {
   };
 
 
-
-  // 🟡 Open delete confirmation dialog
-  const handleOpenDeleteConfirm = (_id) => {
-    setDeleteConfirm({ open: true, _id });
-  };
-
-
-
-  // ✅ Cancel confirmation popup
-  const handleCancelConfirm = () => setConfirmMode(null);
-
-  // ✅ DataGrid columns
-  // const columns = [
-  //   {
-  //     field: "edit",
-  //     headerName: "Edit",
-  //     width: 90,
-  //     renderCell: (params) => (
-  //       <Button
-  //         variant="outlined"
-  //         color="primary"
-  //         size="small"
-  //         onClick={() => handleEditRow(params.row)}
-  //       >
-  //         <EditIcon />
-  //       </Button>
-  //     ),
-  //   },
-  //   {
-  //     field: "delete",
-  //     headerName: "Delete",
-  //     width: 90,
-  //     renderCell: (params) => (
-  //       <Button
-  //         variant="outlined"
-  //         color="error"
-  //         onClick={() => handleOpenDeleteConfirm(params.row._id)} // ✅ open confirm dialog
-  //       >
-  //         <DeleteIcon />
-  //       </Button>
-  //     ),
-  //   },
-
-
-  //   { field: "_id", headerName: "ID", width: 200 },
-  //   { field: "firstName", headerName: "First Name", width: 150 },
-  //   { field: "lastName", headerName: "Last Name", width: 150 },
-  //   { field: "age", headerName: "Age", type: "number", width: 110 },
-  // ];
   const columns = [
     {
       field: "edit",
       headerName: "Edit",
       width: 90,
       renderCell: (params) => (
-        <Button
-          variant="outlined"
-          color="primary"
-          size="small"
-          onClick={() => handleEditRow(params.row)}
-        >
+        <Button variant="outlined" color="primary" size="small" onClick={() => handleEditRow(params.row)}>
           <EditIcon />
         </Button>
       ),
@@ -219,24 +188,18 @@ export default function ItemMaster() {
       headerName: "Delete",
       width: 90,
       renderCell: (params) => (
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={() => handleOpenDeleteConfirm(params.row._id)}
-        >
+        <Button variant="outlined" color="error" onClick={() => handleOpenDeleteConfirm(params.row._id)}>
           <DeleteIcon />
         </Button>
       ),
     },
-    { field: "_id", headerName: "ID", width: 200 },
-    { field: "itemName", headerName: "Item Name", width: 150 },
-    { field: "itemCode", headerName: "Item Code", width: 150 },
-    { field: "underGroup", headerName: "Under Group", width: 150 },
-    { field: "stockUnit", headerName: "Stock Unit", width: 150 },
-    { field: "gstClassification", headerName: "GST Classification", width: 180 },
-    { field: "openingStock", headerName: "Opening Stock", width: 150 },
+    { field: "itemName", headerName: "Name", width: 150 },
+    { field: "itemCode", headerName: "Code", width: 150 },
+    { field: "hsnCode", headerName: "HSN Code", width: 50 },
+    { field: "underGroup", headerName: "Group", width: 150 },
+    { field: "categoryName", headerName: "Category", width: 150 },
+    { field: "barcodeTracking", headerName: "Barcode Tracking", width: 150 },
   ];
-
 
   return (
     <>
@@ -244,7 +207,7 @@ export default function ItemMaster() {
       <Box>
         <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
           <Button variant="contained" onClick={() => setAddOpen(true)}>
-            Add Row
+            Add Item
           </Button>
           <Button
             variant="contained"
@@ -265,7 +228,6 @@ export default function ItemMaster() {
           columns={columns}
           getRowId={(row) => row._id}
           pageSize={5}
-          checkboxSelection
           disableRowSelectionOnClick
           slots={{
             noRowsOverlay: () => (
@@ -286,335 +248,179 @@ export default function ItemMaster() {
             ),
           }}
         />
-
-
       </Box>
 
-      {/* ➕ Add Dialog */}
+      {/* Add Dialog */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Add New Item</DialogTitle>
         <DialogContent>
           <TextField
             margin="dense"
-            label="Item Name"
+            label="Name"
             fullWidth
-            value={newRowData.itemName}
-            onChange={(e) => setNewRowData({ ...newRowData, itemName: e.target.value })}
+            value={newRowData.Name}
+            onChange={(e) => setNewRowData({ ...newRowData, Name: e.target.value })}
           />
-
           <TextField
             margin="dense"
-            label="Item Code"
+            label="Code"
             fullWidth
-            value={newRowData.itemCode}
-            onChange={(e) => setNewRowData({ ...newRowData, itemCode: e.target.value })}
+            value={newRowData.Code}
+            onChange={(e) => setNewRowData({ ...newRowData, Code: e.target.value })}
           />
-
           <TextField
             margin="dense"
-            label="Under Group"
+            label="HSN Code"
+            fullWidth
+            value={newRowData.HSN_Code}
+            onChange={(e) => setNewRowData({ ...newRowData, HSN_Code: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Category Name"
+            fullWidth
+            value={newRowData.Category_Name}
+            onChange={(e) => setNewRowData({ ...newRowData, Category_Name: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Group"
             fullWidth
             select
-            value={newRowData.underGroup}
-            onChange={(e) => setNewRowData({ ...newRowData, underGroup: e.target.value })}
+            value={newRowData.Group}
+            onChange={(e) => setNewRowData({ ...newRowData, Group: e.target.value })}
           >
-            {["Consumption", "Fiber Equipment", "Wireless CPE", "Assets"].map((group) => (
+            {groups.map((group) => (
               <MenuItem key={group} value={group}>
                 {group}
               </MenuItem>
             ))}
           </TextField>
-
           <TextField
             margin="dense"
-            label="Stock Unit"
+            label="Barcode Tracking"
             fullWidth
             select
-            value={newRowData.stockUnit}
-            onChange={(e) => setNewRowData({ ...newRowData, stockUnit: e.target.value })}
+            value={newRowData.BAR_CODE_TRACKING}
+            onChange={(e) => setNewRowData({ ...newRowData, BAR_CODE_TRACKING: e.target.value })}
           >
-            {["Kg", "Litre", "Piece", "Box"].map((unit) => (
-              <MenuItem key={unit} value={unit}>
-                {unit}
+            {barcodeOptions.map((opt) => (
+              <MenuItem key={opt} value={opt}>
+                {opt}
               </MenuItem>
             ))}
           </TextField>
-
-          <TextField
-            margin="dense"
-            label="GST Classification"
-            fullWidth
-            select
-            value={newRowData.gstClassification}
-            onChange={(e) =>
-              setNewRowData({ ...newRowData, gstClassification: e.target.value })
-            }
-          >
-            {["5%", "12%", "18%", "28%"].map((gst) => (
-              <MenuItem key={gst} value={gst}>
-                {gst}
-              </MenuItem>
-            ))}
-          </TextField>
-
-          <TextField
-            margin="dense"
-            label="Opening Stock"
-            fullWidth
-            value={newRowData.openingStock}
-            onChange={(e) => setNewRowData({ ...newRowData, openingStock: e.target.value })}
-          />
-
-          {/* 🔹 Add Serial Tracking Fields Here */}
-          <TextField
-            margin="dense"
-            label="Serial Tracking"
-            fullWidth
-            value={newRowData.serialTracking || ""}
-            onChange={(e) =>
-              setNewRowData({ ...newRowData, serialTracking: e.target.value })
-            }
-          />
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              marginTop: "10px",
-            }}
-          >
-            <span style={{ marginRight: "10px" }}>Enable Serial Tracking:</span>
-            <Switch
-              checked={newRowData.serialTrackingEnabled || false}
-              onChange={(e) =>
-                setNewRowData({
-                  ...newRowData,
-                  serialTrackingEnabled: e.target.checked,
-                })
-              }
-              color="primary"
-            />
-            <span>{newRowData.serialTrackingEnabled ? "ON" : "OFF"}</span>
-          </div>
         </DialogContent>
-
         <DialogActions>
           <Button onClick={() => setAddOpen(false)}>Cancel</Button>
-          <Button onClick={handleSaveAdd} variant="contained" color="primary">
+          <Button variant="contained" onClick={handleSaveAdd}>
             Save
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* ✏️ Edit / Confirm Dialog */}
-      <Dialog open={!!editRow} onClose={() => setEditRow(null)} fullWidth maxWidth="sm">
-        <DialogTitle>
-          {confirmMode
-            ? confirmMode === "save"
-              ? "Confirm Save"
-              : "Discard Changes?"
-            : "Edit Item"}
-        </DialogTitle>
 
+      <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>Edit Item</DialogTitle>
         <DialogContent>
-          {confirmMode ? (
-            <Typography>
-              {confirmMode === "save"
-                ? "Are you sure you want to save these changes?"
-                : "Are you sure you want to discard your changes? This action cannot be undone."}
-            </Typography>
-          ) : (
-            <>
-              <TextField
-                margin="dense"
-                label="Item Name"
-                fullWidth
-                value={formState.itemName || ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, itemName: e.target.value })
-                }
-              />
-
-              <TextField
-                margin="dense"
-                label="Item Code"
-                fullWidth
-                value={formState.itemCode || ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, itemCode: e.target.value })
-                }
-              />
-
-              <TextField
-                margin="dense"
-                label="Under Group"
-                fullWidth
-                select
-                value={formState.underGroup || ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, underGroup: e.target.value })
-                }
-              >
-                {["Kg", "Litre", "Piece", "Box"].map((group) => (
-                  <MenuItem key={group} value={group}>
-                    {group}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              <TextField
-                margin="dense"
-                label="Stock Unit"
-                fullWidth
-                select
-                value={formState.stockUnit || ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, stockUnit: e.target.value })
-                }
-              >
-                {["Kg", "Litre", "Piece", "Box"].map((unit) => (
-                  <MenuItem key={unit} value={unit}>
-                    {unit}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              <TextField
-                margin="dense"
-                label="GST Classification"
-                fullWidth
-                select
-                value={formState.gstClassification || ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, gstClassification: e.target.value })
-                }
-              >
-                {["5%", "12%", "18%", "28%"].map((gst) => (
-                  <MenuItem key={gst} value={gst}>
-                    {gst}
-                  </MenuItem>
-                ))}
-              </TextField>
-
-              <TextField
-                margin="dense"
-                label="Opening Stock"
-                fullWidth
-                value={formState.openingStock || ""}
-                onChange={(e) =>
-                  setFormState({ ...formState, openingStock: e.target.value })
-                }
-              />
-            </>
-          )}
+          <TextField
+            margin="dense"
+            label="Name"
+            fullWidth
+            value={editData.itemName}
+            onChange={(e) => setEditData({ ...editData, itemName: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Code"
+            fullWidth
+            value={editData.itemCode}
+            onChange={(e) => setEditData({ ...editData, itemCode: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="HSN Code"
+            fullWidth
+            value={editData.hsnCode}
+            onChange={(e) => setEditData({ ...editData, hsnCode: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Category Name"
+            fullWidth
+            value={editData.categoryName}
+            onChange={(e) => setEditData({ ...editData, categoryName: e.target.value })}
+          />
+          <TextField
+            margin="dense"
+            label="Group"
+            fullWidth
+            select
+            value={editData.underGroup}
+            onChange={(e) => setEditData({ ...editData, underGroup: e.target.value })}
+          >
+            {groups.map((group) => (
+              <MenuItem key={group} value={group}>
+                {group}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            margin="dense"
+            label="Barcode Tracking"
+            fullWidth
+            select
+            value={editData.barcodeTracking}
+            onChange={(e) => setEditData({ ...editData, barcodeTracking: e.target.value })}
+          >
+            {barcodeOptions.map((opt) => (
+              <MenuItem key={opt} value={opt}>
+                {opt}
+              </MenuItem>
+            ))}
+          </TextField>
         </DialogContent>
-
         <DialogActions>
-          {confirmMode ? (
-            <>
-              <Button onClick={handleCancelConfirm} color="secondary">
-                No
-              </Button>
-              <Button
-                onClick={handleConfirm}
-                color={confirmMode === "save" ? "primary" : "error"}
-                variant="contained"
-              >
-                {confirmMode === "save" ? "Yes, Save" : "Yes, Discard"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button onClick={() => setConfirmMode("cancel")} color="secondary">
-                Cancel
-              </Button>
-              <Button
-                onClick={() => setConfirmMode("save")}
-                variant="contained"
-                color="primary"
-              >
-                Save
-              </Button>
-            </>
-          )}
+          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveEdit}>
+            Save
+          </Button>
         </DialogActions>
       </Dialog>
 
-      {/* 🗑️ Delete Confirmation Dialog */}
+      {/* ===== Delete Confirmation Dialog ===== */}
       <Dialog
         open={deleteConfirm.open}
         onClose={() => setDeleteConfirm({ open: false, _id: null })}
+        fullWidth
+        maxWidth="xs"
       >
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
-          <Typography >
-            Are you sure you want to delete this record? This action cannot be undone.
-          </Typography>
+          <Typography>Are you sure you want to delete this item?</Typography>
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={() => setDeleteConfirm({ open: false, _id: null })}
-            color="secondary"
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={async () => {
-              try {
-                await axios.delete("/api/users", { data: { _id: deleteConfirm._id } });
-
-                setRows((prev) =>
-                  prev.filter((row) => row._id !== deleteConfirm._id)
-                );
-
-                setSnackbar({
-                  open: true,
-                  message: "User deleted successfully!",
-                  severity: "error", // 🔴 red snackbar for delete
-                });
-              } catch (error) {
-                console.error("Delete failed:", error);
-                setSnackbar({
-                  open: true,
-                  message: "Failed to delete user.",
-                  severity: "error",
-                });
-              } finally {
-                setDeleteConfirm({ open: false, _id: null });
-              }
-            }}
-            color="error"
-            variant="contained"
-          >
+          <Button onClick={() => setDeleteConfirm({ open: false, _id: null })}>Cancel</Button>
+          <Button variant="contained" color="error" onClick={handleConfirmDelete}>
             Delete
           </Button>
         </DialogActions>
       </Dialog>
-
+      {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
         autoHideDuration={3000}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         onClose={() => setSnackbar({ ...snackbar, open: false })}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <MuiAlert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
           severity={snackbar.severity}
           variant="filled"
-          sx={{
-            width: "100%",
-            backgroundColor:
-              snackbar.severity === "error"
-                ? "#d32f2f" // 🔴 custom red for delete
-                : snackbar.severity === "success"
-                  ? "#2e7d32" // 🟢 green for add/edit
-                  : undefined,
-          }}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
           {snackbar.message}
         </MuiAlert>
       </Snackbar>
-
     </>
   );
 }

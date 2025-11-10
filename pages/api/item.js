@@ -1,104 +1,173 @@
+import mongoose from "mongoose";
 import dbConnect from "@/lib/db";
-import Form from "@/models/Form";
+import Item from "@/models/Item";
+import Branch from "@/models/Branch";
 
 export default async function handler(req, res) {
   await dbConnect();
 
   try {
-    console.log(`➡️ ${req.method} /api/item called`);
-
+    // ==================== GET ====================
     if (req.method === "GET") {
-      const items = await Form.find();
-      return res.status(200).json(items);
-    }
+      const { branch } = req.query;
 
-    if (req.method === "POST") {
-      const {
-        itemName,
-        itemCode,
-        underGroup,
-        stockUnit,
-        gstClassification,
-        openingStock,
-      } = req.body;
+      const allItems = await Item.find().populate("branch");
 
-      const requiredFields = [
-        "itemName",
-        "itemCode",
-        "underGroup",
-        "stockUnit",
-        "gstClassification",
-        "openingStock",
-      ];
+      // const itemsWithBranchFlag = allItems.map((item) => {
+      //   const branchesArray = item.branch || [];
+      //   return {
+      //     ...item.toObject(),
+      //     belongsToBranch:
+      //       branch && mongoose.Types.ObjectId.isValid(branch)
+      //         ? branchesArray.some((b) => b._id.toString() === branch)
+      //         : true,
+      //   };
+      // });
+      const itemsWithBranchFlag = allItems.map((item) => {
+        const belongsToBranch = branch && mongoose.Types.ObjectId.isValid(branch)
+          ? item.branch.some((b) => b._id.toString() === branch)
+          : true;
 
-      for (const field of requiredFields) {
-        if (!req.body[field]) {
-          return res
-            .status(400)
-            .json({ message: `Missing required field: ${field}` });
-        }
-      }
-
-
-      const newItem = await Form.create({
-        itemName,
-        itemCode,
-        underGroup,
-        stockUnit,
-        gstClassification,
-        openingStock,
+        return {
+          ...item.toObject(),
+          belongsToBranch
+        };
       });
 
-      return res.status(201).json(newItem);
+      const schemaPaths = Item.schema.paths;
+      const enums = {
+        underGroup: schemaPaths.underGroup?.options?.enum || [],
+        stockUnit: schemaPaths.stockUnit?.options?.enum || [],
+        gstClassification: schemaPaths.gstClassification?.options?.enum || [],
+        barcodeTracking: schemaPaths.barcodeTracking?.options?.enum || [],
+      };
+
+      return res.status(200).json({
+        message: branch
+          ? `Fetched ${allItems.length} items for branch ${branch}`
+          : `Fetched all ${allItems.length} items`,
+        count: allItems.length,
+        data: itemsWithBranchFlag,
+        enums,
+      });
     }
 
-    if (req.method === "PUT") {
-      const { _id, ...rest } = req.body;
+    // ==================== POST ====================
+    if (req.method === "POST") {
+      const items = Array.isArray(req.body) ? req.body : [req.body];
+      const insertedItems = [];
 
-      if (!_id) {
-        return res.status(400).json({ message: "Missing _id" });
+      for (let i = 0; i < items.length; i++) {
+        const {
+          Name, Code, HSN_Code, Category_Name, Group,
+          BAR_CODE_TRACKING, branch,
+          MRP, MIN_RATE, RATE, PACK
+        } = items[i];
+
+        if (!Name || !Code || !Group) {
+          return res.status(400).json({
+            message: `Missing required fields in item ${i + 1}: Name, Code, Group are required`,
+          });
+        }
+
+        let branchIds = [];
+        if (branch) {
+          branchIds = Array.isArray(branch) ? branch : [branch];
+          for (let id of branchIds) {
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+              return res.status(400).json({ message: `Invalid branch ID: ${id}` });
+            }
+            const branchExists = await Branch.findById(id);
+            if (!branchExists) {
+              return res.status(404).json({ message: `Branch not found: ${id}` });
+            }
+          }
+        }
+
+        const newItem = await Item.create({
+          itemName: Name,
+          itemCode: Code,
+          hsnCode: HSN_Code || "Default",
+          categoryName: Category_Name || "",
+          underGroup: Group,
+          barcodeTracking: BAR_CODE_TRACKING || "DISABLE",
+          branch: branchIds,
+          mrp: MRP || 0,
+          minRate: MIN_RATE || 0,
+          rate: RATE || 0,
+          pack: PACK || "",
+        });
+
+        await newItem.populate("branch");
+        insertedItems.push(newItem);
       }
 
-      const updated = await Form.findByIdAndUpdate(_id, rest, { new: true });
+      return res.status(201).json({
+        message: "Items created successfully",
+        data: insertedItems,
+      });
+    }
 
-      if (!updated) {
+    // ==================== PUT ====================
+    if (req.method === "PUT") {
+      const { _id, ...updateData } = req.body;
+
+      if (!_id) {
+        return res.status(400).json({ message: "Missing _id for update" });
+      }
+
+      if (updateData.branch) {
+        const branchIds = Array.isArray(updateData.branch)
+          ? updateData.branch
+          : [updateData.branch];
+
+        for (let id of branchIds) {
+          if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: `Invalid branch ID: ${id}` });
+          }
+          const branchExists = await Branch.findById(id);
+          if (!branchExists) {
+            return res.status(404).json({ message: `Branch not found: ${id}` });
+          }
+        }
+        updateData.branch = branchIds;
+      }
+
+      const updatedItem = await Item.findByIdAndUpdate(_id, updateData, {
+        new: true,
+        runValidators: true,
+      }).populate("branch");
+
+      if (!updatedItem) {
         return res.status(404).json({ message: "Item not found" });
       }
 
-      return res.status(200).json(updated);
+      return res.status(200).json({
+        message: "Item updated successfully",
+        data: updatedItem,
+      });
     }
 
+    // ==================== DELETE ====================
     if (req.method === "DELETE") {
       const { _id } = req.body;
 
       if (!_id) {
-        return res.status(400).json({ message: "Missing _id" });
+        return res.status(400).json({ message: "Missing _id for delete" });
       }
 
-      await Form.findByIdAndDelete(_id);
-      return res.status(200).json({ message: "Item deleted successfully" });
-    }
-    if (req.method === "PATCH") {
-      const { _id, serialTrackingEnabled } = req.body;
-
-      if (!_id) {
-        return res.status(400).json({ message: "Missing _id" });
-      }
-
-      const updated = await Form.findByIdAndUpdate(
-        _id,
-        { serialTrackingEnabled },
-        { new: true }
-      );
-
-      if (!updated) {
+      const deletedItem = await Item.findByIdAndDelete(_id);
+      if (!deletedItem) {
         return res.status(404).json({ message: "Item not found" });
       }
 
-      return res.status(200).json(updated);
+      return res.status(200).json({
+        message: "Item deleted successfully",
+        data: deletedItem,
+      });
     }
 
-
+    // ==================== METHOD NOT ALLOWED ====================
     return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
     console.error("❌ API error:", error);

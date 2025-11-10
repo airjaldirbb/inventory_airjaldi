@@ -16,6 +16,7 @@ import Vendor from "./components/Inventory/Vendor";
 import PurchaseOrder from "./components/Inventory/PurchaseOrder";
 import PurchaseBill from "./components/Inventory/PurchaseBill";
 import BillPayment from "./components/Inventory/BillPayment";
+import ItemList from "./components/Inventory/ItemList";
 
 export default function Dashboard() {
   const [tabs, setTabs] = useState([
@@ -66,6 +67,7 @@ export default function Dashboard() {
     switch (id) {
       case "analytics": return <AnalyticsContent />;
       case "itemMaster": return <ItemMaster />;
+      case "itemList": return <ItemList />;
       case "materialissue": return <MaterialIssue />;
       case "materialReceipt": return <MaterialReceipt />;
       case "Stock Management": return <StockManagment />;
@@ -103,6 +105,11 @@ export default function Dashboard() {
       onMenuClick={(menuItem) => {
         if (menuItem.path === "/ItemMaster") {
           addTab("itemMaster", "Item Master", <ItemMaster />);
+          
+        }
+           if (menuItem.path === "/ItemList") {
+          addTab("itemList", "Item List", <ItemList />);
+          
         }
         if (menuItem.path === "/MaterialIssue") {
           addTab("materialissue", "Material Issue", <MaterialIssue />);

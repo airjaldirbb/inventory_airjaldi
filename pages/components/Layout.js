@@ -52,6 +52,7 @@ const menuItems = [
         path: "/inventory",
         subMenu: [
             { label: "Item Master", path: "/ItemMaster" },
+             { label: "Item List", path: "/ItemList" },
             { label: "Material Issue", path: "/MaterialIssue" },
             { label: "Material Receipt", path: "/MaterialReceipt" },
             { label: "Stock Management", path: "/StockManagement" },
