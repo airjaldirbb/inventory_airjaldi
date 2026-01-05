@@ -5,9 +5,6 @@ export default async function handler(req, res) {
   await dbConnect();
 
   try {
-    console.log(`➡️ ${req.method} /api/branch called`);
-    console.log("Received body:", req.body);
-
     // GET all branches
     if (req.method === "GET") {
       const branches = await Branch.find();

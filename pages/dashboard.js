@@ -1,148 +1,153 @@
-import { useState,useEffect } from "react";
-import { Box, Tabs, Tab, IconButton, Container, Typography, Paper, Grid } from "@mui/material";
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Tabs,
+  Tab,
+  IconButton,
+  Container,
+  Typography,
+  Paper,
+  Grid,
+} from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import Layout from "./components/Layout";
+
+// Inventory Components
 import ItemMaster from "./components/Inventory/ItemMaster";
-import KendoGrid from "./KendoGrid";
-import PieCharts from "./PieCharts";
-import BardCharts from "./BardCharts";
+import ItemList from "./components/Inventory/ItemList";
 import MaterialIssue from "./components/Inventory/MaterialIssue";
 import MaterialReceipt from "./components/Inventory/MaterialReceipt";
-import SalesInvoice from "./components/Inventory/SalesInvoice";
 import StockManagment from "./components/Inventory/StockManagment";
+import SalesInvoice from "./components/Inventory/SalesInvoice";
 import Customer from "./components/Inventory/Customer";
 import PaymentReceipt from "./components/Inventory/PaymentReceipt";
 import Vendor from "./components/Inventory/Vendor";
 import PurchaseOrder from "./components/Inventory/PurchaseOrder";
 import PurchaseBill from "./components/Inventory/PurchaseBill";
 import BillPayment from "./components/Inventory/BillPayment";
-import ItemList from "./components/Inventory/ItemList";
+import AllReports from "./components/Inventory/AllReports";
+import CustomerTrial from "./components/Inventory/CustomerTrial";
+import VendorTrial from "./components/Inventory/VendorTrial";
+// Charts
+import KendoGrid from "./KendoGrid";
+import PieCharts from "./PieCharts";
+import BardCharts from "./BardCharts";
+import SalesInvoiceRegister from "./components/Inventory/salesInvoiceRegister";
+import PurchaseInvoiceRegisterGrid from "./components/Inventory/purchaseInvoiceRegister";
+/* =====================================================
+   🔹 TAB REGISTRY (SINGLE SOURCE OF TRUTH)
+===================================================== */
+const TAB_REGISTRY = {
+  analytics: { label: "Dashboard Analytics", component: <AnalyticsContent /> },
+  itemMaster: { label: "Item Master", component: <ItemMaster /> },
+  itemList: { label: "Item List", component: <ItemList /> },
+  materialIssue: { label: "Material Issue", component: <MaterialIssue /> },
+  materialReceipt: { label: "Material Receipt", component: <MaterialReceipt /> },
+  stockManagement: { label: "Stock Management", component: <StockManagment /> },
+  salesInvoice: { label: "Sales Invoice", component: <SalesInvoice /> }, 
+  customer: { label: "Customer", component: <Customer /> },
+  paymentReceipt: { label: "Payment Receipt", component: <PaymentReceipt /> },
+  vendor: { label: "Vendor", component: <Vendor /> },
+  purchaseOrder: { label: "Purchase Order", component: <PurchaseOrder /> },
+  purchaseBill: { label: "Purchase Bill", component: <PurchaseBill /> },
+  billPayment: { label: "Bill Payment", component: <BillPayment /> },
+  customerTrial: { label: "Customer Trial", component: <CustomerTrial /> },
+  vendorTrial: { label: "Vendor Trial", component: <VendorTrial /> },
+  salesInvoiceRegister: { label: "Sales Invoice Register", component: <SalesInvoiceRegister /> }, 
 
+allReports: {
+  label: "All Reports",
+  render: (addTab) => <AllReports addTab={addTab} />,
+},
+purchaseInvoiceRegister: {
+  label: "Purchase Invoice Register",
+  component: <PurchaseInvoiceRegisterGrid />,
+},
+
+
+};
+
+/* =====================================================
+   🔹 LOCAL STORAGE UTILITIES
+===================================================== */
+const STORAGE_KEY = "dashboardTabs";
+
+const loadTabsFromStorage = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY));
+  } catch {
+    return null;
+  }
+};
+
+const saveTabsToStorage = (tabs, activeTab) => {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ tabs, activeTab }));
+};
+
+/* =====================================================
+   🔹 DASHBOARD
+===================================================== */
 export default function Dashboard() {
-  const [tabs, setTabs] = useState([
-    { id: "analytics", label: "Dashboard Analytics", content: <AnalyticsContent /> },
-  ]);
-  const [activeTab, setActiveTab] = useState("analytics");
+  // Restore state from localStorage on initial render
+  const stored = loadTabsFromStorage();
 
-  // const addTab = (id, label, content) => {
-  //   if (!tabs.find((tab) => tab.id === id)) {
-  //     setTabs([...tabs, { id, label, content }]);
-  //   }
-  //   setActiveTab(id);
-  // };
+  const [tabs, setTabs] = useState(
+    stored?.tabs?.length ? stored.tabs : [{ id: "analytics" }]
+  );
+  const [activeTab, setActiveTab] = useState(stored?.activeTab || "analytics");
 
-  // const closeTab = (id) => {
-  //   const newTabs = tabs.filter((tab) => tab.id !== id);
-  //   setTabs(newTabs);
-  //   if (activeTab === id && newTabs.length > 0) {
-  //     setActiveTab(newTabs[0].id);
-  //   }
-  // };
-
-
-   useEffect(() => {
-    const savedTabs = sessionStorage.getItem("dashboardTabs");
-    const savedActiveTab = sessionStorage.getItem("activeDashboardTab");
-
-    if (savedTabs) {
-      const parsedTabs = JSON.parse(savedTabs);
-
-      // Rebuild the React components (content can’t be stored directly)
-      const restoredTabs = parsedTabs.map((tab) => ({
-        ...tab,
-        content: getTabContent(tab.id),
-      }));
-
-      setTabs(restoredTabs);
-      if (savedActiveTab) setActiveTab(savedActiveTab);
-    }
-  }, []);
-
-   useEffect(() => {
-    const tabsToSave = tabs.map(({ id, label }) => ({ id, label }));
-    sessionStorage.setItem("dashboardTabs", JSON.stringify(tabsToSave));
-    sessionStorage.setItem("activeDashboardTab", activeTab);
+  /* =====================================================
+     🔹 SAVE TO LOCAL STORAGE
+  ===================================================== */
+  useEffect(() => {
+    saveTabsToStorage(tabs, activeTab);
   }, [tabs, activeTab]);
-    const getTabContent = (id) => {
-    switch (id) {
-      case "analytics": return <AnalyticsContent />;
-      case "itemMaster": return <ItemMaster />;
-      case "itemList": return <ItemList />;
-      case "materialissue": return <MaterialIssue />;
-      case "materialReceipt": return <MaterialReceipt />;
-      case "Stock Management": return <StockManagment />;
-      case "Sales Invoice": return <SalesInvoice />;
-      case "Customer": return <Customer />;
-      case "Payment Receipt": return <PaymentReceipt />;
-      case "Vendor": return <Vendor />;
-      case "Purchase Order": return <PurchaseOrder />;
-      case "Purchase Bill": return <PurchaseBill />;
-      case "Bill Payment": return <BillPayment />;
-      default: return null;
-    }
-  };
 
-   const addTab = (id, label, content) => {
-    if (!tabs.find((tab) => tab.id === id)) {
-      setTabs([...tabs, { id, label, content }]);
+  /* =====================================================
+     🔹 ADD / CLOSE TAB ACTIONS
+  ===================================================== */
+  const addTab = (id) => {
+    if (!TAB_REGISTRY[id]) return;
+    if (!tabs.find((t) => t.id === id)) {
+      setTabs([...tabs, { id }]);
     }
     setActiveTab(id);
   };
 
-  
   const closeTab = (id) => {
-    const newTabs = tabs.filter((tab) => tab.id !== id);
+    const newTabs = tabs.filter((t) => t.id !== id);
     setTabs(newTabs);
-
-    if (activeTab === id && newTabs.length > 0) {
+    if (activeTab === id && newTabs.length) {
       setActiveTab(newTabs[0].id);
     }
   };
 
-  
+  /* =====================================================
+     🔹 RENDER
+  ===================================================== */
   return (
     <Layout
       onMenuClick={(menuItem) => {
-        if (menuItem.path === "/ItemMaster") {
-          addTab("itemMaster", "Item Master", <ItemMaster />);
-          
-        }
-           if (menuItem.path === "/ItemList") {
-          addTab("itemList", "Item List", <ItemList />);
-          
-        }
-        if (menuItem.path === "/MaterialIssue") {
-          addTab("materialissue", "Material Issue", <MaterialIssue />);
-        }
-        if (menuItem.path === "/MaterialReceipt") {
-          addTab("materialReceipt", "Material Receipt", <MaterialReceipt />);
-        }
-        if (menuItem.path === "/StockManagement") {
-          addTab("Stock Management", "Stock Managment", <StockManagment />);
-        }
-        if (menuItem.path === "/SalesInvoice") {
-          addTab("Sales Invoice", "Sales Invoice", <SalesInvoice />);
-        }
-        if (menuItem.path === "/Customer") {
-          addTab("Customer", "Customer", <Customer />);
-        }
-        if (menuItem.path === "/PaymentReceipt") {
-          addTab("Payment Receipt", "Payment Receipt", <PaymentReceipt />);
-        }
-
-        //purchase
-        if (menuItem.path === "/Vendor") {
-          addTab("Vendor", "Vendor", <Vendor />);
-        }
-            if (menuItem.path === "/PurchaseOrder") {
-          addTab("Purchase Order", "Purchase Order", <PurchaseOrder />);
-        }
-            if (menuItem.path === "/PurchaseBill") {
-          addTab("Purchase Bill", "Purchase Bill", <PurchaseBill />);
-        }
-            if (menuItem.path === "/BillPayment") {
-          addTab("Bill Payment", "Bill Payment", <BillPayment />);
-        }
+        const map = {
+          "/ItemMaster": "itemMaster",
+          "/ItemList": "itemList",
+          "/MaterialIssue": "materialIssue",
+          "/MaterialReceipt": "materialReceipt",
+          "/StockManagement": "stockManagement",
+          "/SalesInvoice": "salesInvoice",
+          "/Customer": "customer",
+          "/PaymentReceipt": "paymentReceipt",
+          "/Vendor": "vendor",
+          "/PurchaseOrder": "purchaseOrder",
+          "/PurchaseBill": "purchaseBill",
+          "/BillPayment": "billPayment",
+          "/AllReports": "allReports",
+          "/CustomerTrial": "customerTrial",
+          "/VendorTrial": "vendorTrial",
+          "/salesInvoiceRegister": "salesInvoiceRegister",
+        };
+        if (map[menuItem.path]) addTab(map[menuItem.path]);
       }}
     >
       <Box sx={{ p: 1 }}>
@@ -158,7 +163,7 @@ export default function Dashboard() {
               value={tab.id}
               label={
                 <Box sx={{ display: "flex", alignItems: "center" }}>
-                  {tab.label}
+                  {TAB_REGISTRY[tab.id]?.label}
                   {tab.id !== "analytics" && (
                     <IconButton
                       size="small"
@@ -176,68 +181,54 @@ export default function Dashboard() {
           ))}
         </Tabs>
 
-        <Box sx={{ mt: 2 }}>
-          {tabs.find((tab) => tab.id === activeTab)?.content}
-        </Box>
+     <Box sx={{ mt: 2 }}>
+  {TAB_REGISTRY[activeTab]?.render
+    ? TAB_REGISTRY[activeTab].render(addTab)
+    : TAB_REGISTRY[activeTab]?.component}
+</Box>
       </Box>
     </Layout>
   );
 }
 
+/* =====================================================
+   🔹 ANALYTICS CONTENT
+===================================================== */
 function AnalyticsContent() {
   return (
-    <Box sx={{ p: 3, backgroundColor: "rgba(240, 245, 250, 1)", minHeight: "100%" }}>
+    <Box sx={{ p: 3, backgroundColor: "#0086c7", minHeight: "100%" }}>
       <Container maxWidth="xl">
-        <Typography variant="h4" align="center" gutterBottom sx={{ fontWeight: 600 }}>
+        <Typography variant="h4" align="center" gutterBottom fontWeight={600} color="#fff">
           Dashboard Analytics
         </Typography>
 
-        <Paper elevation={3} sx={{ p: 3, borderRadius: 3, mb: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Bar Chart Insights
-          </Typography>
-          <Grid container spacing={3} justifyContent="center" alignItems="center">
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6">Bar Chart Insights</Typography>
+          <Grid container justifyContent="center">
             <Grid item xs={12} sm={6}>
               <KendoGrid />
             </Grid>
           </Grid>
         </Paper>
 
-        <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Distribution Overview
-          </Typography>
-          <Grid container spacing={3} justifyContent="center" alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <PieCharts type="donut" />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <PieCharts type="donut" />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <PieCharts type="donut" />
-            </Grid>
+        <Paper sx={{ p: 3, mb: 3 }}>
+          <Typography variant="h6">Distribution Overview</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}><PieCharts type="donut" /></Grid>
+            <Grid item xs={12} sm={4}><PieCharts type="donut" /></Grid>
+            <Grid item xs={12} sm={4}><PieCharts type="donut" /></Grid>
           </Grid>
         </Paper>
 
-        <Paper elevation={3} sx={{ p: 3, mb: 4, borderRadius: 3 }}>
-          <Typography variant="h6" gutterBottom>
-            Pie Chart Analysis
-          </Typography>
-          <Grid container spacing={3} justifyContent="center" alignItems="center">
-            <Grid item xs={12} sm={4}>
-              <BardCharts type="pie" />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <BardCharts type="pie" />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <BardCharts type="pie" />
-            </Grid>
+        <Paper sx={{ p: 3 }}>
+          <Typography variant="h6">Pie Chart Analysis</Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={12} sm={4}><BardCharts type="pie" /></Grid>
+            <Grid item xs={12} sm={4}><BardCharts type="pie" /></Grid>
+            <Grid item xs={12} sm={4}><BardCharts type="pie" /></Grid>
           </Grid>
         </Paper>
       </Container>
-
     </Box>
   );
 }

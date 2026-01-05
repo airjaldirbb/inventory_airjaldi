@@ -1,25 +1,47 @@
-// pages/api/barcode-scan.js
+// pages/api/barcodeScan.js
+
 import dbConnect from "@/lib/db";
 import Item from "@/models/Item";
-import MaterialReceipt from "@/models/MaterialReceipt";
+
+export const config = {
+  api: {
+    externalResolver: true,
+  },
+};
 
 export default async function handler(req, res) {
   await dbConnect();
 
-  if (req.method !== "POST") return res.status(405).json({ message: "Method not allowed" });
+  try {
+    if (req.method === "GET") {
+      console.log("📥 Fetching items where barcodeTracking = \"ENABLE\"");
 
-  const { barcode, branch, user } = req.body;
+      const items = await Item.find({ barcodeTracking: "ENABLE" }).populate("branch");
+      console.log(`📄 Found ${items.length} item(s) with barcodeTracking=ENABLE`);
 
-  const item = await Item.findOne({ itemCode: barcode, barcodeTracking: "ENABLE" });
-  if (!item) return res.status(404).json({ message: "Item not found or barcode tracking disabled" });
+      const itemsWithBranchFlag = items.map((item) => {
+        const obj = {
+          ...item.toObject(),
+          belongsToBranch: true,
+        };
+        console.log("→ Item:", {
+          itemCode: obj.itemCode,
+          barcodeTracking: obj.barcodeTracking
+        });
+        return obj;
+      });
 
-  const receipt = await MaterialReceipt.create({
-    item: item._id,
-    branch,
-    quantity: 1,
-    receivedBy: user,
-    source: "Barcode Scan"
-  });
+      return res.status(200).json({
+        message: `Fetched ${itemsWithBranchFlag.length} items with barcode tracking ENABLED`,
+        count: itemsWithBranchFlag.length,
+        data: itemsWithBranchFlag,
+      });
+    }
 
-  res.status(201).json({ message: "Item received via barcode", data: receipt });
+    console.warn("⚠️ Method not allowed:", req.method);
+    return res.status(405).json({ message: "Method not allowed" });
+  } catch (error) {
+    console.error("❌ API error:", error);
+    return res.status(500).json({ message: "Server error", error: error.message });
+  }
 }

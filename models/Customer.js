@@ -9,10 +9,12 @@ const CustomerSchema = new mongoose.Schema(
     city: { type: String, required: true },
     location: { type: String, required: true },
     gst: { type: String, required: true },
-    gstn: { type: String, required: true },
+    // remove gstn completely or make it optional
+    // gstn: { type: String }, 
+
     user: { type: String, default: 'Tester' },
     ledger: { type: String, default: 'General Ledger' },
-    serialTrackingEnabled: { type: Boolean, default: false },
+    serialTrackingEnabled: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );

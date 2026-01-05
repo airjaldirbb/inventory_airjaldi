@@ -12,21 +12,34 @@ export default function ItemMasterGrid() {
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-const [editItem, setEditItem] = useState(null);
+  const [editItem, setEditItem] = useState(null);
   const [newItem, setNewItem] = useState({
     Name: "", Code: "", HSN_Code: "", Category_Name: "",
-    Group: "", BAR_CODE_TRACKING: "DISABLE"
+    Group: "", BAR_CODE_TRACKING: "DISABLE", stockUnit: "Pcs"
   });
-  const [editedRows, setEditedRows] = useState({});
 
   const groups = ["Consumption", "Fiber Equipments", "Wireless CPE", "Assets"];
   const barcodeOptions = ["ENABLE", "DISABLE"];
+  const stockUnits = ["Pcs", "Mtr", "Kg", "Litre", "Box"];
 
+  // Fetch items from API
   const fetchItems = async () => {
     try {
       const res = await axios.get("/api/item");
-      setItems(res.data.data || []);
-    } catch {
+      // Map API fields to DataGrid row fields
+      const mappedItems = res.data.data.map(item => ({
+        ...item,
+        Name: item.itemName || "",
+        Code: item.itemCode || "",
+        HSN_Code: item.hsnCode || "",
+        Category_Name: item.categoryName || "",
+        Group: item.underGroup || "",
+        BAR_CODE_TRACKING: item.barcodeTracking || "DISABLE",
+        stockUnit: item.stockUnit || "Pcs"
+      }));
+      setItems(mappedItems);
+    } catch (err) {
+      console.error(err);
       setSnackbar({ open: true, message: "Failed to fetch items", severity: "error" });
     }
   };
@@ -35,93 +48,89 @@ const [editItem, setEditItem] = useState(null);
     fetchItems();
   }, []);
 
+  // Add new item
   const handleAddItem = async () => {
     try {
       await axios.post("/api/item", newItem);
       setSnackbar({ open: true, message: "Item added", severity: "success" });
       setAddOpen(false);
-      setNewItem({ Name: "", Code: "", HSN_Code: "", Category_Name: "", Group: "", BAR_CODE_TRACKING: "DISABLE" });
+      setNewItem({ Name: "", Code: "", HSN_Code: "", Category_Name: "", Group: "", BAR_CODE_TRACKING: "DISABLE", stockUnit: "Pcs" });
       fetchItems();
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSnackbar({ open: true, message: "Failed to add item", severity: "error" });
     }
   };
 
-
-  const handleUpdateItem = async (id, rowOverride = null) => {
-  const row = rowOverride || items.find((item) => item._id === id);
-  if (!row) return;
-
-  const payload = {
-    _id: id,
-    itemName: row.itemName,
-    itemCode: row.itemCode,
-    hsnCode: row.hsnCode,
-    categoryName: row.categoryName,
-    underGroup: row.underGroup,
-    barcodeTracking: row.barcodeTracking,
+  // Update item
+  const handleUpdateItem = async (id, row) => {
+    try {
+      const payload = {
+        _id: id,
+        itemName: row.Name,
+        itemCode: row.Code,
+        hsnCode: row.HSN_Code,
+        categoryName: row.Category_Name,
+        underGroup: row.Group,
+        barcodeTracking: row.BAR_CODE_TRACKING,
+        stockUnit: row.stockUnit
+      };
+      await axios.put("/api/item", payload);
+      setSnackbar({ open: true, message: "Item updated", severity: "success" });
+      fetchItems();
+    } catch (err) {
+      console.error(err);
+      setSnackbar({ open: true, message: "Failed to update item", severity: "error" });
+    }
   };
 
-  try {
-    await axios.put("/api/item", payload);
-    setSnackbar({ open: true, message: "Item updated", severity: "success" });
-    fetchItems();
-  } catch {
-    setSnackbar({ open: true, message: "Failed to update item", severity: "error" });
-  }
-};
-
+  // Delete item
   const handleDeleteItem = async (id) => {
     try {
       await axios.delete("/api/item", { data: { _id: id } });
       setSnackbar({ open: true, message: "Item deleted", severity: "success" });
       fetchItems();
-    } catch {
+    } catch (err) {
+      console.error(err);
       setSnackbar({ open: true, message: "Failed to delete item", severity: "error" });
     }
   };
 
   const columns = [
-    { field: "itemName", headerName: "Name", width: 180, editable: true },
-    { field: "itemCode", headerName: "Code", width: 120, editable: true },
-    { field: "hsnCode", headerName: "HSN Code", width: 120, editable: true },
-    { field: "categoryName", headerName: "Category", width: 150, editable: true },
+    { field: "Name", headerName: "Name", width: 180, editable: true },
+    { field: "Code", headerName: "Code", width: 120, editable: true },
+    { field: "HSN_Code", headerName: "HSN Code", width: 120, editable: true },
+    { field: "stockUnit", headerName: "Stock Unit", width: 120, editable: true, type: "singleSelect", valueOptions: stockUnits },
+    { field: "Category_Name", headerName: "Category", width: 150, editable: true },
+    { field: "Group", headerName: "Group", width: 150, editable: true, type: "singleSelect", valueOptions: groups },
+    { field: "BAR_CODE_TRACKING", headerName: "Barcode", width: 120, editable: true, type: "singleSelect", valueOptions: barcodeOptions },
     {
-      field: "underGroup", headerName: "Group", width: 150, editable: true,
-      type: "singleSelect", valueOptions: groups
-    },
-    {
-      field: "barcodeTracking", headerName: "Barcode", width: 120, editable: true,
-      type: "singleSelect", valueOptions: barcodeOptions
-    },
-    {
-  field: "actions",
-  headerName: "Actions",
-  width: 220,
-  renderCell: (params) => (
-    <Stack direction="row" spacing={1}>
-      <Button
-        variant="outlined"
-        size="small"
-        onClick={() => {
-          setEditItem(params.row);
-          setEditOpen(true);
-        }}
-      >
-        Edit
-      </Button>
-  
-      <Button
-        variant="outlined"
-        color="error"
-        size="small"
-        onClick={() => handleDeleteItem(params.row._id)}
-      >
-        Delete
-      </Button>
-    </Stack>
-  )
-}
+      field: "actions",
+      headerName: "Actions",
+      width: 220,
+      renderCell: (params) => (
+        <Stack direction="row" spacing={1}>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setEditItem(params.row);
+              setEditOpen(true);
+            }}
+          >
+            Edit
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            size="small"
+            onClick={() => handleDeleteItem(params.row._id)}
+          >
+            Delete
+          </Button>
+        </Stack>
+      )
+    }
   ];
 
   return (
@@ -142,13 +151,8 @@ const [editItem, setEditItem] = useState(null);
           getRowId={(row) => row._id}
           pageSize={10}
           disableRowSelectionOnClick
-          processRowUpdate={(updatedRow, originalRow) => {
-            const hasChanged = Object.keys(updatedRow).some(
-              (key) => updatedRow[key] !== originalRow[key]
-            );
-            if (hasChanged) {
-              setEditedRows((prev) => ({ ...prev, [updatedRow._id]: updatedRow }));
-            }
+          processRowUpdate={(updatedRow) => {
+            handleUpdateItem(updatedRow._id, updatedRow);
             return updatedRow;
           }}
         />
@@ -168,25 +172,14 @@ const [editItem, setEditItem] = useState(null);
               onChange={(e) => setNewItem({ ...newItem, [field]: e.target.value })}
             />
           ))}
-          <TextField
-            margin="dense"
-            label="Group"
-            select
-            fullWidth
-            value={newItem.Group}
-            onChange={(e) => setNewItem({ ...newItem, Group: e.target.value })}
-          >
-            {groups.map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
+          <TextField margin="dense" label="Group" select fullWidth value={newItem.Group} onChange={(e) => setNewItem({ ...newItem, Group: e.target.value })}>
+            {groups.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
           </TextField>
-          <TextField
-            margin="dense"
-            label="Barcode Tracking"
-            select
-            fullWidth
-            value={newItem.BAR_CODE_TRACKING}
-            onChange={(e) => setNewItem({ ...newItem, BAR_CODE_TRACKING: e.target.value })}
-          >
-            {barcodeOptions.map((opt) => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+          <TextField margin="dense" label="Barcode Tracking" select fullWidth value={newItem.BAR_CODE_TRACKING} onChange={(e) => setNewItem({ ...newItem, BAR_CODE_TRACKING: e.target.value })}>
+            {barcodeOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+          </TextField>
+          <TextField margin="dense" label="Stock Unit" select fullWidth value={newItem.stockUnit} onChange={(e) => setNewItem({ ...newItem, stockUnit: e.target.value })}>
+            {stockUnits.map(unit => <MenuItem key={unit} value={unit}>{unit}</MenuItem>)}
           </TextField>
         </DialogContent>
         <DialogActions>
@@ -195,75 +188,31 @@ const [editItem, setEditItem] = useState(null);
         </DialogActions>
       </Dialog>
 
+      {/* Edit Item Dialog */}
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
-  <DialogTitle>Edit Item</DialogTitle>
-  <DialogContent>
-    {editItem && (
-      <>
-        <TextField
-          margin="dense"
-          label="Name"
-          fullWidth
-          value={editItem.itemName}
-          onChange={(e) => setEditItem({ ...editItem, itemName: e.target.value })}
-        />
-        <TextField
-          margin="dense"
-          label="Code"
-          fullWidth
-          value={editItem.itemCode}
-          onChange={(e) => setEditItem({ ...editItem, itemCode: e.target.value })}
-        />
-        <TextField
-          margin="dense"
-          label="HSN Code"
-          fullWidth
-          value={editItem.hsnCode}
-          onChange={(e) => setEditItem({ ...editItem, hsnCode: e.target.value })}
-        />
-        <TextField
-          margin="dense"
-          label="Category Name"
-          fullWidth
-          value={editItem.categoryName}
-          onChange={(e) => setEditItem({ ...editItem, categoryName: e.target.value })}
-        />
-        <TextField
-          margin="dense"
-          label="Group"
-          select
-          fullWidth
-          value={editItem.underGroup}
-          onChange={(e) => setEditItem({ ...editItem, underGroup: e.target.value })}
-        >
-          {groups.map((g) => <MenuItem key={g} value={g}>{g}</MenuItem>)}
-        </TextField>
-        <TextField
-          margin="dense"
-          label="Barcode Tracking"
-          select
-          fullWidth
-          value={editItem.barcodeTracking}
-          onChange={(e) => setEditItem({ ...editItem, barcodeTracking: e.target.value })}
-        >
-          {barcodeOptions.map((opt) => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-        </TextField>
-      </>
-    )}
-  </DialogContent>
-  <DialogActions>
-    <Button onClick={() => setEditOpen(false)}>Cancel</Button>
-    <Button
-      variant="contained"
-      onClick={() => {
-        handleUpdateItem(editItem._id, editItem);
-        setEditOpen(false);
-      }}
-    >
-      Save
-    </Button>
-  </DialogActions>
-</Dialog>
+        <DialogTitle>Edit Item</DialogTitle>
+        <DialogContent>
+          {editItem && ["Name","Code","HSN_Code","Category_Name","Group","BAR_CODE_TRACKING","stockUnit"].map(field => (
+            <TextField
+              key={field}
+              margin="dense"
+              label={field.replace("_"," ")}
+              fullWidth
+              select={["Group","BAR_CODE_TRACKING","stockUnit"].includes(field)}
+              value={editItem[field]}
+              onChange={(e) => setEditItem({ ...editItem, [field]: e.target.value })}
+            >
+              {field === "Group" && groups.map(g => <MenuItem key={g} value={g}>{g}</MenuItem>)}
+              {field === "BAR_CODE_TRACKING" && barcodeOptions.map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+              {field === "stockUnit" && stockUnits.map(u => <MenuItem key={u} value={u}>{u}</MenuItem>)}
+            </TextField>
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={() => { handleUpdateItem(editItem._id, editItem); setEditOpen(false); }}>Save</Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={snackbar.open}
@@ -271,11 +220,7 @@ const [editItem, setEditItem] = useState(null);
         onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
-        <MuiAlert
-          severity={snackbar.severity}
-          variant="filled"
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-        >
+        <MuiAlert severity={snackbar.severity} variant="filled" onClose={() => setSnackbar({ ...snackbar, open: false })}>
           {snackbar.message}
         </MuiAlert>
       </Snackbar>

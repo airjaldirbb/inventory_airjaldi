@@ -10,6 +10,31 @@ export default async function handler(req, res) {
   try {
     // ==================== GET ====================
     if (req.method === "GET") {
+      const { barcode } = req.query;
+
+      // 🔍 Barcode lookup mode
+      if (barcode) {
+        const item = await Item.findOne({
+          $or: [
+            { barcodeValue: barcode.trim() },
+            { itemCode: barcode.trim() }
+          ],
+          barcodeEnabled: true
+        });
+
+        if (!item) {
+          return res.status(404).json({
+            message: `Item not found or barcode not enabled: ${barcode}`
+          });
+        }
+
+        return res.status(200).json({
+          message: "Item fetched via barcode",
+          data: item
+        });
+      }
+
+      // 📦 Default: fetch all material issues
       const issues = await MaterialIssue.find()
         .populate("branch")
         .populate("items.itemId");
@@ -23,13 +48,7 @@ export default async function handler(req, res) {
 
     // ==================== POST ====================
     if (req.method === "POST") {
-      const {
-        branch,
-        issueDate,
-        issueNo,
-        issuedTo,
-        items = [],
-      } = req.body;
+      const { branch, issueDate, issueNo, issuedTo, items = [] } = req.body;
 
       if (!branch || !issueDate || !issueNo || items.length === 0) {
         return res.status(400).json({
@@ -116,6 +135,7 @@ export default async function handler(req, res) {
 
     // ==================== METHOD NOT ALLOWED ====================
     return res.status(405).json({ message: "Method not allowed" });
+
   } catch (error) {
     console.error("❌ API error:", error);
     return res.status(500).json({ message: "Server error", error: error.message });

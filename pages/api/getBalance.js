@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   }
 
   try {
-    console.log(`Fetching balance for userId: ${userId}`);
 
     const response = await fetch(`http://localhost:8001/api/v1/get_balance/${userId}`, {
       method: "GET",
@@ -18,13 +17,11 @@ export default async function handler(req, res) {
     });
 
     const text = await response.text(); // get raw response first
-    console.log("Raw API Response:", text);
 
     let data;
     try {
       data = JSON.parse(text); // parse JSON
     } catch (err) {
-      console.log("Failed to parse JSON, returning raw text");
       data = text;
     }
 

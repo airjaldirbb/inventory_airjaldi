@@ -51,7 +51,7 @@ const menuItems = [
         icon: <InventoryIcon />,
         path: "/inventory",
         subMenu: [
-            { label: "Item Master", path: "/ItemMaster" },
+            // { label: "Item Master", path: "/ItemMaster" },
              { label: "Item List", path: "/ItemList" },
             { label: "Material Issue", path: "/MaterialIssue" },
             { label: "Material Receipt", path: "/MaterialReceipt" },
@@ -68,7 +68,7 @@ const menuItems = [
             { label: "Trial Balance", path: "/TrailBalance" },
             { label: "Customer Trial", path: "/CustomerTrial" },
             { label: "Vendor Trial", path: "/VendorTrial" },
-            { label: "Stock Trial", path: "/StockTrial" },
+            { label: "Sales Invoice Register", path: "/salesInvoiceRegister" },
         ],
     },
 ];

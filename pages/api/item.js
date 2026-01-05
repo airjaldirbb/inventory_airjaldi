@@ -7,47 +7,53 @@ export default async function handler(req, res) {
   await dbConnect();
 
   try {
+    // ENUMS FOR FRONTEND
+    const enums = {
+      underGroup: Item.schema.path("underGroup").enumValues,
+      stockUnit: Item.schema.path("stockUnit").enumValues,
+      gstClassification: Item.schema.path("gstClassification").enumValues,
+      barcodeTracking: Item.schema.path("barcodeTracking").enumValues,
+    };
+
     // ==================== GET ====================
     if (req.method === "GET") {
-      const { branch } = req.query;
+      const { branch, barcode } = req.query;
 
-      const allItems = await Item.find().populate("branch");
+      // If barcode is provided → fetch that item only
+      if (barcode && barcode.trim() !== "") {
+        const item = await Item.findOne({
+          $or: [{ barcodeValue: barcode.trim() }, { itemCode: barcode.trim() }],
+        }).populate("branch");
 
-      // const itemsWithBranchFlag = allItems.map((item) => {
-      //   const branchesArray = item.branch || [];
-      //   return {
-      //     ...item.toObject(),
-      //     belongsToBranch:
-      //       branch && mongoose.Types.ObjectId.isValid(branch)
-      //         ? branchesArray.some((b) => b._id.toString() === branch)
-      //         : true,
-      //   };
-      // });
-      const itemsWithBranchFlag = allItems.map((item) => {
-        const belongsToBranch = branch && mongoose.Types.ObjectId.isValid(branch)
-          ? item.branch.some((b) => b._id.toString() === branch)
-          : true;
+        if (!item) {
+          return res.status(404).json({
+            message: `Item not found for barcode/code: ${barcode}`,
+          });
+        }
 
-        return {
-          ...item.toObject(),
-          belongsToBranch
-        };
-      });
+        return res.status(200).json({
+          message: "Item fetched via barcode/code",
+          data: item,
+          enums,
+        });
+      }
 
-      const schemaPaths = Item.schema.paths;
-      const enums = {
-        underGroup: schemaPaths.underGroup?.options?.enum || [],
-        stockUnit: schemaPaths.stockUnit?.options?.enum || [],
-        gstClassification: schemaPaths.gstClassification?.options?.enum || [],
-        barcodeTracking: schemaPaths.barcodeTracking?.options?.enum || [],
-      };
+      // Fetch all items, optional branch filtering
+      let allItems = await Item.find({}).populate("branch");
+
+      if (branch && mongoose.Types.ObjectId.isValid(branch)) {
+        allItems = allItems.map((item) => {
+          const belongsToBranch = item.branch.some(
+            (b) => b._id.toString() === branch
+          );
+          return { ...item.toObject(), belongsToBranch };
+        });
+      }
 
       return res.status(200).json({
-        message: branch
-          ? `Fetched ${allItems.length} items for branch ${branch}`
-          : `Fetched all ${allItems.length} items`,
+        message: `Fetched ${allItems.length} items`,
         count: allItems.length,
-        data: itemsWithBranchFlag,
+        data: allItems,
         enums,
       });
     }
@@ -57,12 +63,21 @@ export default async function handler(req, res) {
       const items = Array.isArray(req.body) ? req.body : [req.body];
       const insertedItems = [];
 
-      for (let i = 0; i < items.length; i++) {
+      for (const [i, item] of items.entries()) {
         const {
-          Name, Code, HSN_Code, Category_Name, Group,
-          BAR_CODE_TRACKING, branch,
-          MRP, MIN_RATE, RATE, PACK
-        } = items[i];
+          Name,
+          Code,
+          HSN_Code,
+          Category_Name,
+          Group,
+          BAR_CODE_TRACKING,
+          branch,
+          MRP,
+          MIN_RATE,
+          RATE,
+          PACK,
+          stockUnit,
+        } = item;
 
         if (!Name || !Code || !Group) {
           return res.status(400).json({
@@ -70,32 +85,46 @@ export default async function handler(req, res) {
           });
         }
 
+        // Validate branches
         let branchIds = [];
         if (branch) {
           branchIds = Array.isArray(branch) ? branch : [branch];
-          for (let id of branchIds) {
+          for (const id of branchIds) {
             if (!mongoose.Types.ObjectId.isValid(id)) {
               return res.status(400).json({ message: `Invalid branch ID: ${id}` });
             }
-            const branchExists = await Branch.findById(id);
-            if (!branchExists) {
+            const exists = await Branch.findById(id);
+            if (!exists) {
               return res.status(404).json({ message: `Branch not found: ${id}` });
             }
           }
         }
 
+        // Validate stockUnit
+        const validStockUnits = enums.stockUnit;
+        const finalStockUnit =
+          stockUnit && validStockUnits.includes(stockUnit) ? stockUnit : "Pcs";
+
+        // Validate barcodeTracking
+        const barcodeTracking =
+          (BAR_CODE_TRACKING || "").toUpperCase() === "ENABLE"
+            ? "ENABLE"
+            : "DISABLE";
+
         const newItem = await Item.create({
           itemName: Name,
           itemCode: Code,
+          barcodeValue: Code,
+          barcodeTracking,
           hsnCode: HSN_Code || "Default",
           categoryName: Category_Name || "",
           underGroup: Group,
-          barcodeTracking: BAR_CODE_TRACKING || "DISABLE",
           branch: branchIds,
           mrp: MRP || 0,
           minRate: MIN_RATE || 0,
           rate: RATE || 0,
           pack: PACK || "",
+          stockUnit: finalStockUnit,
         });
 
         await newItem.populate("branch");
@@ -105,6 +134,7 @@ export default async function handler(req, res) {
       return res.status(201).json({
         message: "Items created successfully",
         data: insertedItems,
+        enums,
       });
     }
 
@@ -121,16 +151,24 @@ export default async function handler(req, res) {
           ? updateData.branch
           : [updateData.branch];
 
-        for (let id of branchIds) {
+        for (const id of branchIds) {
           if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: `Invalid branch ID: ${id}` });
           }
-          const branchExists = await Branch.findById(id);
-          if (!branchExists) {
+          const exists = await Branch.findById(id);
+          if (!exists) {
             return res.status(404).json({ message: `Branch not found: ${id}` });
           }
         }
+
         updateData.branch = branchIds;
+      }
+
+      if (updateData.stockUnit) {
+        const validStockUnits = enums.stockUnit;
+        if (!validStockUnits.includes(updateData.stockUnit)) {
+          updateData.stockUnit = "Pcs";
+        }
       }
 
       const updatedItem = await Item.findByIdAndUpdate(_id, updateData, {
@@ -167,7 +205,6 @@ export default async function handler(req, res) {
       });
     }
 
-    // ==================== METHOD NOT ALLOWED ====================
     return res.status(405).json({ message: "Method not allowed" });
   } catch (error) {
     console.error("❌ API error:", error);

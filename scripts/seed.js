@@ -14,7 +14,6 @@ async function seed() {
     role: 'admin'
   });
 
-  console.log('User seeded successfully');
   mongoose.disconnect();
 }
 

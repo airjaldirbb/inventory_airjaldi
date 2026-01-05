@@ -3,42 +3,65 @@
 import { useState, useRef, useEffect } from "react";
 
 export default function BarcodeForm() {
-  const [items, setItems] = useState({}); // { barcode: { name, quantity } }
+  const [items, setItems] = useState({}); // { barcode: { name, quantity, rate, itemId } }
   const inputRef = useRef(null);
 
-  // Keep input focused for continuous scanning
   useEffect(() => {
     inputRef.current.focus();
   }, [items]);
 
-  const handleScan = (e) => {
+  const handleScan = async (e) => {
     if (e.key === "Enter") {
       const barcode = e.target.value.trim();
       if (!barcode) return;
 
-      setItems((prevItems) => {
-        // Check if barcode already exists
-        const existingItem = prevItems[barcode];
+      try {
+        // 🔹 Call backend API
+        const res = await fetch("/api/barcodeScan", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ barcode }),
+        });
 
-        if (existingItem) {
-          // Increment quantity
-          return {
-            ...prevItems,
-            [barcode]: {
-              ...existingItem,
-              quantity: existingItem.quantity + 1,
-            },
-          };
-        } else {
-          // New item, set quantity to 1
-          return {
-            ...prevItems,
-            [barcode]: { name: `Item ${barcode}`, quantity: 1 },
-          };
+        if (!res.ok) {
+          const err = await res.json();
+          alert(err.message);
+          e.target.value = "";
+          return;
         }
-      });
 
-      e.target.value = ""; // Clear input for next scan
+        const { data } = await res.json();
+
+        setItems((prevItems) => {
+          const existingItem = prevItems[barcode];
+
+          if (existingItem) {
+            return {
+              ...prevItems,
+              [barcode]: {
+                ...existingItem,
+                quantity: existingItem.quantity + 1,
+              },
+            };
+          } else {
+            return {
+              ...prevItems,
+              [barcode]: {
+                name: data.itemName,
+                quantity: 1,
+                rate: data.rate,
+                itemId: data._id,
+                unit: data.stockUnit,
+              },
+            };
+          }
+        });
+
+        e.target.value = ""; // clear input
+      } catch (error) {
+        console.error("Scan error:", error);
+        alert("Error scanning barcode");
+      }
     }
   };
 
@@ -61,6 +84,7 @@ export default function BarcodeForm() {
             <th style={{ border: "1px solid black", padding: "5px" }}>Barcode</th>
             <th style={{ border: "1px solid black", padding: "5px" }}>Name</th>
             <th style={{ border: "1px solid black", padding: "5px" }}>Quantity</th>
+            <th style={{ border: "1px solid black", padding: "5px" }}>Rate</th>
           </tr>
         </thead>
         <tbody>
@@ -69,6 +93,7 @@ export default function BarcodeForm() {
               <td style={{ border: "1px solid black", padding: "5px" }}>{barcode}</td>
               <td style={{ border: "1px solid black", padding: "5px" }}>{item.name}</td>
               <td style={{ border: "1px solid black", padding: "5px" }}>{item.quantity}</td>
+              <td style={{ border: "1px solid black", padding: "5px" }}>{item.rate}</td>
             </tr>
           ))}
         </tbody>

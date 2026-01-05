@@ -117,14 +117,10 @@ export default function StockAdjustmentForm() {
     <Box sx={{ p: 4 }}>
       <Typography variant="h4" gutterBottom>Stock Adjustment</Typography>
       <Box component="form" onSubmit={handleSubmit} sx={{ mb: 4, display: "grid", gap: 2 }}>
-        <FormControl fullWidth>
+        {/* <FormControl fullWidth>
           <InputLabel>Branch</InputLabel>
-          <Select name="branch" value={formData.branch} onChange={handleChange} required>
-            {(branches || []).map((b) => (
-              <MenuItem key={b._id} value={b._id}>{b.name}</MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+         
+        </FormControl> */}
 
         <FormControl fullWidth>
           <InputLabel id="branch-label">Branch</InputLabel>
