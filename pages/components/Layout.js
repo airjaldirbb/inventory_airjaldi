@@ -68,7 +68,7 @@ const menuItems = [
             { label: "Trial Balance", path: "/TrailBalance" },
             { label: "Customer Trial", path: "/CustomerTrial" },
             { label: "Vendor Trial", path: "/VendorTrial" },
-            { label: "Sales Invoice Register", path: "/salesInvoiceRegister" },
+            { label: "Stock Trail", path: "/StockTrail" },
         ],
     },
 ];

@@ -75,11 +75,6 @@ export default function SalesInvoice() {
     setSnackbar({ ...snackbar, open: false });
   };
 
-  const unitsList = [
-    "BAGS", "BALE", "BUNDLES", "BUCKLES", "BOX", "BOTTLES",
-    "BUNCHES", "CANS", "CUBIC METER", "CUBIC CENTIMETER", "CENTIMETER",
-    "CARTONS", "DOZEN", "DRUM", "GRAMS", "GROSS", "GROSS YARDS", "KILOGRAMS"
-  ];
 
   // ================= LOAD DATA =================
   useEffect(() => {

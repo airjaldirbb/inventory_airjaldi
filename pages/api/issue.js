@@ -64,35 +64,27 @@ export default async function handler(req, res) {
       if (!branchExists) {
         return res.status(404).json({ message: `Branch not found: ${branch}` });
       }
+const enrichedItems = await Promise.all(items.map(async (item) => {
+  const { itemId, qty, unit, rate, remarks } = item;
 
-      const enrichedItems = await Promise.all(items.map(async (item, i) => {
-        const { itemId, qty, unit, rate, remarks } = item;
+  const itemDetails = await Item.findById(itemId);
+  if (!itemDetails) throw new Error(`Item not found: ${itemId}`);
 
-        if (!itemId || !qty) {
-          throw new Error(`Missing itemId or qty in item ${i + 1}`);
-        }
+  const finalRate = rate ?? itemDetails.rate ?? 0;
+  const amount = qty * finalRate;
 
-        if (!mongoose.Types.ObjectId.isValid(itemId)) {
-          throw new Error(`Invalid item ID: ${itemId}`);
-        }
+  return {
+    itemId,
+    itemName: itemDetails.itemName, // ✅ save item name here
+    qty,
+    unit: unit || itemDetails.stockUnit || "pcs",
+    rate: finalRate,
+    amount,
+    remarks: remarks || "",
+  };
+}));
 
-        const itemDetails = await Item.findById(itemId);
-        if (!itemDetails) {
-          throw new Error(`Item not found: ${itemId}`);
-        }
 
-        const finalRate = rate ?? itemDetails.rate ?? 0;
-        const amount = qty * finalRate;
-
-        return {
-          itemId,
-          qty,
-          unit: unit || itemDetails.stockUnit || "pcs",
-          rate: finalRate,
-          amount,
-          remarks: remarks || "",
-        };
-      }));
 
       const totalAmount = enrichedItems.reduce((sum, item) => sum + item.amount, 0);
 

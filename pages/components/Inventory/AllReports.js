@@ -97,7 +97,7 @@ export default function AllReports({ addTab }) {
                 <Link
                   component="button"
                   underline="hover"
-                  onClick={() => addTab("materialIssue")}
+                  onClick={() => addTab("materialIssueRegister")}
                 >
                   Material Issue
                 </Link>

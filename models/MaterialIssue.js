@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 
 const issueItemSchema = new mongoose.Schema({
   itemId: { type: mongoose.Schema.Types.ObjectId, ref: "Item", required: true },
+  itemName: { type: String, required: true }, // ✅ store item name
   qty: { type: Number, required: true },
   unit: { type: String },
   rate: { type: Number },

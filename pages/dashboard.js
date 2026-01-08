@@ -34,6 +34,8 @@ import PieCharts from "./PieCharts";
 import BardCharts from "./BardCharts";
 import SalesInvoiceRegister from "./components/Inventory/salesInvoiceRegister";
 import PurchaseInvoiceRegisterGrid from "./components/Inventory/purchaseInvoiceRegister";
+import StockTrail from "./components/Inventory/StockTrial";
+import MaterialIssueRegister from "./components/Inventory/MaterialIssueRegister";
 /* =====================================================
    🔹 TAB REGISTRY (SINGLE SOURCE OF TRUTH)
 ===================================================== */
@@ -44,7 +46,7 @@ const TAB_REGISTRY = {
   materialIssue: { label: "Material Issue", component: <MaterialIssue /> },
   materialReceipt: { label: "Material Receipt", component: <MaterialReceipt /> },
   stockManagement: { label: "Stock Management", component: <StockManagment /> },
-  salesInvoice: { label: "Sales Invoice", component: <SalesInvoice /> }, 
+  salesInvoice: { label: "Sales Invoice", component: <SalesInvoice /> },
   customer: { label: "Customer", component: <Customer /> },
   paymentReceipt: { label: "Payment Receipt", component: <PaymentReceipt /> },
   vendor: { label: "Vendor", component: <Vendor /> },
@@ -53,16 +55,22 @@ const TAB_REGISTRY = {
   billPayment: { label: "Bill Payment", component: <BillPayment /> },
   customerTrial: { label: "Customer Trial", component: <CustomerTrial /> },
   vendorTrial: { label: "Vendor Trial", component: <VendorTrial /> },
-  salesInvoiceRegister: { label: "Sales Invoice Register", component: <SalesInvoiceRegister /> }, 
+  salesInvoiceRegister: { label: "Sales Invoice Register", component: <SalesInvoiceRegister /> },
 
-allReports: {
-  label: "All Reports",
-  render: (addTab) => <AllReports addTab={addTab} />,
-},
-purchaseInvoiceRegister: {
-  label: "Purchase Invoice Register",
-  component: <PurchaseInvoiceRegisterGrid />,
-},
+  stockTrail: { label: "Stock Trial", component: <StockTrail /> },
+
+  allReports: {
+    label: "All Reports",
+    render: (addTab) => <AllReports addTab={addTab} />,
+  },
+  purchaseInvoiceRegister: {
+    label: "Purchase Invoice Register",
+    component: <PurchaseInvoiceRegisterGrid />,
+  },
+   materialIssueRegister: {
+    label: "Material Issue Register",
+    component: <MaterialIssueRegister />,
+  },
 
 
 };
@@ -145,7 +153,8 @@ export default function Dashboard() {
           "/AllReports": "allReports",
           "/CustomerTrial": "customerTrial",
           "/VendorTrial": "vendorTrial",
-          "/salesInvoiceRegister": "salesInvoiceRegister",
+          "/StockTrail": "stockTrail",
+          
         };
         if (map[menuItem.path]) addTab(map[menuItem.path]);
       }}
@@ -181,11 +190,11 @@ export default function Dashboard() {
           ))}
         </Tabs>
 
-     <Box sx={{ mt: 2 }}>
-  {TAB_REGISTRY[activeTab]?.render
-    ? TAB_REGISTRY[activeTab].render(addTab)
-    : TAB_REGISTRY[activeTab]?.component}
-</Box>
+        <Box sx={{ mt: 2 }}>
+          {TAB_REGISTRY[activeTab]?.render
+            ? TAB_REGISTRY[activeTab].render(addTab)
+            : TAB_REGISTRY[activeTab]?.component}
+        </Box>
       </Box>
     </Layout>
   );

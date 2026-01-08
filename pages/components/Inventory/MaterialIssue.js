@@ -27,6 +27,11 @@ export default function MaterialIssue() {
   const [rows, setRows] = useState([]);
   const [issues, setIssues] = useState([]);
   const [totalAmount, setTotalAmount] = useState(0);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [quantity, setQuantity] = useState(1);
+  const [rate, setRate] = useState(0);
+  const [amount, setAmount] = useState(0);
+  const [selectedUnit, setSelectedUnit] = useState("");
 
   const [addOpen, setAddOpen] = useState(false);
   const [newRow, setNewRow] = useState({
@@ -162,6 +167,15 @@ export default function MaterialIssue() {
     { field: "amount", headerName: "Amount (₹)", width: 150 },
     { field: "remarks", headerName: "Remarks", width: 180 },
   ];
+    const clearItemDialog = () => {
+    setSelectedItem(null);
+    setQuantity(1);
+    setRate(0);
+    setAmount(0);
+    setSelectedUnit("");
+    setFormState(prev => ({ ...prev, tax: "" }));
+  };
+
 
   return (
     <Box sx={{ p: 3 }}>
@@ -235,33 +249,42 @@ export default function MaterialIssue() {
       <Dialog open={addOpen} onClose={() => setAddOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Add Item</DialogTitle>
         <DialogContent>
-          <TextField
-            margin="dense"
-            label="Item"
-            fullWidth
-            select
-            value={newRow.item}
-            onChange={(e) => setNewRow({ ...newRow, item: e.target.value })}
-          >
-            {items.map((i) => (
-              <MenuItem key={i._id} value={i._id}>
-                {i.itemName} ({i.itemCode})
-              </MenuItem>
-            ))}
-          </TextField>
 
-          <TextField
-            margin="dense"
-            label="Unit"
-            select
-            fullWidth
-            value={newRow.unit}
-            onChange={(e) => setNewRow({ ...newRow, unit: e.target.value })}
-          >
-            {unitsList.map((u) => (
-              <MenuItem key={u} value={u}>{u}</MenuItem>
-            ))}
-          </TextField>
+               <TextField
+                        select
+                        fullWidth
+                        label="Select Item"
+                        value={selectedItem?._id || ""}
+                        onChange={(e) => {
+                          const item = items.find(i => i._id === e.target.value);
+          
+                          if (!item) {
+                            clearItemDialog();
+                            return;
+                          }
+          
+                          setSelectedItem(item);
+                          setRate(item.rate || 0);
+                          setQuantity(1);
+                          setSelectedUnit(item.stockUnit || "Pcs");
+                        }}
+                        sx={{ mt: 2 }}
+                      >
+                        {items.map(i => (
+                          <MenuItem key={i._id} value={i._id}>
+                            {i.itemName}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+          
+                      <TextField
+                        fullWidth
+                        label="Unit"
+                        value={selectedUnit}
+                        InputProps={{ readOnly: true }}
+                        sx={{ mt: 2 }}
+                      />
+     
 
           <TextField
             margin="dense"
