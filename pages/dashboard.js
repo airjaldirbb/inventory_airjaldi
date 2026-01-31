@@ -36,6 +36,7 @@ import SalesInvoiceRegister from "./components/Inventory/salesInvoiceRegister";
 import PurchaseInvoiceRegisterGrid from "./components/Inventory/purchaseInvoiceRegister";
 import StockTrail from "./components/Inventory/StockTrial";
 import MaterialIssueRegister from "./components/Inventory/MaterialIssueRegister";
+import MaterialReceiptRegister from "./components/Inventory/MaterialReceiptRegister";
 /* =====================================================
    🔹 TAB REGISTRY (SINGLE SOURCE OF TRUTH)
 ===================================================== */
@@ -56,9 +57,7 @@ const TAB_REGISTRY = {
   customerTrial: { label: "Customer Trial", component: <CustomerTrial /> },
   vendorTrial: { label: "Vendor Trial", component: <VendorTrial /> },
   salesInvoiceRegister: { label: "Sales Invoice Register", component: <SalesInvoiceRegister /> },
-
   stockTrail: { label: "Stock Trial", component: <StockTrail /> },
-
   allReports: {
     label: "All Reports",
     render: (addTab) => <AllReports addTab={addTab} />,
@@ -67,12 +66,11 @@ const TAB_REGISTRY = {
     label: "Purchase Invoice Register",
     component: <PurchaseInvoiceRegisterGrid />,
   },
-   materialIssueRegister: {
+  materialIssueRegister: {
     label: "Material Issue Register",
     component: <MaterialIssueRegister />,
   },
-
-
+  materialreceiptRegister: { label: "Material Receipt Register", component: <MaterialReceiptRegister /> },
 };
 
 /* =====================================================
@@ -154,7 +152,7 @@ export default function Dashboard() {
           "/CustomerTrial": "customerTrial",
           "/VendorTrial": "vendorTrial",
           "/StockTrail": "stockTrail",
-          
+
         };
         if (map[menuItem.path]) addTab(map[menuItem.path]);
       }}

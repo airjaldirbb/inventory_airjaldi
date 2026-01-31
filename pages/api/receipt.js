@@ -1,3 +1,4 @@
+// /pages/api/receipt.js
 import mongoose from "mongoose";
 import dbConnect from "@/lib/db";
 import MaterialReceipt from "@/models/MaterialReceipt";
@@ -10,6 +11,30 @@ export default async function handler(req, res) {
   try {
     // ==================== GET ====================
     if (req.method === "GET") {
+      const { barcode } = req.query;
+
+      if (barcode) {
+        const item = await Item.findOne({
+          $or: [
+            { barcodeValue: barcode.trim() },
+            { itemCode: barcode.trim() }
+          ],
+          barcodeEnabled: true
+        });
+
+        if (!item) {
+          return res.status(404).json({
+            message: `Item not found or barcode not enabled: ${barcode}`
+          });
+        }
+
+        return res.status(200).json({
+          message: "Item fetched via barcode",
+          data: item
+        });
+      }
+
+      // Default: fetch all material receipts
       const receipts = await MaterialReceipt.find()
         .populate("branch")
         .populate("items.itemId");
@@ -23,10 +48,12 @@ export default async function handler(req, res) {
 
     // ==================== POST ====================
     if (req.method === "POST") {
-      const { branch, receiptDate, receiptNo, party, items = [], barcode, quantity = 1 } = req.body;
+      const { branch, receiptDate, receiptNo, party, items = [] } = req.body;
 
-      if (!branch || !receiptDate || !receiptNo) {
-        return res.status(400).json({ message: "Missing required fields: branch, receiptDate, receiptNo" });
+      if (!branch || !receiptDate || !receiptNo || items.length === 0) {
+        return res.status(400).json({
+          message: "Missing required fields: branch, receiptDate, receiptNo, items",
+        });
       }
 
       if (!mongoose.Types.ObjectId.isValid(branch)) {
@@ -38,59 +65,26 @@ export default async function handler(req, res) {
         return res.status(404).json({ message: `Branch not found: ${branch}` });
       }
 
-      let enrichedItems = [];
+      // Enrich items
+      const enrichedItems = await Promise.all(items.map(async (item) => {
+        const { itemId, qty, unit, rate, remarks } = item;
 
-      // ----------- Barcode scanning logic -----------
-      if (barcode) {
-        const itemDetails = await Item.findOne({ itemCode: barcode, barcodeTracking: "ENABLE" });
-        if (!itemDetails) {
-          return res.status(404).json({ message: "Item not found or barcode tracking disabled" });
-        }
+        const itemDetails = await Item.findById(itemId);
+        if (!itemDetails) throw new Error(`Item not found: ${itemId}`);
 
-        const rate = itemDetails.rate ?? 0;
-        const amount = rate * quantity;
+        const finalRate = rate ?? itemDetails.rate ?? 0;
+        const amount = qty * finalRate;
 
-        enrichedItems.push({
-          itemId: itemDetails._id,
-          qty: quantity,
-          unit: itemDetails.stockUnit || "pcs",
-          rate,
+        return {
+          itemId,
+          itemName: itemDetails.itemName, // save item name here
+          qty,
+          unit: unit || itemDetails.stockUnit || "pcs",
+          rate: finalRate,
           amount,
-          remarks: "Scanned via barcode",
-        });
-      } else if (items.length > 0) {
-        // ----------- Normal items array logic -----------
-        enrichedItems = await Promise.all(items.map(async (item, i) => {
-          const { itemId, qty, unit, rate, remarks } = item;
-
-          if (!itemId || !qty) {
-            throw new Error(`Missing itemId or qty in item ${i + 1}`);
-          }
-
-          if (!mongoose.Types.ObjectId.isValid(itemId)) {
-            throw new Error(`Invalid item ID: ${itemId}`);
-          }
-
-          const itemDetails = await Item.findById(itemId);
-          if (!itemDetails) {
-            throw new Error(`Item not found: ${itemId}`);
-          }
-
-          const finalRate = rate ?? itemDetails.rate ?? 0;
-          const amount = qty * finalRate;
-
-          return {
-            itemId,
-            qty,
-            unit: unit || itemDetails.stockUnit || "pcs",
-            rate: finalRate,
-            amount,
-            remarks: remarks || "",
-          };
-        }));
-      } else {
-        return res.status(400).json({ message: "No items provided or barcode missing" });
-      }
+          remarks: remarks || "",
+        };
+      }));
 
       const totalAmount = enrichedItems.reduce((sum, item) => sum + item.amount, 0);
 
@@ -131,9 +125,11 @@ export default async function handler(req, res) {
       });
     }
 
+    // ==================== METHOD NOT ALLOWED ====================
     return res.status(405).json({ message: "Method not allowed" });
+
   } catch (error) {
-    console.error("❌ API error:", error);
+    console.error("❌ Material Receipt API error:", error);
     return res.status(500).json({ message: "Server error", error: error.message });
   }
 }

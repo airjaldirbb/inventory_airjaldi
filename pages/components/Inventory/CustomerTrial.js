@@ -1,6 +1,8 @@
 import { DataGrid } from "@mui/x-data-grid";
+import { Button } from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 export default function CustomerTrial() {
   const [rows, setRows] = useState([]);
@@ -27,6 +29,21 @@ export default function CustomerTrial() {
 
   return (
     <div style={{ height: 500, width: "100%" }}>
+        <Button
+        variant="contained"
+        color="success"
+        sx={{ mb: 2 }}
+        onClick={() =>
+          exportToExcel({
+            fileName: "customer-trial.xlsx",
+            sheetName: "Customer Trial",
+            columns,
+            rows,
+          })
+        }
+      >
+        Export Excel
+      </Button>
       <DataGrid
         rows={rows}
         columns={columns}

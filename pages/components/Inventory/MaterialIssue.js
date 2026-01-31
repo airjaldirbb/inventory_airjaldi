@@ -49,11 +49,6 @@ export default function MaterialIssue() {
     severity: "success",
   });
 
-  const unitsList = [
-    "BAGS","BALE","BUNDLES","BUCKLES","BILLIONS OF UNITS","BOX","BOTTLES",
-    "BUNCHES","CANS","CUBIC METER","CUBIC CENTIMETER","CENTIMETER","CARTONS",
-    "DOZEN","DRUM","GRAMS","GROSS","GROSS YARDS","KILOGRAMS"
-  ];
 
   // Fetch branches
   useEffect(() => {
@@ -145,7 +140,7 @@ export default function MaterialIssue() {
         })),
       };
 
-      const res = await axios.post("/api/issue", payload);
+
       setSnackbar({ open: true, message: "Material issue saved successfully!", severity: "success" });
 
       // Refresh issues

@@ -89,7 +89,7 @@ export default function AllReports({ addTab }) {
                 <Link
                   component="button"
                   underline="hover"
-                  onClick={() => addTab("materialReceipt")}
+                  onClick={() => addTab("materialreceiptRegister")}
                 >
                   Material Receipt
                 </Link>
