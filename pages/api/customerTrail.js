@@ -2,6 +2,7 @@ import dbConnect from "@/lib/db";
 import Customer from "@/models/Customer";
 import SalesInvoice from "@/models/SalesInvoice";
 import PaymentReceipt from "@/models/PaymentReceipt";
+import CustomerTrial from "@/models/CustomerTrial";
 
 export default async function handler(req, res) {
   await dbConnect();
@@ -25,7 +26,7 @@ export default async function handler(req, res) {
       const openingBalance = cust.openingBalance || 0;
       const debit = debitObj ? debitObj.totalDebit : 0;
       const credit = creditObj ? creditObj.totalCredit : 0;
-      const closing = openingBalance + debit - credit;
+      const closingBalance = openingBalance + debit - credit;
 
       return {
         id: cust._id,
@@ -34,12 +35,23 @@ export default async function handler(req, res) {
         openingBalance,
         debit,
         credit,
-        closingBalance: closing,
-        balanceType: closing > 0 ? "Dr" : closing < 0 ? "Cr" : "Balanced",
+        closingBalance: Math.abs(closingBalance),
+        balanceType: closingBalance > 0 ? "Dr" : closingBalance < 0 ? "Cr" : "Balanced",
       };
     });
 
-    res.status(200).json({ data: trialData });
+    const totalClosingBalance = trialData.reduce((sum, t) => sum + t.closingBalance, 0);
+
+    // Optional: save to CustomerTrial collection
+    await Promise.all(trialData.map(t =>
+      CustomerTrial.findOneAndUpdate(
+        { customer: t.id },
+        { ...t, snapshotDate: new Date() },
+        { upsert: true, new: true }
+      )
+    ));
+
+    res.status(200).json({ data: trialData, totalClosingBalance });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: error.message });

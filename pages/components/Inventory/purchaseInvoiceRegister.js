@@ -6,6 +6,7 @@ import axios from "axios";
 const PurchaseInvoiceRegisterGrid = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0); // ✅ Add state for total
 
   useEffect(() => {
     const fetchData = async () => {
@@ -13,9 +14,8 @@ const PurchaseInvoiceRegisterGrid = () => {
         const res = await axios.get("/api/purchaseInvoiceRegister");
         const bills = res.data.data || [];
 
-        // Flatten API response for DataGrid
         const rowsData = bills.map((bill, index) => ({
-          id: bill.id || index, // unique ID
+          id: bill.id || index,
           invoiceNo: bill.invoiceNo || "",
           invoiceDate: new Date(bill.invoiceDate || bill.date).toLocaleDateString(),
           vendor: bill.vendor?.name || "N/A",
@@ -24,14 +24,19 @@ const PurchaseInvoiceRegisterGrid = () => {
           qty: Number(bill.qty ?? 0),
           uom: bill.uom || "N/A",
           rate: Number(bill.rate ?? 0),
-          taxPercent: Number(bill.taxPercent ?? 0), // <-- THIS WILL NOW WORK
-            taxPercent: bill.taxPercent != null ? bill.taxPercent : 0, // number
+          taxPercent: Number(bill.taxPercent ?? 0),
           taxAmount: Number(bill.taxAmount ?? 0),
           invoiceAmount: Number(bill.invoiceAmount ?? 0),
         }));
 
-        console.log("RowsData:", rowsData); // check values here
+        // ✅ Calculate total amount
+        const totalAmount = rowsData.reduce(
+          (sum, row) => sum + (row.invoiceAmount || 0),
+          0
+        );
+
         setRows(rowsData);
+        setTotal(totalAmount); // ✅ Save total
       } catch (error) {
         console.error("Error fetching purchase invoice register:", error);
       } finally {
@@ -51,32 +56,28 @@ const PurchaseInvoiceRegisterGrid = () => {
     { field: "qty", headerName: "Qty", width: 80, type: "number" },
     { field: "uom", headerName: "UOM", width: 80 },
     { field: "rate", headerName: "Rate", width: 110, type: "number" },
-    {
-      field: "taxPercent",
-      headerName: "Tax %",
-      width: 100,
-      type: "number",
-      // valueFormatter: (params) => `${params.value}%`, // display 5 as "5%"
-    },
+    { field: "taxPercent", headerName: "Tax %", width: 100, type: "number" },
     { field: "taxAmount", headerName: "Tax Amt", width: 110, type: "number" },
     { field: "invoiceAmount", headerName: "Invoice Amount", width: 150, type: "number" },
   ];
 
   return (
-    <Box sx={{ height: 520, width: "100%" }}>
+    <Box sx={{ height: 500, width: "100%" }}>
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
-          <CircularProgress />
-        </Box>
+        <CircularProgress />
       ) : (
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
-          disableRowSelectionOnClick
-          autoHeight
-        />
+        <>
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            pageSize={10}
+            rowsPerPageOptions={[10, 25, 50]}
+            disableRowSelectionOnClick
+          />
+          <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", mr: 2 }}>
+            <strong>Total Amount: </strong>&nbsp; {total.toLocaleString()}
+          </Box>
+        </>
       )}
     </Box>
   );

@@ -50,6 +50,12 @@ const salesInvoiceItemSchema = new mongoose.Schema(
 const salesInvoiceRegisterSchema = new mongoose.Schema(
   {
     items: [salesInvoiceItemSchema],
+
+    totalAmount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

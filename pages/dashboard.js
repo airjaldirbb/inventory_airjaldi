@@ -203,14 +203,13 @@ export default function Dashboard() {
 ===================================================== */
 function AnalyticsContent() {
   return (
-    <Box sx={{ p: 3, backgroundColor: "#0086c7", minHeight: "100%" }}>
+    <Box sx={{ p: 5, backgroundColor: "#0086c7",minHeight:'80vh'}}>
       <Container maxWidth="xl">
         <Typography variant="h4" align="center" gutterBottom fontWeight={600} color="#fff">
           Dashboard Analytics
         </Typography>
-
         <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h6">Bar Chart Insights</Typography>
+          <Typography variant="h4" align="center" gutterBottom fontWeight={600}>Bar Chart Insights</Typography>
           <Grid container justifyContent="center">
             <Grid item xs={12} sm={6}>
               <KendoGrid />
@@ -218,23 +217,23 @@ function AnalyticsContent() {
           </Grid>
         </Paper>
 
-        <Paper sx={{ p: 3, mb: 3 }}>
+        {/* <Paper sx={{ p: 3, mb: 3 }}>
           <Typography variant="h6">Distribution Overview</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}><PieCharts type="donut" /></Grid>
             <Grid item xs={12} sm={4}><PieCharts type="donut" /></Grid>
             <Grid item xs={12} sm={4}><PieCharts type="donut" /></Grid>
           </Grid>
-        </Paper>
+        </Paper> */}
 
-        <Paper sx={{ p: 3 }}>
+        {/* <Paper sx={{ p: 3 }}>
           <Typography variant="h6">Pie Chart Analysis</Typography>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={4}><BardCharts type="pie" /></Grid>
             <Grid item xs={12} sm={4}><BardCharts type="pie" /></Grid>
             <Grid item xs={12} sm={4}><BardCharts type="pie" /></Grid>
           </Grid>
-        </Paper>
+        </Paper> */}
       </Container>
     </Box>
   );

@@ -24,7 +24,10 @@ export default async function handler(req, res) {
 
       p.items.forEach((i, index) => {
         const taxPercent = i.taxPercent ?? p.taxPercent ?? 0;
-        const taxAmount = i.taxAmount ?? (i.amount * taxPercent) / 100;
+        const taxAmount = i.taxAmount ?? ((i.amount || 0) * taxPercent) / 100;
+
+        const invoiceAmount =
+          i.totalAmount ?? (i.amount || 0) + taxAmount + (i.freightAmount || 0);
 
         register.push({
           id: `${p._id}-${index}`,
@@ -53,14 +56,18 @@ export default async function handler(req, res) {
           taxPercent,
           taxAmount,
 
-          invoiceAmount:
-            i.totalAmount ??
-            (i.amount || 0) + taxAmount + (i.freightAmount || 0),
+          invoiceAmount,
         });
       });
     });
 
-    return res.status(200).json({ data: register });
+    // 🔹 Calculate total for all items
+    const totalAmount = register.reduce(
+      (sum, item) => sum + (item.invoiceAmount || 0),
+      0
+    );
+
+    return res.status(200).json({ data: register, totalAmount });
   } catch (error) {
     console.error("❌ PurchaseInvoiceRegister API error:", error);
     return res.status(500).json({

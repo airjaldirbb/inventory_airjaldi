@@ -38,9 +38,11 @@ const purchaseInvoiceItemSchema = new mongoose.Schema(
 const purchaseInvoiceRegisterSchema = new mongoose.Schema(
   {
     items: [purchaseInvoiceItemSchema],
+
+    // ✅ Total amount of the invoice (sum of all items' invoiceAmount + taxAmount)
+    totalAmount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
-
 export default mongoose.models.PurchaseInvoiceRegister ||
   mongoose.model("PurchaseInvoiceRegister", purchaseInvoiceRegisterSchema);

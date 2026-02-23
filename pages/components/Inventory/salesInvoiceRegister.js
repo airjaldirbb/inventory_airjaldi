@@ -7,38 +7,40 @@ import axios from "axios";
 const SalesInvoiceRegister = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+const [total, setTotal] = useState(0);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const res = await axios.get("/api/salesInvoiceREgister");
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      const res = await axios.get("/api/salesInvoiceREgister"); // fix API path
 
-        const data = res.data.data.map((item, index) => ({
-          id: index + 1,
-          invoiceNo: item.invoiceNo,
-          invoiceDate: new Date(item.invoiceDate).toLocaleDateString(),
-          customer: item.customer?.name || "N/A",
-          branch: item.branch?.name || "N/A",
-          itemName: item.item?.itemName || "N/A",
-          qty: item.qty,
-          uom: item.uom,
-          rate: item.rate,
-          taxPercent: item.taxPercent,
-          taxAmount: item.taxAmount,
-          invoiceAmount: item.invoiceAmount,
-          paymentStatus: item.paymentStatus,
-        }));
+      const data = res.data.data.map((item, index) => ({
+        id: index + 1,
+        invoiceNo: item.invoiceNo,
+        invoiceDate: new Date(item.invoiceDate).toLocaleDateString(),
+        customer: item.customer?.name || "N/A",
+        branch: item.branch?.name || "N/A",
+        itemName: item.item?.itemName || "N/A",
+        qty: item.qty,
+        uom: item.uom,
+        rate: item.rate,
+        taxPercent: item.taxPercent,
+        taxAmount: item.taxAmount || 0,
+        invoiceAmount: item.invoiceAmount,
+        paymentStatus: item.paymentStatus,
+      }));
 
-        setRows(data);
-      } catch (error) {
-        console.error("Error fetching sales invoice register data:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+      setRows(data);
+      setTotal(res.data.totalAmount || 0); // set total
+    } catch (error) {
+      console.error("Error fetching sales invoice register data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchData();
-  }, []);
+  fetchData();
+}, []);
 
   const columns = [
     { field: "invoiceNo", headerName: "Invoice No", width: 120 },
@@ -61,19 +63,24 @@ const SalesInvoiceRegister = () => {
   ];
 
   return (
-    <Box sx={{ height: 500, width: "100%" }}>
-      {loading ? (
-        <CircularProgress />
-      ) : (
-        <DataGrid
-          rows={rows}
-          columns={columns}
-          pageSize={10}
-          rowsPerPageOptions={[10, 25, 50]}
-          disableRowSelectionOnClick
-        />
-      )}
-    </Box>
+<Box sx={{ height: 500, width: "100%" }}>
+  {loading ? (
+    <CircularProgress />
+  ) : (
+    <>
+      <DataGrid
+        rows={rows}
+        columns={columns}
+        pageSize={10}
+        rowsPerPageOptions={[10, 25, 50]}
+        disableRowSelectionOnClick
+      />
+      <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", mr: 2 }}>
+        <strong>Total Amount: </strong>&nbsp; {total.toLocaleString()}
+      </Box>
+    </>
+  )}
+</Box>
   );
 };
 

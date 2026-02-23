@@ -20,7 +20,6 @@ export default async function handler(req, res) {
       return res.status(405).json({ message: "Method not allowed" });
     }
 
-    // 🔹 renamed for clarity
     const salesInvoiceRegister = [];
 
     // ================= MATERIAL RECEIPT =================
@@ -176,7 +175,17 @@ export default async function handler(req, res) {
       });
     });
 
-    return res.status(200).json({ data: salesInvoiceRegister });
+    // ================= CALCULATE TOTAL =================
+    const totalAmount = salesInvoiceRegister.reduce((sum, i) => {
+      const invoice = i.invoiceAmount || 0;
+      const tax = i.taxAmount || 0;
+      return sum + invoice + tax;
+    }, 0);
+
+    return res.status(200).json({ 
+      data: salesInvoiceRegister,
+      totalAmount 
+    });
 
   } catch (error) {
     console.error("❌ SalesInvoiceRegister API error:", error);
