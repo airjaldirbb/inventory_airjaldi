@@ -211,8 +211,8 @@ export default function Layout({ children, onMenuClick }) {
                             Logged in as <b>{user?.role}</b>
                         </MenuItem>
                         <Divider />
-                        <MenuItem onClick={handleProfileUpdate}>Update Profile</MenuItem>
-                        <MenuItem onClick={handleChangePassword}>Change Password</MenuItem>
+                        {/* <MenuItem onClick={handleProfileUpdate}>Update Profile</MenuItem> */}
+                        {/* <MenuItem onClick={handleChangePassword}>Change Password</MenuItem> */}
                         <Divider />
                         <MenuItem onClick={handleLogout}>Logout</MenuItem>
                     </Menu>
