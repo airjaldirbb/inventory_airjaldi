@@ -22,40 +22,46 @@ export default function CreateUser() {
     );
   }
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError('');
-    setSuccess('');
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-    try {
-      const res = await fetch('api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`, 
-      
-        },
-        body: JSON.stringify({ name, email, password, role }),
-        
-      });
+  setLoading(true);
+  setError('');
+  setSuccess('');
 
-      const data = await res.json();
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name,
+        email,
+        password,
+        role
+      })
+    });
 
-      if (!res.ok) throw new Error(data.message || 'Failed to create user');
+    const data = await res.json();
 
-      setSuccess(`User "${data.user.name}" created successfully!`);
-      setName('');
-      setEmail('');
-      setPassword('');
-      setRole('');
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (!res.ok) {
+      throw new Error(data.message || "User creation failed");
     }
-  }; 
-  
+
+    setSuccess(`User "${data.user.name}" created successfully`);
+
+    setName('');
+    setEmail('');
+    setPassword('');
+    setRole('');
+
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4 }}>

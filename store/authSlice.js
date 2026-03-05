@@ -98,24 +98,35 @@ const authSlice = createSlice({
       })
 
       /* ===== LOGIN SUCCESS ===== */
-      .addCase(loginUser.fulfilled, (state, action) => {
-        const token = action.payload.token;
-        const decoded = jwtDecode(token);
+      // .addCase(loginUser.fulfilled, (state, action) => {
+      //   const token = action.payload.token;
+      //   const decoded = jwtDecode(token);
+      //   state.loading = false;
+      //   state.token = token;
+      //   state.user = {
+      //     id: decoded.userId,
+      //     role: decoded.role,
+      //   };
+      //   state.role = decoded.role;
+      //   state.initialized = true; // 🔥 important
 
-        state.loading = false;
-        state.token = token;
-        state.user = {
-          id: decoded.userId,
-          role: decoded.role,
-        };
-        state.role = decoded.role;
-        state.initialized = true; // 🔥 important
+      //   if (typeof window !== 'undefined') {
+      //     localStorage.setItem('authToken', token);
+      //   }
+      // })
+.addCase(loginUser.fulfilled, (state, action) => {
+  const token = action.payload.token;
+  const user = action.payload.user;
+  state.loading = false;
+  state.token = token;
+  state.user = user;
+  state.role = user.role;
+  state.initialized = true;
 
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('authToken', token);
-        }
-      })
-
+  if (typeof window !== 'undefined') {
+    localStorage.setItem('authToken', token);
+  }
+})
       /* ===== LOGIN ERROR ===== */
       .addCase(loginUser.rejected, (state, action) => {
         state.loading = false;

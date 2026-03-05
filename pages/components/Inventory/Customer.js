@@ -1,6 +1,8 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import { DataGrid } from "@mui/x-data-grid";
+import axios from "axios";
+import { useRef } from "react";
 import {
   Box,
   Typography,
@@ -17,17 +19,20 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import axios from "axios";
+import { CleaningServices } from "@mui/icons-material";
 
 export default function Customer() {
-  const [rows, setRows] = useState([]);
+  const controllerRef = useRef(null);
+
+  const [rows, setRows] = useState([]); // Local customers
   const [addOpen, setAddOpen] = useState(false);
   const [editRow, setEditRow] = useState(null);
   const [formState, setFormState] = useState({});
+  const [phone, setPhone] = useState("");
   const [confirmMode, setConfirmMode] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState({ open: false, _id: null });
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
-
+  const [searchText, setSearchText] = useState("");
   const [newRowData, setNewRowData] = useState({
     custName: "",
     code: "",
@@ -41,22 +46,24 @@ export default function Customer() {
     serialTrackingEnabled: false,
   });
 
-  // Fetch all customers
+
+
   useEffect(() => {
     const fetchCustomers = async () => {
       try {
-        const response = await axios.get("/api/customer");
-        setRows(response.data);
-      } catch (error) {
-        console.error("Error fetching customers:", error);
+        const res = await axios.get("/api/customer");
+        setRows(res.data);
+      } catch (err) {
+        console.error("Error fetching customers:", err);
       }
     };
     fetchCustomers();
   }, []);
 
-  // Add Customer
+
+
+
   const handleSaveAdd = async () => {
-    // Validate all required fields
     const requiredFields = ["custName", "code", "phone", "email", "city", "location", "gst"];
     for (let field of requiredFields) {
       if (!newRowData[field]) {
@@ -66,27 +73,24 @@ export default function Customer() {
     }
 
     try {
-      const response = await axios.post("/api/customer", newRowData, { headers: { "Content-Type": "application/json" } });
-      setRows((prev) => [...prev, response.data]);
+      const res = await axios.post("/api/customer", newRowData, { headers: { "Content-Type": "application/json" } });
+      setRows(prev => [...prev, { ...newRowData, _id: res.data._id || Date.now() }]);
       setSnackbar({ open: true, message: "Customer added successfully!", severity: "success" });
       setAddOpen(false);
       setNewRowData({ custName: "", code: "", phone: "", email: "", city: "", location: "", gst: "", user: "Tester", ledger: "General Ledger", serialTrackingEnabled: false });
-    } catch (error) {
-      console.error("Error adding customer:", error);
-      setSnackbar({ open: true, message: error.response?.data?.error || "Failed to add customer!", severity: "error" });
+    } catch (err) {
+      console.error(err);
+      setSnackbar({ open: true, message: "Failed to add customer!", severity: "error" });
     }
   };
 
-  // Edit Row
   const handleEditRow = (row) => {
     setEditRow(row);
     setFormState(row);
   };
 
-  // Confirm Save (PUT request)
   const handleConfirm = async () => {
     if (confirmMode === "save" && editRow) {
-      // Validate required fields
       const requiredFields = ["custName", "code", "phone", "email", "city", "location", "gst"];
       for (let field of requiredFields) {
         if (!formState[field]) {
@@ -97,42 +101,52 @@ export default function Customer() {
 
       try {
         const res = await axios.put(`/api/customer?id=${editRow._id}`, formState);
-        const updatedCustomer = res.data;
-        setRows((prev) => prev.map((r) => (r._id === updatedCustomer._id ? updatedCustomer : r)));
+        setRows(prev => prev.map(r => (r._id === editRow._id ? res.data : r)));
         setSnackbar({ open: true, message: "Customer updated successfully!", severity: "success" });
-      } catch (error) {
-        console.error("Error updating customer:", error);
-        setSnackbar({ open: true, message: error.response?.data?.error || "Error updating customer!", severity: "error" });
+      } catch (err) {
+        console.error(err);
+        setSnackbar({ open: true, message: "Failed to update customer!", severity: "error" });
       } finally {
         setEditRow(null);
         setConfirmMode(null);
       }
-    } else if (confirmMode === "cancel") {
-      // Reset form and close
+    } else {
       setEditRow(null);
-      setFormState({});
       setConfirmMode(null);
     }
   };
 
-  // Delete Customer
   const handleOpenDeleteConfirm = (_id) => setDeleteConfirm({ open: true, _id });
   const handleDeleteCustomer = async () => {
     try {
       await axios.delete(`/api/customer?id=${deleteConfirm._id}`);
-      setRows((prev) => prev.filter((r) => r._id !== deleteConfirm._id));
+      setRows(prev => prev.filter(r => r._id !== deleteConfirm._id));
       setSnackbar({ open: true, message: "Customer deleted successfully!", severity: "success" });
-    } catch (error) {
-      console.error("Delete failed:", error);
-      setSnackbar({ open: true, message: error.response?.data?.error || "Failed to delete customer!", severity: "error" });
+    } catch (err) {
+      console.error(err);
+      setSnackbar({ open: true, message: "Failed to delete customer!", severity: "error" });
     } finally {
       setDeleteConfirm({ open: false, _id: null });
     }
   };
 
+
+  // const columns = [
+  //   { field: "edit", headerName: "Edit", width: 80, renderCell: params => <Button color="primary" onClick={() => handleEditRow(params.row)} size="small"><EditIcon /></Button> },
+  //   { field: "delete", headerName: "Delete", width: 90, renderCell: params => <Button color="error" onClick={() => handleOpenDeleteConfirm(params.row._id)} size="small"><DeleteIcon /></Button> },
+  //   { field: "custName", headerName: "Name", width: 150 },
+  //   { field: "code", headerName: "Code", width: 120 },
+  //   { field: "phone", headerName: "Phone", width: 130 },
+  //   { field: "email", headerName: "Email", width: 180 },
+  //   { field: "city", headerName: "City", width: 120 },
+  //   { field: "location", headerName: "Location", width: 150 },
+  //   { field: "gst", headerName: "GST", width: 120 },
+  //   { field: "user", headerName: "User", width: 120 },
+  // ];
+
   const columns = [
-    { field: "edit", headerName: "Edit", width: 80, renderCell: (params) => <Button color="primary" onClick={() => handleEditRow(params.row)} size="small"><EditIcon /></Button> },
-    { field: "delete", headerName: "Delete", width: 90, renderCell: (params) => <Button color="error" onClick={() => handleOpenDeleteConfirm(params.row._id)} size="small"><DeleteIcon /></Button> },
+    { field: "edit", headerName: "Edit", width: 80, renderCell: params => <Button color="primary" onClick={() => handleEditRow(params.row)} size="small"><EditIcon /></Button> },
+    { field: "delete", headerName: "Delete", width: 90, renderCell: params => <Button color="error" onClick={() => handleOpenDeleteConfirm(params.row._id)} size="small"><DeleteIcon /></Button> },
     { field: "custName", headerName: "Name", width: 150 },
     { field: "code", headerName: "Code", width: 120 },
     { field: "phone", headerName: "Phone", width: 130 },
@@ -141,30 +155,139 @@ export default function Customer() {
     { field: "location", headerName: "Location", width: 150 },
     { field: "gst", headerName: "GST", width: 120 },
     { field: "user", headerName: "User", width: 120 },
+    // extra fields
+    { field: "company", headerName: "Company", width: 150 },
+    { field: "groupName", headerName: "Group", width: 150 },
+    { field: "profileName", headerName: "Profile", width: 150 },
+    { field: "status", headerName: "Status", width: 120 },
+    { field: "connectionType", headerName: "Connection Type", width: 150 },
+    { field: "clientType", headerName: "Client Type", width: 150 },
   ];
 
+  // Combine local customers and AirJaldi search results
+  const combinedRows = rows.filter((row) =>
+    Object.values(row).some(
+      (value) =>
+        value &&
+        value.toString().toLowerCase().includes(searchText.toLowerCase())
+    )
+  );
+  // Inside Customer component
+  const fetchUserDetails = async (phoneNumber) => {
+    if (!phoneNumber) {
+      console.log("No phone number entered");
+      return;
+    }
+
+    try {
+      const res = await axios.get(
+        `/api/jazeApi?type=phone&value=${phoneNumber}`
+      );
+
+      console.log("RAW API RESPONSE:", res.data);
+
+      let responseData = res.data;
+
+      // ✅ If wrapped inside { data: [...] }
+      if (responseData?.data) {
+        responseData = responseData.data;
+      }
+
+      // ✅ If single object returned, convert to array
+      if (!Array.isArray(responseData)) {
+        responseData = [responseData];
+      }
+
+      // ✅ Find User block safely
+      const userBlock = responseData.find(
+        (item) => item?.User
+      );
+
+      if (!userBlock?.User) {
+        console.warn("User not found in API response");
+        return;
+      }
+
+      const user = userBlock.User;
+      const gstNumber = userBlock.UserSetting?.gstNumber || ""
+      const normalizedRow = {
+        _id: user.id,
+
+        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+
+        code: user.username || "",
+
+        phone: user.phone || "",
+
+        email: user.email || "",
+
+        city: user.address_city || "",
+
+        location: user.address_line1 || "",
+
+        gst: gstNumber,
+
+        user: "AirJaldi",
+
+        company: user.company_name || "",
+
+        groupName: user.group_name || "",
+
+        profileName: user.profile_name || "",
+
+        status: user.status || "",
+
+        connectionType: user["Connection Type"] || "",
+
+        clientType: user["Client Type"] || "",
+      };
+
+      // ✅ Merge into existing rows safely
+      setRows((prev) => {
+        const exists = prev.some((r) => r._id === normalizedRow._id);
+        if (exists) return prev;
+        return [...prev, normalizedRow];
+      });
+
+    } catch (err) {
+      console.error("Error fetching AirJaldi user:", err);
+    }
+  };
   return (
     <>
-      <Box sx={{ mb: 2 }}>
-        <Stack direction="row" spacing={2}>
-          <Button variant="contained" onClick={() => setAddOpen(true)}>➕ Add Customer</Button>
-        </Stack>
+      <Box sx={{ mb: 2, display: "flex", gap: 2, flexWrap: "wrap" }}>
+        <Button variant="contained" onClick={() => setAddOpen(true)}>➕ Add Customer</Button>
+        <TextField
+          label="Search by Phone"
+          variant="outlined"
+          size="small"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          sx={{ width: 250 }}
+        />
       </Box>
+      <Button variant="contained" onClick={() => fetchUserDetails(phone)}>
+        🔍 Test Fetch
+      </Button>
 
-      <Box sx={{ height: 600 }}>
-        <DataGrid rows={rows} columns={columns} getRowId={(r) => r._id} pageSize={10} disableRowSelectionOnClick />
-      </Box>
 
+      <DataGrid
+        rows={combinedRows}
+        columns={columns}
+        getRowId={(row) => row._id}
+        pageSize={10}
+        disableRowSelectionOnClick
+      />
       {/* Add Dialog */}
       <Dialog open={addOpen} onClose={() => setAddOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Add New Customer</DialogTitle>
         <DialogContent>
-          {["custName", "code", "phone", "email", "city", "location", "gst"].map((field) => (
-            <TextField key={field} margin="dense" label={field.charAt(0).toUpperCase() + field.slice(1)} fullWidth value={newRowData[field]} onChange={(e) => setNewRowData({ ...newRowData, [field]: e.target.value })} />
+          {["custName", "code", "phone", "email", "city", "location", "gst"].map(field => (
+            <TextField key={field} margin="dense" label={field.charAt(0).toUpperCase() + field.slice(1)} fullWidth value={newRowData[field]} onChange={e => setNewRowData({ ...newRowData, [field]: e.target.value })} />
           ))}
           <Box sx={{ mt: 2, display: "flex", alignItems: "center" }}>
             <Typography sx={{ mr: 1 }}>Enable Serial Tracking:</Typography>
-            <Switch checked={newRowData.serialTrackingEnabled} onChange={(e) => setNewRowData({ ...newRowData, serialTrackingEnabled: e.target.checked })} />
+            <Switch checked={newRowData.serialTrackingEnabled} onChange={e => setNewRowData({ ...newRowData, serialTrackingEnabled: e.target.checked })} />
             <Typography>{newRowData.serialTrackingEnabled ? "ON" : "OFF"}</Typography>
           </Box>
         </DialogContent>
@@ -181,8 +304,8 @@ export default function Customer() {
           {confirmMode ? (
             <Typography sx={{ mt: 2 }}>{confirmMode === "save" ? "Are you sure you want to save these changes?" : "Discard changes?"}</Typography>
           ) : (
-            ["custName", "code", "phone", "email", "city", "location", "gst"].map((field) => (
-              <TextField key={field} margin="dense" label={field.charAt(0).toUpperCase() + field.slice(1)} fullWidth value={formState[field] || ""} onChange={(e) => setFormState({ ...formState, [field]: e.target.value })} />
+            ["custName", "code", "phone", "email", "city", "location", "gst"].map(field => (
+              <TextField key={field} margin="dense" label={field.charAt(0).toUpperCase() + field.slice(1)} fullWidth value={formState[field] || ""} onChange={e => setFormState({ ...formState, [field]: e.target.value })} />
             ))
           )}
         </DialogContent>

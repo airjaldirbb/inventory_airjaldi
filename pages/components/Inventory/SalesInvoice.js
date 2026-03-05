@@ -20,12 +20,14 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 
 export default function SalesInvoice() {
-  const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: "#fff",
-    padding: theme.spacing(1),
-    textAlign: "center",
-    color: theme.palette.text.secondary,
-  }));
+    const [phone, setPhone] = useState("");
+  
+  // const Item = styled(Paper)(({ theme }) => ({
+  //   backgroundColor: "#fff",
+  //   padding: theme.spacing(1),
+  //   textAlign: "center",
+  //   color: theme.palette.text.secondary,
+  // }));
 
   const commonFieldProps = { fullWidth: true, size: "small" };
 
@@ -58,6 +60,7 @@ export default function SalesInvoice() {
   // ========== ADD ITEM MODAL ==========
   const [openAddItem, setOpenAddItem] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [searchText, setSearchText] = useState("");
 
   const [quantity, setQuantity] = useState(1);
   const [rate, setRate] = useState(0);
@@ -273,7 +276,93 @@ export default function SalesInvoice() {
     setFormState(prev => ({ ...prev, tax: "" }));
   };
 
+  const fetchUserDetails = async (phoneNumber) => {
+    if (!phoneNumber) {
+      console.log("No phone number entered");
+      return;
+    }
 
+    try {
+      const res = await axios.get(
+        `/api/jazeApi?type=phone&value=${phoneNumber}`
+      );
+
+      console.log("RAW API RESPONSE:", res.data);
+
+      let responseData = res.data;
+
+      // ✅ If wrapped inside { data: [...] }
+      if (responseData?.data) {
+        responseData = responseData.data;
+      }
+
+      // ✅ If single object returned, convert to array
+      if (!Array.isArray(responseData)) {
+        responseData = [responseData];
+      }
+
+      // ✅ Find User block safely
+      const userBlock = responseData.find(
+        (item) => item?.User
+      );
+
+      if (!userBlock?.User) {
+        console.warn("User not found in API response");
+        return;
+      }
+
+      const user = userBlock.User;
+      const gstNumber = userBlock.UserSetting?.gstNumber || ""
+      const normalizedRow = {
+        _id: user.id,
+
+        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+
+        code: user.username || "",
+
+        phone: user.phone || "",
+
+        email: user.email || "",
+
+        city: user.address_city || "",
+
+        location: user.address_line1 || "",
+
+        gst: gstNumber,
+
+        user: "AirJaldi",
+
+        company: user.company_name || "",
+
+        groupName: user.group_name || "",
+
+        profileName: user.profile_name || "",
+
+        status: user.status || "",
+
+        connectionType: user["Connection Type"] || "",
+
+        clientType: user["Client Type"] || "",
+      };
+
+      // ✅ Merge into existing rows safely
+      setRows((prev) => {
+        const exists = prev.some((r) => r._id === normalizedRow._id);
+        if (exists) return prev;
+        return [...prev, normalizedRow];
+      });
+
+    } catch (err) {
+      console.error("Error fetching AirJaldi user:", err);
+    }
+  };
+    const combinedRows = rows.filter((row) =>
+    Object.values(row).some(
+      (value) =>
+        value &&
+        value.toString().toLowerCase().includes(searchText.toLowerCase())
+    )
+  );
   return (
     <>
       <Box sx={{ width: "100%", p: 1, }}>
@@ -346,6 +435,18 @@ export default function SalesInvoice() {
                 <TextField {...params} {...commonFieldProps} label="Customer" sx={{ mb: 2 }} fullWidth />
               )}
             />
+              {/* <TextField
+                      label="Search by Phone"
+                      variant="outlined"
+                      size="small"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      sx={{ width: 250 }}
+                    />
+               <Button variant="contained" onClick={() => fetchUserDetails(phone)}>
+                    🔍 Test Fetch
+                  </Button> */}
+
 
             <TextField
               {...commonFieldProps}
@@ -425,7 +526,14 @@ export default function SalesInvoice() {
         </Box>
 
         <Box sx={{ height: 350, width: "100%", mt: 2 }}>
-          <DataGrid rows={rows} columns={columns} getRowId={(r) => r.rowId} />
+          {/* <DataGrid rows={rows} columns={columns} getRowId={(r) => r.rowId} /> */}
+             <DataGrid
+                    rows={combinedRows}
+                    columns={columns}
+                    getRowId={(row) => row._id}
+                    pageSize={10}
+                    disableRowSelectionOnClick
+                  />
         </Box>
 
         <Box mt={3}>
