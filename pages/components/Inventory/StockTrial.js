@@ -12,7 +12,6 @@ import {
 export default function StockTrial() {
   const [stockData, setStockData] = useState([]);
   const [loading, setLoading] = useState(false);
-
   // Filters
   const [branch, setBranch] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -20,10 +19,8 @@ export default function StockTrial() {
   const [search, setSearch] = useState("");
 
   // Example branch list (replace with API fetch if needed)
-  const branchList = [
-    { _id: "1", name: "Main Branch" },
-    { _id: "2", name: "Branch 2" },
-  ];
+
+  const [branchList, setBranchList] = useState([]);
 
   const columns = [
     { field: "itemName", headerName: "Item Name", flex: 1 },
@@ -37,6 +34,19 @@ export default function StockTrial() {
     // { field: "transactionDate", headerName: "Date", width: 150 },
   ];
 
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const res = await fetch("/api/branch");
+        const data = await res.json();
+        setBranchList(data);
+      } catch (err) {
+        console.error("Error fetching branches:", err);
+      }
+    };
+
+    fetchBranches();
+  }, []);
   const fetchStockTrail = async () => {
     setLoading(true);
     try {

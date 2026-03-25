@@ -10,9 +10,14 @@ export default async function handler(req, res) {
   await dbConnect();
 
   try {
-    const { search } = req.query; // <-- query param
+    const { search, branch } = req.query; // <-- query param
 
     // 1️⃣ Fetch all items (apply search if provided)
+    let branchFilter = {};
+
+    if (branch) {
+      branchFilter = { branch: new mongoose.Types.ObjectId(branch) };
+    }
     const query = {};
     if (search) {
       query.itemName = { $regex: search, $options: "i" }; // case-insensitive search
@@ -33,7 +38,7 @@ export default async function handler(req, res) {
     // 2️⃣ Aggregate stock data (same as before)
     const poAgg = await PurchaseOrder.aggregate([
       { $unwind: "$items" },
-      { $match: { "items.item": { $in: itemIds } } },
+      { $match: { "items.item": { $in: itemIds }, ...branchFilter, } },
       { $group: { _id: "$items.item", total: { $sum: "$items.quantity" } } },
     ]);
     const poMap = {};
@@ -41,7 +46,7 @@ export default async function handler(req, res) {
 
     const mrAgg = await MaterialReceipt.aggregate([
       { $unwind: "$items" },
-      { $match: { "items.itemId": { $in: itemIds } } },
+      { $match: { "items.itemId": { $in: itemIds }, ...branchFilter, } },
       { $group: { _id: "$items.itemId", total: { $sum: "$items.qty" } } },
     ]);
     const mrMap = {};
@@ -49,7 +54,7 @@ export default async function handler(req, res) {
 
     const miAgg = await MaterialIssue.aggregate([
       { $unwind: "$items" },
-      { $match: { "items.itemId": { $in: itemIds } } },
+      { $match: { "items.itemId": { $in: itemIds }, ...branchFilter, } },
       { $group: { _id: "$items.itemId", total: { $sum: "$items.qty" } } },
     ]);
     const miMap = {};
@@ -57,7 +62,7 @@ export default async function handler(req, res) {
 
     const salesAgg = await SalesInvoice.aggregate([
       { $unwind: "$items" },
-      { $match: { "items.item": { $in: itemIds } } },
+      { $match: { "items.item": { $in: itemIds }, ...branchFilter, } },
       { $group: { _id: "$items.item", total: { $sum: "$items.quantity" } } },
     ]);
     const salesMap = {};
@@ -67,7 +72,7 @@ export default async function handler(req, res) {
     const stockData = items.map((item) => {
       const stockIn = (poMap[item._id.toString()] || 0) + (mrMap[item._id.toString()] || 0);
       const stockOut = (miMap[item._id.toString()] || 0) + (salesMap[item._id.toString()] || 0);
-      const openingQty = 0; 
+      const openingQty = 0;
       const balanceQty = openingQty + stockIn - stockOut;
 
       return {

@@ -32,6 +32,7 @@ export default async function handler(req, res) {
         id: cust._id,
         customerId: cust.code || cust._id,
         customerName: cust.custName,
+         company: cust.company || "", 
         openingBalance,
         debit,
         credit,
@@ -46,7 +47,9 @@ export default async function handler(req, res) {
     await Promise.all(trialData.map(t =>
       CustomerTrial.findOneAndUpdate(
         { customer: t.id },
-        { ...t, snapshotDate: new Date() },
+        { ...t, 
+            company: t.company, 
+          snapshotDate: new Date() },
         { upsert: true, new: true }
       )
     ));

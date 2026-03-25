@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useRef } from "react";
 import {
   Box,
   Button,
@@ -12,11 +13,19 @@ import {
   Typography,
   Paper,
 } from "@mui/material";
+import {
+  
+  IconButton
+} from "@mui/material";
+import CloseIcon from "@mui/icons-material/Close";
 import Autocomplete from "@mui/material/Autocomplete";
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 
 export default function PurchaseBill() {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState("");
+  const fileInputRef = useRef();
   const [branches, setBranches] = useState([]);
   const [vendors, setVendors] = useState([]);
   const [vendorEmail, setVendorEmail] = useState("");
@@ -79,103 +88,103 @@ export default function PurchaseBill() {
   };
 
   // ================= ADD ITEM =================
-const addItem = () => {
-  const quantity = Number(itemForm.quantity);
-  const rate = Number(itemForm.rate);
-  const taxPercent = Number(itemForm.taxPercent || 0);
+  const addItem = () => {
+    const quantity = Number(itemForm.quantity);
+    const rate = Number(itemForm.rate);
+    const taxPercent = Number(itemForm.taxPercent || 0);
 
-  const amount = quantity * rate;
-  const taxAmount = (amount * taxPercent) / 100;
-  const freightAmount = Number(itemForm.freightAmount || 0);
-  const totalAmount = amount + taxAmount + freightAmount;
+    const amount = quantity * rate;
+    const taxAmount = (amount * taxPercent) / 100;
+    const freightAmount = Number(itemForm.freightAmount || 0);
+    const totalAmount = amount + taxAmount + freightAmount;
 
-  setItems((prev) => [
-    ...prev,
-    {
-      id: prev.length + 1,
-      item: itemForm.item,          // STRING ✔
-      unit: itemForm.unit,          // STRING ✔
-      quantity,                     // NUMBER ✔
-      rate,                          // NUMBER ✔
-      amount,                        // REQUIRED ✔
-      taxPercent,                    // REQUIRED ✔
+    setItems((prev) => [
+      ...prev,
+      {
+        id: prev.length + 1,
+        item: itemForm.item,          // STRING ✔
+        unit: itemForm.unit,          // STRING ✔
+        quantity,                     // NUMBER ✔
+        rate,                          // NUMBER ✔
+        amount,                        // REQUIRED ✔
+        taxPercent,                    // REQUIRED ✔
+        taxAmount,
+        freightAmount,
+        totalAmount,
+        remarks: itemForm.remarks,
+      },
+    ]);
+
+    setOpenDialog(false);
+    setItemForm({
+      itemId: "",
+      item: "",
+      unit: "",
+      quantity: 0,
+      rate: 0,
+      taxPercent: 0,
+      taxAmount: 0,
+      freightAmount: 0,
+      totalAmount: 0,
+      remarks: "",
+    });
+  };
+
+  // ================= SAVE BILL =================
+  const handleSubmit = async () => {
+    if (!billData.branch) return alert("Select Branch");
+    if (!billData.vendor) return alert("Select Vendor");
+    if (!billData.supplierInvNo) return alert("Supplier Invoice No required");
+    if (items.length === 0) return alert("Add at least one item");
+    // Bill totals
+    const amount = items.reduce((a, i) => a + i.amount, 0);
+    const taxAmount = items.reduce((a, i) => a + i.taxAmount, 0);
+    const freightAmount = items.reduce((a, i) => a + i.freightAmount, 0);
+    const totalAmount = amount + taxAmount + freightAmount;
+    const taxPercent =
+      items.reduce((a, i) => a + i.taxPercent, 0) / items.length;
+
+    const payload = {
+      gstType: billData.gstType,
+      cashOrCredit: billData.cashOrCredit,
+      branch: billData.branch,           // ObjectId ✔
+      vendor: billData.vendor,           // ObjectId ✔
+      email: billData.email,
+      date: billData.date,
+      invoiceNo: billData.invoiceNo,
+      supplierInvNo: billData.supplierInvNo,
+      supplierInvDate: billData.supplierInvDate,
+      taxMode: billData.taxMode,
+      paymentTerms: billData.paymentTerms,
+      dueDate: billData.dueDate,
+      remarks: billData.remarks,
+      items,                             // CLEAN items ✔
+      amount,
+      taxPercent,
       taxAmount,
       freightAmount,
       totalAmount,
-      remarks: itemForm.remarks,
-    },
-  ]);
+      attachments: billData.attachments || [],
+    };
 
-  setOpenDialog(false);
-  setItemForm({
-    itemId: "",
-    item: "",
-    unit: "",
-    quantity: 0,
-    rate: 0,
-    taxPercent: 0,
-    taxAmount: 0,
-    freightAmount: 0,
-    totalAmount: 0,
-    remarks: "",
-  });
-};
-
-  // ================= SAVE BILL =================
-const handleSubmit = async () => {
-  if (!billData.branch) return alert("Select Branch");
-  if (!billData.vendor) return alert("Select Vendor");
-  if (!billData.supplierInvNo) return alert("Supplier Invoice No required");
-  if (items.length === 0) return alert("Add at least one item");
-
-  // Bill totals
-  const amount = items.reduce((a, i) => a + i.amount, 0);
-  const taxAmount = items.reduce((a, i) => a + i.taxAmount, 0);
-  const freightAmount = items.reduce((a, i) => a + i.freightAmount, 0);
-  const totalAmount = amount + taxAmount + freightAmount;
-
-  const taxPercent =
-    items.reduce((a, i) => a + i.taxPercent, 0) / items.length;
-
-  const payload = {
-    gstType: billData.gstType,
-    cashOrCredit: billData.cashOrCredit,
-    branch: billData.branch,           // ObjectId ✔
-    vendor: billData.vendor,           // ObjectId ✔
-    email: billData.email,
-    date: billData.date,
-    invoiceNo: billData.invoiceNo,
-    supplierInvNo: billData.supplierInvNo,
-    supplierInvDate: billData.supplierInvDate,
-    taxMode: billData.taxMode,
-    paymentTerms: billData.paymentTerms,
-    dueDate: billData.dueDate,
-    remarks: billData.remarks,
-    items,                             // CLEAN items ✔
-    amount,
-    taxPercent,
-    taxAmount,
-    freightAmount,
-    totalAmount,
+    try {
+      await axios.post("/api/purchaseBill", payload);
+      alert("Purchase Bill Saved Successfully");
+      setItems([]);
+      setBillData({
+        ...billData,
+        supplierInvNo: "",
+        remarks: "",
+        attachments: [],
+      });
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // ✅ clears input UI
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error saving bill");
+    }
   };
-
-  try {
-    await axios.post("/api/purchaseBill", payload);
-    alert("Purchase Bill Saved Successfully");
-
-    setItems([]);
-    setBillData({
-      ...billData,
-      supplierInvNo: "",
-      remarks: "",
-    });
-  } catch (err) {
-    console.error(err);
-    alert("Error saving bill");
-  }
-};
-
-
 
   // ================= GRID COLUMNS =================
   const itemColumns = [
@@ -190,7 +199,36 @@ const handleSubmit = async () => {
     { field: "totalAmount", headerName: "Total", width: 120 },
     { field: "remarks", headerName: "Remarks", width: 180 },
   ];
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await axios.post("/api/file/upload", formData);
+
+      setBillData(prev => ({
+        ...prev,
+        attachments: [
+          ...(prev.attachments || []),
+          {
+            fileId: res.data.file.id,
+            fileName: res.data.file.filename,
+          },
+        ],
+      }));
+
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handlePreview = (url) => {
+    setPreviewImage(url);
+    setPreviewOpen(true);
+  };
   return (
     <Box p={3}>
       <Typography variant="h5" mb={2}>Purchase Bill</Typography>
@@ -284,7 +322,69 @@ const handleSubmit = async () => {
               onChange={(e) => setBillData({ ...billData, dueDate: e.target.value })}
             />
           </Grid>
+          <input type="file" ref={fileInputRef} onChange={handleFileUpload} />
+          {billData.attachments?.map((file, index) => {
+            const fileUrl = `/api/file/file?id=${file.fileId}`;
+            const isImage = file.fileName.match(/\.(jpg|jpeg|png|gif|webp)$/i);
 
+            return (
+              <div key={index} style={{ marginTop: 10 }}>
+                {isImage ? (
+                  <img
+                    src={fileUrl}
+                    alt={file.fileName}
+                    style={{
+                      width: 120,
+                      height: 120,
+                      objectFit: "cover",
+                      cursor: "pointer",
+                      borderRadius: 8,
+                      border: "1px solid #ccc",
+                    }}
+                    onClick={() => handlePreview(fileUrl)}   // ✅ CLICK
+                  />
+                ) : (
+                  <a href={fileUrl} target="_blank">
+                    {file.fileName}
+                  </a>
+                )}
+              </div>
+            );
+          })}
+          <Dialog
+  open={previewOpen}
+  onClose={() => setPreviewOpen(false)}
+  maxWidth="lg"
+>
+  <div style={{ position: "relative", padding: 10 }}>
+    
+    {/* ❌ Close Button */}
+    <IconButton
+      onClick={() => setPreviewOpen(false)}
+      style={{
+        position: "absolute",
+        top: 10,
+        right: 10,
+        zIndex: 10,
+        background: "white",
+      }}
+    >
+      <CloseIcon />
+    </IconButton>
+
+    {/* 🖼 Full Image */}
+    <img
+      src={previewImage}
+      alt="Preview"
+      style={{
+        maxWidth: "90vw",
+        maxHeight: "80vh",
+        objectFit: "contain",
+        borderRadius: 8,
+      }}
+    />
+  </div>
+</Dialog>
           <Grid item xs={12}>
             <TextField
               fullWidth
@@ -294,6 +394,7 @@ const handleSubmit = async () => {
             />
           </Grid>
         </Grid>
+
       </Paper>
 
       {/* ================= ITEMS ================= */}
@@ -301,7 +402,24 @@ const handleSubmit = async () => {
       <Paper sx={{ mt: 2 }}>
         <DataGrid rows={items} columns={itemColumns} autoHeight />
       </Paper>
+      <Box mt={2} textAlign="right">
+        <Typography>
+          Sub Total: ₹{items.reduce((a, i) => a + i.amount, 0)}
+        </Typography>
 
+        <Typography>
+          Total Tax: ₹{items.reduce((a, i) => a + i.taxAmount, 0)}
+        </Typography>
+
+        <Typography>
+          Total Freight: ₹{items.reduce((a, i) => a + i.freightAmount, 0)}
+        </Typography>
+
+        <Typography variant="h6" fontWeight="bold">
+          Grand Total: ₹
+          {items.reduce((a, i) => a + i.totalAmount, 0)}
+        </Typography>
+      </Box>
       <Box textAlign="right" mt={3}>
         <Button variant="contained" size="large" onClick={handleSubmit}>Save Purchase Bill</Button>
       </Box>
@@ -360,6 +478,7 @@ const handleSubmit = async () => {
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
           <Button variant="contained" onClick={addItem}>Add</Button>
         </DialogActions>
+
       </Dialog>
     </Box>
   );

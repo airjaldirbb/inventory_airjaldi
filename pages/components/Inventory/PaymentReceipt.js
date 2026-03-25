@@ -140,7 +140,14 @@ export default function PaymentReceiptForm() {
       showSnackbar("Customer, Branch, and at least one invoice are required", "warning");
       return;
     }
+    const invalidInvoice = form.invoices.find(
+      (inv) => !inv.referenceNo || inv.referenceNo.trim() === ""
+    );
 
+    if (invalidInvoice) {
+      showSnackbar("Reference No is required for all invoices", "error");
+      return;
+    }
     const payload = {
       receiptNumber: form.receiptNumber,
       receiptDate: form.receiptDate,
@@ -268,9 +275,19 @@ export default function PaymentReceiptForm() {
                   <TableCell>{i.salesPaymentMode}</TableCell>
                   <TableCell>{i.amountDue}</TableCell>
                   <TableCell>
+                    {/* <TextField
+                      size="small"
+                      value={i.referenceNo}
+                      onChange={(e) =>
+                        updateInvoiceField(idx, "referenceNo", e.target.value)
+                      }
+                    /> */}
                     <TextField
                       size="small"
                       value={i.referenceNo}
+                      required
+                      error={!i.referenceNo}
+                      helperText={!i.referenceNo ? "Required" : ""}
                       onChange={(e) =>
                         updateInvoiceField(idx, "referenceNo", e.target.value)
                       }

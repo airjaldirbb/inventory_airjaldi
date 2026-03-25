@@ -91,6 +91,7 @@ export default async function handler(req, res) {
         taxAmount,
         freightAmount,
         totalAmount,
+         attachments: body.attachments || [],
       });
 
       return res.status(201).json({

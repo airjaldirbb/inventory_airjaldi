@@ -13,6 +13,7 @@ export default function CustomerTrial() {
       .get("/api/customerTrail")
       .then((res) => {
         const data = res.data.data || [];
+        console.log(data,"customer trial")
         setRows(data);
 
         // Calculate totals
@@ -28,6 +29,7 @@ export default function CustomerTrial() {
   const columns = [
     { field: "customerId", headerName: "Customer ID", flex: 1 },
     { field: "customerName", headerName: "Customer Name", flex: 1 },
+    { field: "company", headerName: "Network", flex: 1 },
     { field: "debit", headerName: "Debit (Sales)", type: "number", flex: 1 },
     { field: "credit", headerName: "Credit (Receipt)", type: "number", flex: 1 },
     { field: "closingBalance", headerName: "Closing Balance", type: "number", flex: 1 },

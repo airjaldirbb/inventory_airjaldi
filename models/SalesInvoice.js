@@ -10,12 +10,19 @@ const salesInvoiceSchema = new mongoose.Schema(
       ref: "Customer",
       required: true,
     },
+    // 🔥 OPTIONAL (for tracking external source)
+
+    jazeCustomerId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
 
     branch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Branch",
     },
- 
+
     items: [
       {
         item: {
@@ -36,11 +43,11 @@ const salesInvoiceSchema = new mongoose.Schema(
       enum: ["CASH", "CREDIT"],
       default: "CASH",
     },
-gstType: {
-  type: String,
-  enum: ["TAX_INVOICE", "REGISTERED", "COMPOSITION"],
-  default: "TAX_INVOICE",
-},
+    gstType: {
+      type: String,
+      enum: ["TAX_INVOICE", "REGISTERED", "COMPOSITION"],
+      default: "TAX_INVOICE",
+    },
 
     totalAmount: { type: Number, required: true, default: 0 },
     totalGST: { type: Number, required: true, default: 0 },
@@ -61,6 +68,7 @@ gstType: {
       default: "UNPAID",
     },
   },
+
   { timestamps: true }
 );
 

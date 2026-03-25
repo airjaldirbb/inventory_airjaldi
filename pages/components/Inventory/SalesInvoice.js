@@ -12,7 +12,7 @@ import {
   DialogContent,
   DialogActions,
   Snackbar,
-  Alert,
+  Alert, Typography,
 } from "@mui/material";
 import { Autocomplete } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
@@ -20,17 +20,10 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 
 export default function SalesInvoice() {
-    const [phone, setPhone] = useState("");
-  
-  // const Item = styled(Paper)(({ theme }) => ({
-  //   backgroundColor: "#fff",
-  //   padding: theme.spacing(1),
-  //   textAlign: "center",
-  //   color: theme.palette.text.secondary,
-  // }));
+  const [phone, setPhone] = useState("");
 
   const commonFieldProps = { fullWidth: true, size: "small" };
-
+  const [jazeCustomerDetails, setJazeCustomerDetails] = useState(null);
   // ========== FORM STATE ==========
   const [formState, setFormState] = useState({
     gstType: "",
@@ -56,17 +49,15 @@ export default function SalesInvoice() {
 
   // ========== SALES INVOICE ROWS ==========
   const [rows, setRows] = useState([]);
-
   // ========== ADD ITEM MODAL ==========
   const [openAddItem, setOpenAddItem] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [searchText, setSearchText] = useState("");
-
   const [quantity, setQuantity] = useState(1);
   const [rate, setRate] = useState(0);
   const [amount, setAmount] = useState(0);
   const [selectedUnit, setSelectedUnit] = useState("");
-
+  const [editingRowId, setEditingRowId] = useState(null);
   // ========== SNACKBAR ==========
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
 
@@ -77,8 +68,6 @@ export default function SalesInvoice() {
     if (reason === "clickaway") return;
     setSnackbar({ ...snackbar, open: false });
   };
-
-
   // ================= LOAD DATA =================
   useEffect(() => {
     axios.get("/api/branch").then(res => setBranches(res.data)).catch(err => console.error(err));
@@ -101,58 +90,11 @@ export default function SalesInvoice() {
     setAmount(quantity * rate + gstAmount);
   }, [quantity, rate, formState.tax]);
 
-  // ================= ADD ITEM TO GRID =================
-  // const handleAddItemToGrid = () => {
-  //   if (!formState.branch) {
-  //     showSnackbar("Please select branch first", "warning");
-  //     return;
-  //   }
-  //   if (!selectedItem || quantity <= 0 || rate <= 0) {
-  //     showSnackbar("Please fill all item fields correctly", "error");
-  //     return;
-  //   }
-
-  //   const item = selectedItem;
-
-  //   if (!item) return;
-
-  //   const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
-  //   const itemTotal = quantity * rate;
-  //   const gstAmount = (itemTotal * gstPercentage) / 100;
-  //   const totalWithGST = itemTotal + gstAmount;
-
-  //   setRows([
-  //     ...rows,
-  //     {
-  //       ...item,
-  //       quantity,
-  //       rate,
-  //       total: itemTotal,
-  //       gstPercentage,
-  //       gstAmount,
-  //       totalWithGST,
-  //       unit: selectedUnit || item.stockUnit || "pcs",
-  //       rowId: Date.now() + Math.random(), // unique row ID
-  //     },
-  //   ]);
-
-  //   // reset modal fields
-  //   setSelectedItem("");
-  //   setQuantity(1);
-  //   setRate(0);
-  //   setAmount(0);
-  //   setSelectedUnit("");
-  //   setFormState({ ...formState, tax: "" });
-  //   setOpenAddItem(false);
-
-  //   showSnackbar("Item added successfully", "success");
-  // };
 
   // ================= DELETE ROW =================
   const handleDeleteRow = (rowId) => {
     setRows(rows.filter(r => r.rowId !== rowId));
   };
-
   // ================= SAVE INVOICE =================
   const handleSaveInvoice = async () => {
     if (rows.length === 0) {
@@ -170,6 +112,7 @@ export default function SalesInvoice() {
         invoiceNumber: formState.invoiceNo || undefined,
         invoiceDate: formState.date || new Date().toISOString().slice(0, 10),
         customer: formState.customer,
+          
         branch: formState.branch,
         gstType: formState.gstType || "TAX_INVOICE", // ✅ ADD THIS
         paymentMode: formState.cashCredit || "CASH", // ✅ ADD THIS
@@ -190,11 +133,8 @@ export default function SalesInvoice() {
 
         paymentStatus: formState.paymentStatus || "UNPAID",
       };
-
-
       await axios.post("/api/salesInvoice", payload);
       showSnackbar("Invoice saved successfully", "success");
-
       // Reset form for next invoice
       setRows([]);
       setFormState({
@@ -224,18 +164,16 @@ export default function SalesInvoice() {
   };
 
   const handleAddItemToGrid = () => {
-  if (!selectedItem) {
-    showSnackbar("Please select an item", "error");
-    return;
-  }
+    if (!selectedItem) {
+      showSnackbar("Please select an item", "error");
+      return;
+    }
 
-  const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
-  const itemTotal = quantity * rate;
-  const gstAmount = (itemTotal * gstPercentage) / 100;
+    const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
+    const itemTotal = quantity * rate;
+    const gstAmount = (itemTotal * gstPercentage) / 100;
 
-  setRows(prev => ([
-    ...prev,
-    {
+    const newRow = {
       ...selectedItem,
       quantity,
       rate,
@@ -244,15 +182,56 @@ export default function SalesInvoice() {
       gstAmount,
       totalWithGST: itemTotal + gstAmount,
       unit: selectedItem.stockUnit || "Pcs",
-      rowId: Date.now() + Math.random(),
+      rowId: editingRowId || Date.now() + Math.random(),
+    };
+
+    if (editingRowId) {
+      // ✅ UPDATE EXISTING ROW
+      setRows(prev =>
+        prev.map(r => (r.rowId === editingRowId ? newRow : r))
+      );
+    } else {
+      // ✅ ADD NEW ROW
+      setRows(prev => [...prev, newRow]);
     }
-  ]));
 
-  clearItemDialog();
-  setOpenAddItem(false);
-  showSnackbar("Item added successfully");
-};
+    // 🔹 RESET EDIT MODE
+    setEditingRowId(null);
 
+    clearItemDialog();
+    setOpenAddItem(false);
+    showSnackbar(editingRowId ? "Item updated" : "Item added");
+  };
+  const totals = React.useMemo(() => {
+    let totalAmount = 0;
+    let totalGST = 0;
+
+    rows.forEach(r => {
+      totalAmount += r.total || 0;
+      totalGST += r.gstAmount || 0;
+    });
+
+    return {
+      totalAmount,
+      totalGST,
+      netAmount: totalAmount + totalGST,
+    };
+  }, [rows]);
+  const handleEditRow = (row) => {
+    setSelectedItem(row);
+    setQuantity(row.quantity);
+    setRate(row.rate);
+    setSelectedUnit(row.unit);
+
+    setFormState(prev => ({
+      ...prev,
+      tax: row.gstPercentage + "%"
+    }));
+
+    setEditingRowId(row.rowId); // ✅ IMPORTANT
+
+    setOpenAddItem(true);
+  };
   // ================= GRID COLUMNS =================
   const columns = [
     { field: "delete", headerName: "Delete", width: 90, renderCell: (params) => <Button color="error" onClick={() => handleDeleteRow(params.row.rowId)}><DeleteIcon /></Button> },
@@ -264,9 +243,22 @@ export default function SalesInvoice() {
     { field: "total", headerName: "Subtotal", width: 120 },
     { field: "gstAmount", headerName: "GST", width: 100 },
     { field: "totalWithGST", headerName: "Total", width: 120 },
+    {
+      field: "actions",
+      headerName: "Actions",
+      width: 150,
+      sortable: false,
+      renderCell: (params) => (
+        <Button
+          variant="outlined"
+          size="small"
+          onClick={() => handleEditRow(params.row)} // 👈 row edit
+        >
+          Edit
+        </Button>
+      ),
+    },
   ];
-
-
   const clearItemDialog = () => {
     setSelectedItem(null);
     setQuantity(1);
@@ -291,20 +283,17 @@ export default function SalesInvoice() {
 
       let responseData = res.data;
 
-      // ✅ If wrapped inside { data: [...] }
+      // ✅ unwrap if needed
       if (responseData?.data) {
         responseData = responseData.data;
       }
 
-      // ✅ If single object returned, convert to array
       if (!Array.isArray(responseData)) {
         responseData = [responseData];
       }
 
-      // ✅ Find User block safely
-      const userBlock = responseData.find(
-        (item) => item?.User
-      );
+      // ✅ find user block
+      const userBlock = responseData.find((item) => item?.User);
 
       if (!userBlock?.User) {
         console.warn("User not found in API response");
@@ -312,51 +301,33 @@ export default function SalesInvoice() {
       }
 
       const user = userBlock.User;
-      const gstNumber = userBlock.UserSetting?.gstNumber || ""
-      const normalizedRow = {
-        _id: user.id,
+      const gstNumber = userBlock.UserSetting?.gstNumber || "";
 
-        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
-
-        code: user.username || "",
-
-        phone: user.phone || "",
-
+      // ✅ SET CUSTOMER (IMPORTANT)
+      setFormState((prev) => ({
+        ...prev,
+        customer: String(user.id), // Jaze ID
         email: user.email || "",
+      }));
 
+      // ✅ STORE FULL DETAILS (for backend)
+      setJazeCustomerDetails({
+        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+        phone: user.phone || "",
+        email: user.email || "",
         city: user.address_city || "",
-
         location: user.address_line1 || "",
-
-        gst: gstNumber,
-
-        user: "AirJaldi",
-
-        company: user.company_name || "",
-
-        groupName: user.group_name || "",
-
-        profileName: user.profile_name || "",
-
-        status: user.status || "",
-
-        connectionType: user["Connection Type"] || "",
-
-        clientType: user["Client Type"] || "",
-      };
-
-      // ✅ Merge into existing rows safely
-      setRows((prev) => {
-        const exists = prev.some((r) => r._id === normalizedRow._id);
-        if (exists) return prev;
-        return [...prev, normalizedRow];
+        gst: gstNumber || "",
+        company: user.company_name || "", 
       });
+
+      console.log("✅ Jaze customer set successfully");
 
     } catch (err) {
       console.error("Error fetching AirJaldi user:", err);
     }
   };
-    const combinedRows = rows.filter((row) =>
+  const combinedRows = rows.filter((row) =>
     Object.values(row).some(
       (value) =>
         value &&
@@ -366,12 +337,9 @@ export default function SalesInvoice() {
   return (
     <>
       <Box sx={{ width: "100%", p: 1, }}>
-
         <Grid container spacing={2} sx={{ justifyContent: "center" }} >
           {/* Left Column */}
           <Grid item xs={12} sm={6}>
-
-
             <TextField
               {...commonFieldProps}
               fullWidth
@@ -387,7 +355,6 @@ export default function SalesInvoice() {
               <MenuItem value="REGISTERED">Registered</MenuItem>
               <MenuItem value="COMPOSITION">Composition</MenuItem>
             </TextField>
-
             <TextField
               {...commonFieldProps}
               fullWidth
@@ -402,8 +369,6 @@ export default function SalesInvoice() {
               <MenuItem value="CASH">Cash</MenuItem>
               <MenuItem value="CREDIT">Credit</MenuItem>
             </TextField>
-
-
             <Autocomplete
               options={branches}
               value={selectedBranch}
@@ -423,8 +388,6 @@ export default function SalesInvoice() {
                 />
               )}
             />
-
-
             <Autocomplete
               options={customers}
               value={customers.find(c => c._id === formState.customer) || null}
@@ -435,19 +398,17 @@ export default function SalesInvoice() {
                 <TextField {...params} {...commonFieldProps} label="Customer" sx={{ mb: 2 }} fullWidth />
               )}
             />
-              {/* <TextField
-                      label="Search by Phone"
-                      variant="outlined"
-                      size="small"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      sx={{ width: 250 }}
-                    />
-               <Button variant="contained" onClick={() => fetchUserDetails(phone)}>
-                    🔍 Test Fetch
-                  </Button> */}
-
-
+            <TextField
+              label="Search by Phone"
+              variant="outlined"
+              size="small"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              sx={{ width: 250 }}
+            />
+            <Button variant="contained" onClick={() => fetchUserDetails(phone)}>
+              🔍 Test Fetch
+            </Button>
             <TextField
               {...commonFieldProps}
               fullWidth
@@ -456,9 +417,7 @@ export default function SalesInvoice() {
               onChange={(e) => setFormState({ ...formState, email: e.target.value })}
               sx={{ mb: 2 }}
             />
-
           </Grid>
-
           {/* Right Column */}
           <Grid item xs={12} sm={6}>
             <TextField
@@ -471,7 +430,6 @@ export default function SalesInvoice() {
               onChange={(e) => setFormState({ ...formState, date: e.target.value })}
               sx={{ mb: 2 }}
             />
-
             <TextField
               {...commonFieldProps}
               fullWidth
@@ -481,7 +439,6 @@ export default function SalesInvoice() {
               onChange={(e) => setFormState({ ...formState, invoiceNo: e.target.value })}
               sx={{ mb: 2 }}
             />
-
             <TextField
               {...commonFieldProps}
               fullWidth
@@ -496,7 +453,6 @@ export default function SalesInvoice() {
                 <MenuItem key={a._id} value={a._id}>{a.name}</MenuItem>
               ))}
             </TextField>
-
             <TextField
               {...commonFieldProps}
               fullWidth
@@ -505,7 +461,6 @@ export default function SalesInvoice() {
               onChange={(e) => setFormState({ ...formState, refNo: e.target.value })}
               sx={{ mb: 2 }}
             />
-
             <TextField
               {...commonFieldProps}
               fullWidth
@@ -518,96 +473,91 @@ export default function SalesInvoice() {
             />
           </Grid>
         </Grid>
-
-
-
         <Box mt={3}>
           <Button variant="contained" onClick={() => setOpenAddItem(true)} color="primary">Add Item</Button>
         </Box>
-
         <Box sx={{ height: 350, width: "100%", mt: 2 }}>
           {/* <DataGrid rows={rows} columns={columns} getRowId={(r) => r.rowId} /> */}
-             <DataGrid
-                    rows={combinedRows}
-                    columns={columns}
-                    getRowId={(row) => row._id}
-                    pageSize={10}
-                    disableRowSelectionOnClick
-                  />
+          <DataGrid
+            rows={combinedRows}
+            columns={columns}
+            getRowId={(row) => row._id}
+            pageSize={10}
+            disableRowSelectionOnClick
+          />
         </Box>
-
+        <Box mt={2} sx={{ textAlign: "right" }}>
+          <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
+          <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
+          <Typography fontWeight="bold">
+            Net Amount: ₹ {totals.netAmount.toFixed(2)}
+          </Typography>
+        </Box>
         <Box mt={3}>
           <Button variant="contained" color="success" onClick={handleSaveInvoice}>Save Invoice</Button>
         </Box>
       </Box>
-
       {/* ========== ADD ITEM MODAL ========== */}
-        <Dialog
-          open={openAddItem}
-          onClose={() => {
-            clearItemDialog();
-            setOpenAddItem(false);
-          }}
-          fullWidth
-          maxWidth="sm"
-        >
+      <Dialog
+        open={openAddItem}
+        onClose={() => {
+          clearItemDialog();
+          setOpenAddItem(false);
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Add Item</DialogTitle>
+        <DialogContent>
+          <TextField
+            select
+            fullWidth
+            label="Select Item"
+            value={selectedItem?._id || ""}
+            onChange={(e) => {
+              const item = items.find(i => i._id === e.target.value);
 
-          <DialogTitle>Add Item</DialogTitle>
-          <DialogContent>
-            <TextField
-              select
-              fullWidth
-              label="Select Item"
-              value={selectedItem?._id || ""}
-              onChange={(e) => {
-                const item = items.find(i => i._id === e.target.value);
+              if (!item) {
+                clearItemDialog();
+                return;
+              }
 
-                if (!item) {
-                  clearItemDialog();
-                  return;
-                }
-
-                setSelectedItem(item);
-                setRate(item.rate || 0);
-                setQuantity(1);
-                setSelectedUnit(item.stockUnit || "Pcs");
-              }}
-              sx={{ mt: 2 }}
-            >
-              {items.map(i => (
-                <MenuItem key={i._id} value={i._id}>
-                  {i.itemName}
-                </MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              fullWidth
-              label="Unit"
-              value={selectedUnit}
-              InputProps={{ readOnly: true }}
-              sx={{ mt: 2 }}
-            />
-
-
-            <TextField fullWidth type="number" label="Quantity" sx={{ mt: 2 }} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} />
-            <TextField fullWidth type="number" label="Rate" sx={{ mt: 2 }} value={rate} onChange={(e) => setRate(parseFloat(e.target.value))} />
-            <TextField fullWidth label="Amount" sx={{ mt: 2 }} value={amount.toFixed(2)} InputProps={{ readOnly: true }} />
-
-            <TextField select fullWidth label="Tax" sx={{ mt: 2 }} value={formState.tax} onChange={(e) => setFormState({ ...formState, tax: e.target.value })}>
-              {["5%", "12%", "18%", "28%"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
-            </TextField>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setOpenAddItem(false)}>Cancel</Button>
-            <Button variant="contained" onClick={handleAddItemToGrid}>Add</Button>
-          </DialogActions>
-        </Dialog>
-
-        {/* ========== SNACKBAR ========== */}
-        <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
-          <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
-        </Snackbar>
-      </>
-      );
+              setSelectedItem(item);
+              setRate(item.rate || 0);
+              setQuantity(1);
+              setSelectedUnit(item.stockUnit || "Pcs");
+            }}
+            sx={{ mt: 2 }}
+          >
+            {items.map(i => (
+              <MenuItem key={i._id} value={i._id}>
+                {i.itemName}
+              </MenuItem>
+            ))}
+          </TextField>
+          <TextField
+            fullWidth
+            label="Unit"
+            value={selectedUnit}
+            InputProps={{ readOnly: true }}
+            sx={{ mt: 2 }}
+          />
+          <TextField fullWidth type="number" label="Quantity" sx={{ mt: 2 }} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} />
+          <TextField fullWidth type="number" label="Rate" sx={{ mt: 2 }} value={rate} onChange={(e) => setRate(parseFloat(e.target.value))} />
+          <TextField fullWidth label="Amount" sx={{ mt: 2 }} value={amount.toFixed(2)} InputProps={{ readOnly: true }} />
+          <TextField select fullWidth label="Tax" sx={{ mt: 2 }} value={formState.tax} onChange={(e) => setFormState({ ...formState, tax: e.target.value })}>
+            {["5%", "12%", "18%", "28%"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
+          </TextField>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenAddItem(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleAddItemToGrid}>Add</Button>
+        </DialogActions>
+      </Dialog>
+      {/* ========== SNACKBAR ========== */}
+      <Snackbar open={snackbar.open} autoHideDuration={3000} onClose={handleCloseSnackbar} anchorOrigin={{ vertical: "top", horizontal: "center" }}>
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>{snackbar.message}</Alert>
+      </Snackbar>
+    </>
+  );
 }

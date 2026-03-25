@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (method === "POST") {
     // Create new customer
     try {
-      const { custName, phone, code, email, city, location, gst, user, ledger, serialTrackingEnabled } = req.body;
+      const { custName, phone, code, email, city, location,company, gst, user, ledger, serialTrackingEnabled } = req.body;
 
       // Validate required fields
       if (!custName || !phone) {
@@ -24,6 +24,7 @@ export default async function handler(req, res) {
         email: email || "",
         city: city || "",
         location: location || "",
+          company: company || "",
         gst: gst || "",
         user: user || "Tester",
         ledger: ledger || "General Ledger",

@@ -62,8 +62,13 @@ const PurchaseBillSchema = new mongoose.Schema(
     remarks: { type: String, default: "" },
 
     items: [ItemSchema],
+attachments: [
+  {
+    fileId: mongoose.Schema.Types.ObjectId,
+   fileName: String,
+  },
+],
 
-    attachments: [String],
   },
   { timestamps: true }
 );
