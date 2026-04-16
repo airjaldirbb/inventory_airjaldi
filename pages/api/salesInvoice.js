@@ -4,7 +4,7 @@ import SalesInvoice from "@/models/SalesInvoice";
 import Item from "@/models/Item";
 import Branch from "@/models/Branch";
 import Customer from "@/models/Customer";
-
+import Agent from "@/models/Agent";
 export default async function handler(req, res) {
   await dbConnect();
 
@@ -164,6 +164,7 @@ export default async function handler(req, res) {
         paymentMode,
         gstType,
         customerDetails, // 🔥 for Jaze
+        agent,
       } = req.body;
 
       if (!customer || !branch || !items || items.length === 0) {
@@ -244,6 +245,15 @@ export default async function handler(req, res) {
         return res.status(404).json({ message: "Customer not found" });
       }
 
+      let agentDoc = null;
+
+      if (agent && mongoose.Types.ObjectId.isValid(agent)) {
+        agentDoc = await Agent.findById(agent);
+
+        if (!agentDoc) {
+          return res.status(404).json({ message: "Agent not found" });
+        }
+      }
       // =====================================================
       // 🔹 ENRICH ITEMS
       // =====================================================
@@ -292,7 +302,7 @@ export default async function handler(req, res) {
       const newInvoice = await SalesInvoice.create({
         invoiceNumber: newInvoiceNumber,
         invoiceDate: invoiceDate || Date.now(),
-
+        agent: agentDoc?._id || null,
         customer: customerDoc._id, // ✅ ALWAYS MONGO ID
 
         branch,
@@ -314,7 +324,7 @@ export default async function handler(req, res) {
       await newInvoice.populate("branch");
       await newInvoice.populate("customer");
       await newInvoice.populate("items.item");
-
+      await newInvoice.populate("agent");
       return res.status(201).json({
         message: "Sales invoice created successfully",
         data: newInvoice,

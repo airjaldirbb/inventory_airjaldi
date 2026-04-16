@@ -12,13 +12,20 @@ import {
   DialogActions,
   Snackbar,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import {
+  DataGrid, useGridApiRef,
+  DEFAULT_GRID_AUTOSIZE_OPTIONS, gridClasses, GridAutosizeOptions,
+} from "@mui/x-data-grid";
+
 import MuiAlert from "@mui/material/Alert";
 import axios from "axios";
 import dayjs from "dayjs";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 export default function MaterialReceipt() {
   /* ================= STATES ================= */
+  const apiRef = useGridApiRef();
+
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
   const [party, setParty] = useState("");
@@ -67,6 +74,15 @@ export default function MaterialReceipt() {
   useEffect(() => {
     barcodeRef.current?.focus();
   }, []);
+  useEffect(() => {
+    if (apiRef.current) {
+      apiRef.current.autosizeColumns({
+        ...DEFAULT_GRID_AUTOSIZE_OPTIONS,
+        includeHeaders: true,
+        includeOutliers: true,
+      });
+    }
+  }, [rows]);
 
   /* ================= BARCODE SCAN ================= */
   const handleBarcodeScan = async () => {
@@ -215,6 +231,64 @@ export default function MaterialReceipt() {
       });
     }
   };
+  const handleSaveAndExport = async () => {
+    if (!selectedBranch || !receiptDate || !receiptNo || rows.length === 0) {
+      setSnackbar({
+        open: true,
+        message: "Please fill all required fields!",
+        severity: "error",
+      });
+      return;
+    }
+
+    const payload = {
+      branch: selectedBranch,
+      receiptDate,
+      receiptNo,
+      party,
+      items: rows.map(r => ({
+        itemId: r.itemId,
+        qty: r.qty,
+        unit: r.unit,
+        rate: r.rate,
+        amount: r.amount,
+        remarks: r.remarks,
+      })),
+    };
+
+    try {
+      // ✅ Save first
+      await axios.post("/api/receipt", payload);
+
+      // ✅ Then export
+      exportToExcel({
+        fileName: `materialReceipt-${receiptNo}.xlsx`,
+        sheetName: "Material Receipt",
+        columns,
+        rows,
+      });
+
+      setSnackbar({
+        open: true,
+        message: "Saved & Exported successfully!",
+        severity: "success",
+      });
+
+      // reset
+      setRows([]);
+      setTotalAmount(0);
+      setReceiptNo("");
+      setParty("");
+      setBarcodeInput("");
+
+    } catch (err) {
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || "Error saving receipt!",
+        severity: "error",
+      });
+    }
+  };
 
   /* ================= DELETE ROW ================= */
   const handleDeleteRow = (id) => {
@@ -244,9 +318,18 @@ export default function MaterialReceipt() {
   /* ================= UI ================= */
   return (
     <Box sx={{ p: 3 }}>
+      <Box sx={{ display: "flex", justifyContent: { mb: 2, xs: 'center', sm: 'flex-end' } }}>
+        <Button
+          variant="contained"
+          color="success"
+          onClick={handleSaveAndExport}
+        >
+          Save & Export Excel
+        </Button>
+      </Box>
       <Typography variant="h5" fontWeight="bold">Material Receipt</Typography>
 
-      <Stack direction="row" spacing={2} sx={{ my: 2 }}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ my: 2 }}>
         <TextField select label="Branch ★" fullWidth
           value={selectedBranch}
           onChange={e => setSelectedBranch(e.target.value)}>
@@ -269,25 +352,28 @@ export default function MaterialReceipt() {
         />
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+      {/* <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
         <TextField label="Scan Barcode" fullWidth
           inputRef={barcodeRef}
           value={barcodeInput}
           onChange={e => setBarcodeInput(e.target.value)}
           onKeyDown={e => e.key === "Enter" && handleBarcodeScan()} />
         <Button variant="contained" onClick={handleBarcodeScan}>Add</Button>
-      </Stack>
+      </Stack> */}
 
-      <Button variant="contained" sx={{ mb: 2 }} onClick={() => setAddOpen(true)}>Add Item</Button>
+      <Button variant="contained" sx={{ mb: 2, float: 'right', m: 2, justifyContent: { xs: "center", sm: "flex-end" } }} onClick={() => setAddOpen(true)}>Add Item</Button>
+      <Box sx={{ width: "100%", overflowX: "auto" }}>
+        <DataGrid
+          apiRef={apiRef}
+          rows={rows}
+          columns={columns}
+          autoHeight
+          getRowId={row => row.id}
+          disableRowSelectionOnClick
+          pageSize={5}
+        />
+      </Box>
 
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        autoHeight
-        getRowId={row => row.id}
-        disableRowSelectionOnClick
-        pageSize={5}
-      />
 
       <Typography align="right" sx={{ mt: 2 }}>
         <b>Total Amount: ₹{totalAmount.toFixed(2)}</b>

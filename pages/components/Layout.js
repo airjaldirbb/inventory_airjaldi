@@ -33,6 +33,7 @@ const menuItems = [
             { label: "Customer", path: "/Customer" },
             { label: "Sales Invoice", path: "/SalesInvoice" },
             { label: "Payment Receipt", path: "/PaymentReceipt" },
+            { label: "Sales Branch Transfer", path: "/SalesBranchTransfer" }
         ],
     },
     {
@@ -43,7 +44,9 @@ const menuItems = [
             { label: "Vendor", path: "/Vendor" },
             { label: "Purchase Order", path: "/PurchaseOrder" },
             { label: "Purchase Bill", path: "/PurchaseBill" },
-            { label: "Bill Payment", path: "/BillPayment" }
+            { label: "Bill Payment", path: "/BillPayment" },
+            { label: "Purchase Branch Transfer", path: "/PurchaseBranchTransfer" }
+
         ],
     },
     {
@@ -52,7 +55,7 @@ const menuItems = [
         path: "/inventory",
         subMenu: [
             // { label: "Item Master", path: "/ItemMaster" },
-             { label: "Item List", path: "/ItemList" },
+            { label: "Item List", path: "/ItemList" },
             { label: "Material Issue", path: "/MaterialIssue" },
             { label: "Material Receipt", path: "/MaterialReceipt" },
             { label: "Stock Management", path: "/StockManagement" },

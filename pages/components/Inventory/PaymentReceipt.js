@@ -87,8 +87,16 @@ export default function PaymentReceiptForm() {
         },
       });
 
-      const invoiceData = res.data.data || [];
+      // const invoiceData = res.data.data || [];
 
+      // ✅ FILTER CREDIT ONLY
+      const invoiceData = (res.data.data || []).filter(
+        (inv) => inv.paymentMode === "CREDIT"
+      );
+
+      if (invoiceData.length === 0) {
+        showSnackbar("No CREDIT invoices found", "info");
+      }
       if (invoiceData.length === 0) {
         showSnackbar("No invoices found for selected branch/customer", "info");
       }
@@ -102,7 +110,7 @@ export default function PaymentReceiptForm() {
         salesPaymentMode: inv.paymentMode.toUpperCase(),
         amountDue: inv.balanceAmount || inv.netAmount,
         amountPaid: inv.balanceAmount || inv.netAmount,
-        referenceNo: "",
+        // referenceNo: "",
         paymentDate: new Date().toISOString().split("T")[0],
       }));
 
@@ -140,14 +148,14 @@ export default function PaymentReceiptForm() {
       showSnackbar("Customer, Branch, and at least one invoice are required", "warning");
       return;
     }
-    const invalidInvoice = form.invoices.find(
-      (inv) => !inv.referenceNo || inv.referenceNo.trim() === ""
-    );
+    // const invalidInvoice = form.invoices.find(
+    //   (inv) => !inv.referenceNo || inv.referenceNo.trim() === ""
+    // );
 
-    if (invalidInvoice) {
-      showSnackbar("Reference No is required for all invoices", "error");
-      return;
-    }
+    // if (invalidInvoice) {
+    //   showSnackbar("Reference No is required for all invoices", "error");
+    //   return;
+    // }
     const payload = {
       receiptNumber: form.receiptNumber,
       receiptDate: form.receiptDate,
@@ -260,7 +268,7 @@ export default function PaymentReceiptForm() {
                 <TableCell>Invoice Date</TableCell>
                 <TableCell>Payment Mode</TableCell>
                 <TableCell>Amount Due</TableCell>
-                <TableCell>Reference No</TableCell>
+                {/* <TableCell>Reference No</TableCell> */}
                 <TableCell>Amount Paid</TableCell>
                 <TableCell>Payment Date</TableCell>
               </TableRow>
@@ -282,7 +290,7 @@ export default function PaymentReceiptForm() {
                         updateInvoiceField(idx, "referenceNo", e.target.value)
                       }
                     /> */}
-                    <TextField
+                    {/* <TextField
                       size="small"
                       value={i.referenceNo}
                       required
@@ -291,7 +299,7 @@ export default function PaymentReceiptForm() {
                       onChange={(e) =>
                         updateInvoiceField(idx, "referenceNo", e.target.value)
                       }
-                    />
+                    /> */}
                   </TableCell>
                   <TableCell>
                     <TextField

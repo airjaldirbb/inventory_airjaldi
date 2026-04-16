@@ -19,8 +19,9 @@ export default function KendoGrid() {
                     axios.get("/api/salesInvoiceREgister"),    // Sales API
                     axios.get("/api/purchaseInvoiceRegister"), // Purchase API
                     axios.get("/api/vendorTrial"),
-                    axios.get("/api/customerTrail")                // Vendor Trial API
-
+                    axios.get("/api/customerTrail"),              // Vendor Trial API
+                    axios.get("/api/SalesBranchTransfer"),
+                    axios.get("/api/PurchaseBranchTransfer")
                 ]);
 
                 // Sales total
@@ -76,24 +77,36 @@ export default function KendoGrid() {
         },
         {
             title: "Payables",
-            values: [Number(closingBalanceTotal.toFixed(2))], // ✅ now working
+            values: [Number(closingBalanceTotal.toFixed(2))],
             labels: ["Payables"],
-            colors: ["#99f071"],
+            colors: ["#ec5b2f"],
+        },
+        {
+            title: "Sales Branch Transfer",
+            values: [Number(closingBalanceTotal.toFixed(2))],
+            labels: ["Sales Branch"],
+            colors: ["#f071cc"],
+        },
+        {
+            title: "Purchase Branch Transfer",
+            values: [Number(closingBalanceTotal.toFixed(2))],
+            labels: ["Purchase Branch"],
+            colors: ["#3e86de"],
         },
 
 
     ];
 
     return (
-        <Box sx={{ justifyContent: 'center',minHeight:'50vh', mt:'10rem' }}>
+        <Box sx={{ justifyContent: 'center', minHeight: '50vh', mt: '5rem' }}>
             <Grid
                 container
                 spacing={2}
-                wrap="nowrap"
                 sx={{
                     overflowX: "auto",
-                    flexWrap: "nowrap",
+
                     justifyContent: 'center',
+
                     alignItems: 'center'
                 }}
             >
@@ -106,45 +119,64 @@ export default function KendoGrid() {
                     }));
 
                     return (
-                        <Grid item key={index} sx={{ flex: "0 0 auto" }}>
+                        <Grid
+                            item
+                            key={index}
+                            xs={12}
+                            sm={6}
+                            md={4}
+                            lg={3}
+                            sx={{ display: "flex" }} // ✅ IMPORTANT
+                        >
                             <Box
                                 sx={{
                                     display: "flex",
                                     flexDirection: "column",
-                                    alignItems: "center",   // horizontally center
-                                    justifyContent: "flex-start", // ensure title stays at top of chart
+                                    alignItems: "center",
+                                    justifyContent: "space-between", // ✅ equal spacing
+                                    p: 2,
+                                    boxShadow: 2,
+                                    borderRadius: 2,
+                                    width: "100%",
+                                    height: "100%", // ✅ equal height for all
+                                    minHeight: 300, // ✅ force uniform height
                                 }}
                             >
-                                {/* <Typography
-                                    variant="h5"
+                                <Typography
+                                    variant="h6"
                                     sx={{
                                         mb: 1,
-                                        textAlign: "center",  // center text above pie
-                                        width: "100%",        // full width so it doesn’t shift
+                                        textAlign: "center",
+                                        width: "100%",
+                                        minHeight: 40, // ✅ equal title height (fix alignment issue)
                                     }}
                                 >
                                     {config.title}
-                                </Typography> */}
+                                </Typography>
 
-                                <PieChart
-                                    series={[
-                                        {
-                                            innerRadius: 60,
-                                            outerRadius: 100,
-                                            data,
-                                            arcLabel: (item) => `${item.value}`, // show label
-                                            labelStyle: {
-                                                fontSize: 18,   // 🔥 increase label size here
-                                                fontWeight: 700,
-                                                fill: "#000",
+                                <Box
+                                    sx={{
+                                        width: "100%",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    <PieChart
+                                        series={[
+                                            {
+                                                innerRadius: 50,
+                                                outerRadius: 90,
+                                                data,
+                                                arcLabel: (item) => `${item.value}`,
                                             },
-                                        },
-                                    ]}
-                                    width={250}
-                                    height={200}
-                                />
+                                        ]}
+                                        width={210}   
+                                        height={200}
+                                    />
+                                </Box>
                             </Box>
                         </Grid>
+
                     );
                 })}
             </Grid>

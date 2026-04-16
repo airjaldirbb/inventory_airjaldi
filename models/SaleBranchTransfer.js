@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const salesInvoiceSchema = new mongoose.Schema(
+const saleBranchTransfer = new mongoose.Schema(
   {
     invoiceNumber: { type: String, required: true, unique: true },
     invoiceDate: { type: Date, default: Date.now },
@@ -75,5 +75,5 @@ const salesInvoiceSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.SalesInvoice ||
-  mongoose.model("SalesInvoice", salesInvoiceSchema);
+export default mongoose.models.SalesTransfer ||
+  mongoose.model("SalesTransfer", saleBranchTransfer);

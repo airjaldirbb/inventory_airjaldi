@@ -33,10 +33,12 @@ import KendoGrid from "./KendoGrid";
 import PieCharts from "./PieCharts";
 import BardCharts from "./BardCharts";
 import SalesInvoiceRegister from "./components/Inventory/salesInvoiceRegister";
+import SalesBranchTransfer from "./components/Inventory/SalesBranchTransfer";
 import PurchaseInvoiceRegisterGrid from "./components/Inventory/purchaseInvoiceRegister";
 import StockTrail from "./components/Inventory/StockTrial";
 import MaterialIssueRegister from "./components/Inventory/MaterialIssueRegister";
 import MaterialReceiptRegister from "./components/Inventory/MaterialReceiptRegister";
+import PurchaseBranchTransfer from "./components/Inventory/PurchaseBranchTranser";
 /* =====================================================
    🔹 TAB REGISTRY (SINGLE SOURCE OF TRUTH)
 ===================================================== */
@@ -57,6 +59,8 @@ const TAB_REGISTRY = {
   customerTrial: { label: "Customer Trial", component: <CustomerTrial /> },
   vendorTrial: { label: "Vendor Trial", component: <VendorTrial /> },
   salesInvoiceRegister: { label: "Sales Invoice Register", component: <SalesInvoiceRegister /> },
+  salesBranchTransfer:{label:"Sales Branch Transfer", component:<SalesBranchTransfer/>},
+  purchaseBranchTransfer:{label:"Purchase Branch Transfer", component:<PurchaseBranchTransfer/>},
   stockTrail: { label: "Stock Trial", component: <StockTrail /> },
   allReports: {
     label: "All Reports",
@@ -142,11 +146,13 @@ export default function Dashboard() {
           "/MaterialReceipt": "materialReceipt",
           "/StockManagement": "stockManagement",
           "/SalesInvoice": "salesInvoice",
+          "/SalesBranchTransfer":"salesBranchTransfer",
           "/Customer": "customer",
           "/PaymentReceipt": "paymentReceipt",
           "/Vendor": "vendor",
           "/PurchaseOrder": "purchaseOrder",
           "/PurchaseBill": "purchaseBill",
+          "/PurchaseBranchTransfer":"purchaseBranchTransfer",
           "/BillPayment": "billPayment",
           "/AllReports": "allReports",
           "/CustomerTrial": "customerTrial",

@@ -72,6 +72,7 @@ const SalesInvoiceRegister = () => {
     fetchData();
   }, []);
 
+
   // ================= EDIT =================
   const handleEditRow = (row) => {
     setEditingRowId(row.id);
@@ -81,39 +82,46 @@ const SalesInvoiceRegister = () => {
     });
   };
 
-  const handleUpdateRow = async (row) => {
-    try {
-    await axios.put(`/api/salesInvoiceREgister?id=${row._id}&type=${row.transactionType}`, {
-  qty: editValues.qty,
-  rate: editValues.rate,
-});
+const handleUpdateRow = async (row) => {
+  try {
+    await axios.put(
+      `/api/salesInvoiceREgister?id=${row.parentId}&type=SALE&itemId=${row.itemId}`,
+      {
+        qty: Number(editValues.qty),
+        rate: Number(editValues.rate),
+        itemName: editValues.itemName,
+      }
+    );
 
-      // ✅ update UI
-      setRows((prev) =>
-        prev.map((r) =>
-          r.id === row.id
-            ? {
-                ...r,
-                qty: Number(editValues.qty),
-                rate: Number(editValues.rate),
-                invoiceAmount:
-                  Number(editValues.qty) * Number(editValues.rate),
-              }
-            : r
-        )
-      );
+    // ✅ update UI
+    setRows((prev) =>
+      prev.map((r) =>
+        r.id === row.id
+          ? {
+              ...r,
+              qty: Number(editValues.qty),
+              rate: Number(editValues.rate),
+              item: {
+                ...r.item,
+                itemName: editValues.itemName,
+              },
+              invoiceAmount:
+                Number(editValues.qty) * Number(editValues.rate),
+            }
+          : r
+      )
+    );
 
-      setEditingRowId(null);
-      showSnackbar("Updated successfully", "success");
+    setEditingRowId(null);
+    showSnackbar("Updated successfully", "success");
 
-      // optional refresh for accuracy
-      fetchData();
+    fetchData(); // optional
 
-    } catch (err) {
-      console.error(err);
-      showSnackbar("Update failed", "error");
-    }
-  };
+  } catch (err) {
+    console.error(err);
+    showSnackbar("Update failed", "error");
+  }
+};
 
   // ================= DELETE =================
   const handleDeleteRow = async (row) => {

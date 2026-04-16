@@ -17,10 +17,8 @@ export const exportToExcel = ({
 
   // Combine header + rows
   const worksheetData = [header, ...data];
-
   const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
   const workbook = XLSX.utils.book_new();
-
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
 
   const excelBuffer = XLSX.write(workbook, {

@@ -52,7 +52,6 @@ export default function Customer() {
     const fetchCustomers = async () => {
       try {
         const res = await axios.get("/api/customer");
-
         setRows(res.data);
       } catch (err) {
         console.error("Error fetching customers:", err);
@@ -60,9 +59,6 @@ export default function Customer() {
     };
     fetchCustomers();
   }, []);
-
-
-
 
   const handleSaveAdd = async () => {
     const requiredFields = ["custName", "code", "phone", "email", "city", "company", "location", "gst"];
@@ -136,7 +132,7 @@ export default function Customer() {
   const columns = [
     { field: "edit", headerName: "Edit", width: 80, renderCell: params => <Button color="primary" onClick={() => handleEditRow(params.row)} size="small"><EditIcon /></Button> },
     { field: "delete", headerName: "Delete", width: 90, renderCell: params => <Button color="error" onClick={() => handleOpenDeleteConfirm(params.row._id)} size="small"><DeleteIcon /></Button> },
-    { field: "custName", headerName: "Name", width: 100 },
+    { field: "_id", headerName: "Customer ID", width: 100 },
     { field: "code", headerName: "Code", width: 120 },
     { field: "phone", headerName: "Phone", width: 130 },
     { field: "email", headerName: "Email", width: 180 },
@@ -167,7 +163,6 @@ export default function Customer() {
     { field: "groupName", headerName: "Group", width: 150 },
     { field: "profileName", headerName: "Profile", width: 150 },
     { field: "status", headerName: "Status", width: 120 },
-
     { field: "connectionType", headerName: "Connection Type", width: 150 },
     { field: "clientType", headerName: "Client Type", width: 150 },
   ];
@@ -191,59 +186,37 @@ export default function Customer() {
       const res = await axios.get(
         `/api/jazeApi?type=phone&value=${phoneNumber}`
       );
-
       console.log("RAW API RESPONSE:", res.data);
-
       let responseData = res.data?.data || [];
-
       // ✅ ALWAYS work with array
       if (!Array.isArray(responseData)) {
         responseData = [responseData];
       }
-
       // ✅ Extract ONLY User objects
       const users = responseData
         .filter(item => item?.User)
         .map(item => {
           const user = item.User;
           const gstNumber = item.UserSetting?.gstNumber || "";
-
           return {
             _id: String(user.id),
-
             custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
-
             code: user.username || "",
-
             phone: user.phone || "",
-
             email: user.email || "",
-
             city: user.address_city || "",
-
             location: user.address_line1 || "",
-
             gst: gstNumber,
-
             user: "AirJaldi",
-
-            // ✅ IMPORTANT (THIS FIXES YOUR ISSUE)
             company: user.company_name || "",
-
             groupName: user.group_name || "",
-
             profileName: user.profile_name || "",
-
             status: user.status || "",
-
             connectionType: user["Connection Type"] || "",
-
             clientType: user["Client Type"] || "",
           };
         });
-
       console.log("✅ Normalized Users:", users);
-
       // ✅ Merge into grid
       setRows(prev => {
         const newRows = users.filter(
@@ -317,11 +290,11 @@ export default function Customer() {
           {["custName", "code", "phone", "email", "city", "company", "location", "gst"].map(field => (
             <TextField key={field} margin="dense" label={field.charAt(0).toUpperCase() + field.slice(1)} fullWidth value={newRowData[field]} onChange={e => setNewRowData({ ...newRowData, [field]: e.target.value })} />
           ))}
-          <Box sx={{ mt: 2, display: "flex", alignItems: "center" }}>
+          {/* <Box sx={{ mt: 2, display: "flex", alignItems: "center" }}>
             <Typography sx={{ mr: 1 }}>Enable Serial Tracking:</Typography>
             <Switch checked={newRowData.serialTrackingEnabled} onChange={e => setNewRowData({ ...newRowData, serialTrackingEnabled: e.target.checked })} />
             <Typography>{newRowData.serialTrackingEnabled ? "ON" : "OFF"}</Typography>
-          </Box>
+          </Box> */}
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setAddOpen(false)}>Cancel</Button>

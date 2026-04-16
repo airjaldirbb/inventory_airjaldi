@@ -112,7 +112,8 @@ export default function SalesInvoice() {
         invoiceNumber: formState.invoiceNo || undefined,
         invoiceDate: formState.date || new Date().toISOString().slice(0, 10),
         customer: formState.customer,
-          
+        // ✅ ADD THIS
+        agent: formState.agent || null,
         branch: formState.branch,
         gstType: formState.gstType || "TAX_INVOICE", // ✅ ADD THIS
         paymentMode: formState.cashCredit || "CASH", // ✅ ADD THIS
@@ -127,10 +128,13 @@ export default function SalesInvoice() {
           total: r.total || 0,
         })),
 
+        totalAmount: totals.totalAmount,
+        totalGST: totals.totalGST,
+        netAmount: totals.roundedNetAmount,
+        roundOff: totals.roundOff,
         totalAmount: rows.reduce((sum, r) => sum + r.total, 0),
         totalGST: rows.reduce((sum, r) => sum + r.gstAmount, 0),
         netAmount: rows.reduce((sum, r) => sum + r.total + r.gstAmount, 0),
-
         paymentStatus: formState.paymentStatus || "UNPAID",
       };
       await axios.post("/api/salesInvoice", payload);
@@ -172,7 +176,7 @@ export default function SalesInvoice() {
     const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
     const itemTotal = quantity * rate;
     const gstAmount = (itemTotal * gstPercentage) / 100;
-
+    const selectedAgent = agents.find(a => a._id === formState.agent);
     const newRow = {
       ...selectedItem,
       quantity,
@@ -183,6 +187,8 @@ export default function SalesInvoice() {
       totalWithGST: itemTotal + gstAmount,
       unit: selectedItem.stockUnit || "Pcs",
       rowId: editingRowId || Date.now() + Math.random(),
+      agentId: selectedAgent?._id || "",
+      name: selectedAgent?.name || "",
     };
 
     if (editingRowId) {
@@ -197,11 +203,26 @@ export default function SalesInvoice() {
 
     // 🔹 RESET EDIT MODE
     setEditingRowId(null);
-
     clearItemDialog();
     setOpenAddItem(false);
     showSnackbar(editingRowId ? "Item updated" : "Item added");
   };
+  // const totals = React.useMemo(() => {
+  //   let totalAmount = 0;
+  //   let totalGST = 0;
+
+  //   rows.forEach(r => {
+  //     totalAmount += r.total || 0;
+  //     totalGST += r.gstAmount || 0;
+  //   });
+
+  //   return {
+  //     totalAmount,
+  //     totalGST,
+  //     netAmount: totalAmount + totalGST,
+  //   };
+  // }, [rows]);
+
   const totals = React.useMemo(() => {
     let totalAmount = 0;
     let totalGST = 0;
@@ -211,10 +232,18 @@ export default function SalesInvoice() {
       totalGST += r.gstAmount || 0;
     });
 
+    const netAmount = totalAmount + totalGST;
+
+    // ✅ ROUND OFF
+    const roundedNetAmount = Math.round(netAmount);
+    const roundOff = roundedNetAmount - netAmount;
+
     return {
       totalAmount,
       totalGST,
-      netAmount: totalAmount + totalGST,
+      netAmount,
+      roundedNetAmount,
+      roundOff,
     };
   }, [rows]);
   const handleEditRow = (row) => {
@@ -237,6 +266,8 @@ export default function SalesInvoice() {
     { field: "delete", headerName: "Delete", width: 90, renderCell: (params) => <Button color="error" onClick={() => handleDeleteRow(params.row.rowId)}><DeleteIcon /></Button> },
     { field: "itemName", headerName: "Item", width: 150 },
     { field: "itemCode", headerName: "Code", width: 120 },
+    { field: "name", headerName: "Agent", width: 120 },
+
     { field: "openingStock", headerName: "Stock", width: 120 },
     { field: "quantity", headerName: "Qty", width: 100 },
     { field: "rate", headerName: "Rate", width: 100 },
@@ -318,7 +349,7 @@ export default function SalesInvoice() {
         city: user.address_city || "",
         location: user.address_line1 || "",
         gst: gstNumber || "",
-        company: user.company_name || "", 
+        company: user.company_name || "",
       });
 
       console.log("✅ Jaze customer set successfully");
@@ -486,12 +517,29 @@ export default function SalesInvoice() {
             disableRowSelectionOnClick
           />
         </Box>
-        <Box mt={2} sx={{ textAlign: "right" }}>
+        {/* <Box mt={2} sx={{ textAlign: "right" }}>
           <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
           <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
           <Typography fontWeight="bold">
             Net Amount: ₹ {totals.netAmount.toFixed(2)}
           </Typography>
+        </Box> */}
+        <Box mt={2} sx={{ textAlign: "right" }}>
+          <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
+          <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
+
+          {/* ✅ ADD THIS */}
+          <Typography>
+            Round Off: ₹ {totals.roundOff.toFixed(2)}
+          </Typography>
+          {/* <Typography>
+            Round Off: ₹ {totals.roundOff >= 0 ? "+" : ""}
+            {totals.roundOff.toFixed(2)}
+          </Typography> */}
+
+          {/* <Typography fontWeight="bold">
+            Net Amount: ₹ {totals.roundedNetAmount.toFixed(2)}
+          </Typography> */}
         </Box>
         <Box mt={3}>
           <Button variant="contained" color="success" onClick={handleSaveInvoice}>Save Invoice</Button>
