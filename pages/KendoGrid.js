@@ -12,16 +12,20 @@ export default function KendoGrid() {
     const [purchaseTotal, setPurchaseTotal] = useState(0);
     const [closingBalanceTotal, setClosingBalanceTotal] = useState(0); // ✅ compute from vendorTrial array
     const [outstandingTotal, setOutstandingTotal] = useState(0);       // Customer Outstanding
+    const [salesBranchTotal, setSalesBranchTotal] = useState(0);
+    const [purchaseBranchTotal, setPurchaseBranchTotal] = useState(0);
     useEffect(() => {
         const fetchTotals = async () => {
             try {
-                const [salesRes, purchaseRes, vendorTrialRes, customerTrialRes] = await Promise.all([
+                const [salesRes, purchaseRes, vendorTrialRes, customerTrialRes, salesBranchRes,
+                    purchaseBranchRes
+                ] = await Promise.all([
                     axios.get("/api/salesInvoiceREgister"),    // Sales API
                     axios.get("/api/purchaseInvoiceRegister"), // Purchase API
                     axios.get("/api/vendorTrial"),
                     axios.get("/api/customerTrail"),              // Vendor Trial API
-                    axios.get("/api/SalesBranchTransfer"),
-                    axios.get("/api/PurchaseBranchTransfer")
+                    // axios.get("/api/SalesBranchTransfer"),
+                    // axios.get("/api/PurchaseBranchTransfer")
                 ]);
 
                 // Sales total
@@ -29,7 +33,17 @@ export default function KendoGrid() {
 
                 // Purchase total
                 setPurchaseTotal(purchaseRes.data.totalAmount || 0);
+                // const salesBranchData = salesBranchRes.data.data || [];
+                // const purchaseBranchData = purchaseBranchRes.data.data || [];
 
+
+                // setSalesBranchTotal(
+                //     salesBranchData.reduce((acc, item) => acc + (item.netAmount || 0), 0)
+                // );
+
+                // setPurchaseBranchTotal(
+                //     purchaseBranchData.reduce((acc, item) => acc + (item.netAmount || 0), 0)
+                // );
                 // Compute total closing balance from vendorTrial array
                 const vendorData = vendorTrialRes.data.data || [];
                 const totalClosing = vendorData.reduce(
@@ -95,6 +109,7 @@ export default function KendoGrid() {
         },
 
 
+
     ];
 
     return (
@@ -104,9 +119,7 @@ export default function KendoGrid() {
                 spacing={2}
                 sx={{
                     overflowX: "auto",
-
                     justifyContent: 'center',
-
                     alignItems: 'center'
                 }}
             >
@@ -133,13 +146,13 @@ export default function KendoGrid() {
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
-                                    justifyContent: "space-between", // ✅ equal spacing
+                                    justifyContent: "space-between", 
                                     p: 2,
                                     boxShadow: 2,
                                     borderRadius: 2,
                                     width: "100%",
-                                    height: "100%", // ✅ equal height for all
-                                    minHeight: 300, // ✅ force uniform height
+                                    height: "100%",
+                                    minHeight: 300, 
                                 }}
                             >
                                 <Typography
@@ -148,7 +161,7 @@ export default function KendoGrid() {
                                         mb: 1,
                                         textAlign: "center",
                                         width: "100%",
-                                        minHeight: 40, // ✅ equal title height (fix alignment issue)
+                                        minHeight: 40, 
                                     }}
                                 >
                                     {config.title}
@@ -170,7 +183,7 @@ export default function KendoGrid() {
                                                 arcLabel: (item) => `${item.value}`,
                                             },
                                         ]}
-                                        width={210}   
+                                        width={210}
                                         height={200}
                                     />
                                 </Box>

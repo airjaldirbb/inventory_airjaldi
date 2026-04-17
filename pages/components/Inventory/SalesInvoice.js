@@ -12,8 +12,9 @@ import {
   DialogContent,
   DialogActions,
   Snackbar,
-  Alert, Typography,
+  Alert, Typography, Container
 } from "@mui/material";
+import AddIcon from '@mui/icons-material/Add';
 import { Autocomplete } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -22,7 +23,7 @@ import axios from "axios";
 export default function SalesInvoice() {
   const [phone, setPhone] = useState("");
 
-  const commonFieldProps = { fullWidth: true, size: "small" };
+  const commonFieldProps = { size: "small", fullWidth: true };
   const [jazeCustomerDetails, setJazeCustomerDetails] = useState(null);
   // ========== FORM STATE ==========
   const [formState, setFormState] = useState({
@@ -367,184 +368,221 @@ export default function SalesInvoice() {
   );
   return (
     <>
-      <Box sx={{ width: "100%", p: 1, }}>
-        <Grid container spacing={2} sx={{ justifyContent: "center" }} >
-          {/* Left Column */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              select
-              label="GST Type"
-              value={formState.gstType}
-              onChange={(e) =>
-                setFormState({ ...formState, gstType: e.target.value })
-              }
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="TAX_INVOICE">Tax Invoice</MenuItem>
-              <MenuItem value="REGISTERED">Registered</MenuItem>
-              <MenuItem value="COMPOSITION">Composition</MenuItem>
-            </TextField>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              select
-              label="Cash / Credit"
-              value={formState.cashCredit}
-              onChange={(e) =>
-                setFormState({ ...formState, cashCredit: e.target.value })
-              }
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="CASH">Cash</MenuItem>
-              <MenuItem value="CREDIT">Credit</MenuItem>
-            </TextField>
-            <Autocomplete
-              options={branches}
-              value={selectedBranch}
-              onChange={(event, newValue) => {
-                setSelectedBranch(newValue);
-                setFormState({ ...formState, branch: newValue?._id || "" });
-              }}
-              getOptionLabel={(o) => o?.name || ""}
-              isOptionEqualToValue={(o, v) => o._id === v._id}
-              sx={{ mb: 2, minWidth: "100%" }}  // prevent shrinking
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="Branch"
-                  fullWidth
-                  sx={{ minWidth: "100%", boxSizing: "border-box" }}
-                />
-              )}
-            />
-            <Autocomplete
-              options={customers}
-              value={customers.find(c => c._id === formState.customer) || null}
-              onChange={(e, newValue) => setFormState({ ...formState, customer: newValue?._id || "", email: newValue?.email || "" })}
-              getOptionLabel={o => o?.custName || ""}
-              isOptionEqualToValue={(o, v) => o._id === v._id}
-              renderInput={(params) => (
-                <TextField {...params} {...commonFieldProps} label="Customer" sx={{ mb: 2 }} fullWidth />
-              )}
-            />
-            <TextField
-              label="Search by Phone"
-              variant="outlined"
-              size="small"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              sx={{ width: 250 }}
-            />
-            <Button variant="contained" onClick={() => fetchUserDetails(phone)}>
-              🔍 Test Fetch
-            </Button>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Email"
-              value={formState.email}
-              onChange={(e) => setFormState({ ...formState, email: e.target.value })}
-              sx={{ mb: 2 }}
-            />
+      {/* <Box sx={{ px: { xs: 1, sm: 2, md: 3 }, py: 2 }}> */}
+      <Container maxWidth="xl">
+        <Grid spacing={8} sx={{ justifyContent: 'center', px: { xs: 1, sm: 2, md: 3 }, py: 2 }}>
+
+          {/* LEFT COLUMN */}
+          <Grid item xs={12} sm={12} md={6} lg={6} sx={{ marginBottom: 2 }}>
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row", md: 'row' }, gap: 2, height: "100%" }}>
+
+              <TextField
+                select
+                label="GST Type"
+                {...commonFieldProps}
+                value={formState.gstType}
+                onChange={(e) =>
+                  setFormState({ ...formState, gstType: e.target.value })
+                }
+              >
+                <MenuItem value="TAX_INVOICE">Tax Invoice</MenuItem>
+                <MenuItem value="REGISTERED">Registered</MenuItem>
+                <MenuItem value="COMPOSITION">Composition</MenuItem>
+              </TextField>
+
+              <TextField
+                select
+                label="Cash / Credit"
+                {...commonFieldProps}
+                value={formState.cashCredit}
+                onChange={(e) =>
+                  setFormState({ ...formState, cashCredit: e.target.value })
+                }
+              >
+                <MenuItem value="CASH">Cash</MenuItem>
+                <MenuItem value="CREDIT">Credit</MenuItem>
+              </TextField>
+
+              <Autocomplete
+
+                {...commonFieldProps}
+                options={branches}
+                value={selectedBranch}
+                onChange={(e, v) => {
+                  setSelectedBranch(v);
+                  setFormState({ ...formState, branch: v?._id || "" });
+                }}
+                getOptionLabel={(o) => o?.name || ""}
+                isOptionEqualToValue={(o, v) => o._id === v._id}
+                renderInput={(params) => (
+                  <TextField {...params} label="Branch" {...commonFieldProps} />
+                )}
+              />
+
+              <Autocomplete
+                {...commonFieldProps}
+                options={customers}
+                value={customers.find(c => c._id === formState.customer) || null}
+                onChange={(e, v) =>
+                  setFormState({
+                    ...formState,
+                    customer: v?._id || "",
+                    email: v?.email || "",
+                  })
+                }
+                getOptionLabel={(o) => o?.custName || ""}
+                isOptionEqualToValue={(o, v) => o._id === v._id}
+                renderInput={(params) => (
+                  <TextField {...params} label="Customer" {...commonFieldProps} />
+                )}
+              />
+
+
+              <TextField
+
+                label="Email"
+                {...commonFieldProps}
+                value={formState.email}
+                onChange={(e) =>
+                  setFormState({ ...formState, email: e.target.value })
+                }
+              /><TextField
+                {...commonFieldProps}
+                label="Search by Phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              <Button
+                
+                variant="outlined"
+                onClick={() => fetchUserDetails(phone)}
+              >
+                Search
+              </Button>
+
+            </Box>
           </Grid>
-          {/* Right Column */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Invoice Date"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={formState.date}
-              onChange={(e) => setFormState({ ...formState, date: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Invoice No (Optional)"
-              placeholder="Leave empty to auto-generate"
-              value={formState.invoiceNo}
-              onChange={(e) => setFormState({ ...formState, invoiceNo: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              select
-              label="Agent"
-              value={formState.agent}
-              onChange={(e) => setFormState({ ...formState, agent: e.target.value })}
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="">Select Agent</MenuItem>
-              {agents.map(a => (
-                <MenuItem key={a._id} value={a._id}>{a.name}</MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Ref No"
-              value={formState.refNo}
-              onChange={(e) => setFormState({ ...formState, refNo: e.target.value })}
-              sx={{ mb: 2 }}
-            />
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Ref Date"
-              type="date"
-              InputLabelProps={{ shrink: true }}
-              value={formState.refDate}
-              onChange={(e) => setFormState({ ...formState, refDate: e.target.value })}
-              sx={{ mb: 2 }}
-            />
+
+          {/* RIGHT COLUMN */}
+          <Grid item xs={12} sm={12} md={6} lg={6}>
+            <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2 }}>
+
+              <TextField
+                label="Invoice Date"
+                type="date"
+                {...commonFieldProps}
+            
+                value={formState.date}
+                onChange={(e) =>
+                  setFormState({ ...formState, date: e.target.value })
+                }
+              />
+
+              <TextField
+                label="Invoice No (Optional)"
+                {...commonFieldProps}
+                value={formState.invoiceNo}
+                onChange={(e) =>
+                  setFormState({ ...formState, invoiceNo: e.target.value })
+                }
+              />
+
+              <TextField
+                select
+                label="Agent"
+                {...commonFieldProps}
+                value={formState.agent}
+                onChange={(e) =>
+                  setFormState({ ...formState, agent: e.target.value })
+                }
+              >
+                <MenuItem value="">Select Agent</MenuItem>
+                {agents.map((a) => (
+                  <MenuItem key={a._id} value={a._id}>
+                    {a.name}
+                  </MenuItem>
+                ))}
+              </TextField>
+
+              <TextField
+                label="Ref No"
+                {...commonFieldProps}
+                value={formState.refNo}
+                onChange={(e) =>
+                  setFormState({ ...formState, refNo: e.target.value })
+                }
+              />
+
+              <TextField
+                label="Ref Date"
+                type="date"
+                {...commonFieldProps}
+                InputLabelProps={{ shrink: true }}
+                value={formState.refDate}
+                onChange={(e) =>
+                  setFormState({ ...formState, refDate: e.target.value })
+                }
+              />
+            </Box>
           </Grid>
         </Grid>
-        <Box mt={3}>
-          <Button variant="contained" onClick={() => setOpenAddItem(true)} color="primary">Add Item</Button>
-        </Box>
-        <Box sx={{ height: 350, width: "100%", mt: 2 }}>
-          {/* <DataGrid rows={rows} columns={columns} getRowId={(r) => r.rowId} /> */}
+
+        
+      </Container>
+ {/* BUTTON */}
+      <Box mt={3}>
+        <Button variant="outlined" onClick={() => setOpenAddItem(true)} sx={{float:''}}>
+        <AddIcon> </AddIcon> Add Items to Inventory
+        </Button>
+      </Box>
+
+     
+
+
+      {/* GRID */}
+      <Box sx={{ width: "100%", mt: 2 }}>
+        <Box sx={{ minWidth: 700 }}>
           <DataGrid
             rows={combinedRows}
             columns={columns}
-            getRowId={(row) => row._id}
+            getRowId={(row) => row.rowId}
+            autoHeight
             pageSize={10}
-            disableRowSelectionOnClick
           />
         </Box>
-        {/* <Box mt={2} sx={{ textAlign: "right" }}>
-          <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
-          <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
-          <Typography fontWeight="bold">
-            Net Amount: ₹ {totals.netAmount.toFixed(2)}
-          </Typography>
-        </Box> */}
-        <Box mt={2} sx={{ textAlign: "right" }}>
-          <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
-          <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
-
-          {/* ✅ ADD THIS */}
-          <Typography>
-            Round Off: ₹ {totals.roundOff.toFixed(2)}
-          </Typography>
-          {/* <Typography>
-            Round Off: ₹ {totals.roundOff >= 0 ? "+" : ""}
-            {totals.roundOff.toFixed(2)}
-          </Typography> */}
-
-          {/* <Typography fontWeight="bold">
-            Net Amount: ₹ {totals.roundedNetAmount.toFixed(2)}
-          </Typography> */}
-        </Box>
-        <Box mt={3}>
-          <Button variant="contained" color="success" onClick={handleSaveInvoice}>Save Invoice</Button>
-        </Box>
       </Box>
+
+      {/* TOTALS */}
+      <Box
+        mt={2}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "flex-end",
+          gap: 1,
+        }}
+      >
+        <Typography>Total: ₹ {totals.totalAmount.toFixed(2)}</Typography>
+        <Typography>GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
+        <Typography>Round Off: ₹ {totals.roundOff.toFixed(2)}</Typography>
+      </Box>
+
+      {/* SAVE BUTTON */}
+      <Box mt={3}>
+        <Button
+
+          variant="contained"
+          color="success"
+          onClick={handleSaveInvoice}
+          style={
+            { float: 'right' }
+          }
+        >
+          Save Invoice
+        </Button>
+      </Box>
+
+
       {/* ========== ADD ITEM MODAL ========== */}
       <Dialog
         open={openAddItem}

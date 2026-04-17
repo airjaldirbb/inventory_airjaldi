@@ -16,19 +16,16 @@ export default async function handler(req, res) {
     // GET TRANSFERS
     // =====================================================
     if (method === "GET") {
-      const { invoiceNumber, customerId, pending } = req.query;
+      const { invoiceNumber, pending } = req.query;
 
       if (invoiceNumber) {
         const invoice = await SaleBranchTransfer.findOne({ invoiceNumber })
           .populate("branch")
-          .populate("customer")
           .populate("items.item")
           .populate("agent");
-
         if (!invoice)
           return res.status(404).json({ message: "Transfer not found" });
-
-        return res.status(200).json({
+          return res.status(200).json({
           message: "Transfer fetched",
           data: invoice,
         });
@@ -57,7 +54,7 @@ export default async function handler(req, res) {
       const invoices = await SaleBranchTransfer.find()
         .sort({ createdAt: -1 })
         .populate("branch")
-        .populate("customer")
+        // .populate("customer")
         .populate("items.item")
         .populate("agent");
 
@@ -71,12 +68,14 @@ export default async function handler(req, res) {
     // =====================================================
     // POST (CREATE TRANSFER)
     // =====================================================
+    
     if (method === "POST") {
       const {
         invoiceNumber,
         invoiceDate,
         customer,
-        branch,
+        fromBranch,
+        toBranch,
         items,
         paymentMode,
         gstType,
@@ -84,9 +83,9 @@ export default async function handler(req, res) {
         agent,
       } = req.body;
 
-      if (!customer || !branch || !items || items.length === 0) {
+      if ( !fromBranch || !toBranch || !items || items.length === 0) {
         return res.status(400).json({
-          message: "Customer, branch, and items are required",
+          message: "fromBranch, toBranch and items are required",
         });
       }
 
@@ -108,13 +107,22 @@ export default async function handler(req, res) {
       }
 
       // 🔹 VALIDATE BRANCH
-      if (!mongoose.Types.ObjectId.isValid(branch)) {
-        return res.status(400).json({ message: "Invalid branch ID" });
+
+      const fromBranchExists = await Branch.findById(fromBranch);
+      const toBranchExists = await Branch.findById(toBranch);
+
+      if (!fromBranchExists) {
+        return res.status(404).json({ message: "From Branch not found" });
       }
 
-      const branchExists = await Branch.findById(branch);
-      if (!branchExists) {
-        return res.status(404).json({ message: "Branch not found" });
+      if (!toBranchExists) {
+        return res.status(404).json({ message: "To Branch not found" });
+      }
+
+      if (fromBranch === toBranch) {
+        return res.status(400).json({
+          message: "From and To branch cannot be same",
+        });
       }
 
       // 🔥 CUSTOMER LOGIC SAME
@@ -205,8 +213,10 @@ export default async function handler(req, res) {
         invoiceNumber: newInvoiceNumber,
         invoiceDate: invoiceDate || Date.now(),
         agent: agentDoc?._id || null,
-        customer: customerDoc._id,
-        branch,
+
+        fromBranch, // ✅
+        toBranch,   // ✅
+
         paymentMode: paymentMode || "CASH",
         items: enrichedItems,
         totalAmount,
@@ -217,9 +227,10 @@ export default async function handler(req, res) {
         paymentStatus: "UNPAID",
         gstType: gstType || "TAX_INVOICE",
       });
-
-      await newTransfer.populate("branch");
-      await newTransfer.populate("customer");
+      // await newTransfer.populate("branch");
+      await newTransfer.populate("fromBranch");
+      await newTransfer.populate("toBranch");
+      // await newTransfer.populate("customer");
       await newTransfer.populate("items.item");
       await newTransfer.populate("agent");
 

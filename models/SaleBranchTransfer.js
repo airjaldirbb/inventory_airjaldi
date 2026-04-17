@@ -5,12 +5,11 @@ const saleBranchTransfer = new mongoose.Schema(
     invoiceNumber: { type: String, required: true, unique: true },
     invoiceDate: { type: Date, default: Date.now },
 
-    customer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
-      required: true,
-    },
-    // 🔥 OPTIONAL (for tracking external source)
+    // customer: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Customer",
+    //   required: true,
+    // },
 
     jazeCustomerId: {
       type: String,
@@ -18,14 +17,23 @@ const saleBranchTransfer = new mongoose.Schema(
       sparse: true,
     },
 
-    branch: {
+    // ✅ NEW FIELDS
+    fromBranch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Branch",
+      required: true,
     },
+    toBranch: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Branch",
+      required: true,
+    },
+
     agent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Agent",
     },
+
     items: [
       {
         item: {
@@ -39,14 +47,15 @@ const saleBranchTransfer = new mongoose.Schema(
         gstPercentage: { type: Number, default: 0 },
         gstAmount: { type: Number, default: 0 },
         total: { type: Number, default: 0 },
-
       },
     ],
+
     paymentMode: {
       type: String,
       enum: ["CASH", "CREDIT"],
       default: "CASH",
     },
+
     gstType: {
       type: String,
       enum: ["TAX_INVOICE", "REGISTERED", "COMPOSITION"],
@@ -71,9 +80,10 @@ const saleBranchTransfer = new mongoose.Schema(
       default: "UNPAID",
     },
   },
-
   { timestamps: true }
 );
+
+
 
 export default mongoose.models.SalesTransfer ||
   mongoose.model("SalesTransfer", saleBranchTransfer);

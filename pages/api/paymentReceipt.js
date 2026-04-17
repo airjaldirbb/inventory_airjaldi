@@ -52,97 +52,178 @@ export default async function handler(req, res) {
       });
     }
 
-    // =====================================================
-    // POST (CREATE RECEIPT)
-    // =====================================================
- // =====================================================
-// POST (CREATE NEW INVOICE)
-// =====================================================
-if (method === "POST") {
-  const { invoiceNumber, invoiceDate, customer, branch, items, paymentMode, gstType } = req.body;
-
-  // 🔹 Validate required fields (without invoiceNumber)
-  if (!customer || !branch || !items || items.length === 0) {
-    return res.status(400).json({ message: "Customer, branch, and items are required" });
-  }
-
-  // 🔹 Auto-generate invoiceNumber if not provided
-
-  // 🔹 Auto-generate invoiceNumber if not provided
-let newInvoiceNumber = invoiceNumber;
-if (!invoiceNumber) {
-  const lastInvoice = await SalesInvoice.findOne().sort({ createdAt: -1 }).select("invoiceNumber");
   
-  if (lastInvoice && lastInvoice.invoiceNumber) {
-    // Extract numeric part
-    const match = lastInvoice.invoiceNumber.match(/\d+$/); // match last number in string
-    const lastNum = match ? parseInt(match[0], 10) : 0;
-    const nextNum = lastNum + 1;
 
-    // Keep leading zeros, e.g., "001", "002"
-    newInvoiceNumber = nextNum.toString().padStart(3, "0");
-  } else {
-    newInvoiceNumber = "001"; // first invoice
-  }
-}
+    // if (method === "POST") {
+    //   const { invoiceNumber, invoiceDate, customer, branch, items, paymentMode, gstType } = req.body;
+
+    //   // 🔹 Validate required fields (without invoiceNumber)
+    //   if (!customer || !branch || !items || items.length === 0) {
+    //     return res.status(400).json({ message: "Customer, branch, and items are required" });
+    //   }
+
+    //   // 🔹 Auto-generate invoiceNumber if not provided
+
+    //   // 🔹 Auto-generate invoiceNumber if not provided
+    // let newInvoiceNumber = invoiceNumber;
+    // if (!invoiceNumber) {
+    //   const lastInvoice = await SalesInvoice.findOne().sort({ createdAt: -1 }).select("invoiceNumber");
+
+    //   if (lastInvoice && lastInvoice.invoiceNumber) {
+    //     // Extract numeric part
+    //     const match = lastInvoice.invoiceNumber.match(/\d+$/); // match last number in string
+    //     const lastNum = match ? parseInt(match[0], 10) : 0;
+    //     const nextNum = lastNum + 1;
+
+    //     // Keep leading zeros, e.g., "001", "002"
+    //     newInvoiceNumber = nextNum.toString().padStart(3, "0");
+    //   } else {
+    //     newInvoiceNumber = "001"; // first invoice
+    //   }
+    // }
 
 
 
 
-  // 🔹 Continue with branch, customer, items validation...
-  const branchExists = await Branch.findById(branch);
-  if (!branchExists) return res.status(404).json({ message: "Branch not found" });
+    //   // 🔹 Continue with branch, customer, items validation...
+    //   const branchExists = await Branch.findById(branch);
+    //   if (!branchExists) return res.status(404).json({ message: "Branch not found" });
 
-  const customerExists = await Customer.findById(customer);
-  if (!customerExists) return res.status(404).json({ message: "Customer not found" });
+    //   const customerExists = await Customer.findById(customer);
+    //   if (!customerExists) return res.status(404).json({ message: "Customer not found" });
 
-  // ...enrich items, calculate totals, create invoice
-  const enrichedItems = await Promise.all(
-    items.map(async (i, index) => {
-      const { item, quantity, rate, unit, gstPercentage } = i;
-      if (!item || !quantity) throw new Error(`Missing item or quantity at row ${index + 1}`);
+    //   // ...enrich items, calculate totals, create invoice
+    //   const enrichedItems = await Promise.all(
+    //     items.map(async (i, index) => {
+    //       const { item, quantity, rate, unit, gstPercentage } = i;
+    //       if (!item || !quantity) throw new Error(`Missing item or quantity at row ${index + 1}`);
 
-      const itemDoc = await Item.findById(item);
-      if (!itemDoc) throw new Error(`Item not found: ${item}`);
+    //       const itemDoc = await Item.findById(item);
+    //       if (!itemDoc) throw new Error(`Item not found: ${item}`);
 
-      const finalRate = rate ?? itemDoc.rate ?? 0;
-      const finalUnit = unit ?? itemDoc.stockUnit ?? "pcs";
-      const gstPerc = gstPercentage ? parseFloat(gstPercentage) : parseFloat(itemDoc.gstPercentage || 0);
+    //       const finalRate = rate ?? itemDoc.rate ?? 0;
+    //       const finalUnit = unit ?? itemDoc.stockUnit ?? "pcs";
+    //       const gstPerc = gstPercentage ? parseFloat(gstPercentage) : parseFloat(itemDoc.gstPercentage || 0);
 
-      const total = quantity * finalRate;
-      const gstAmount = (total * gstPerc) / 100;
+    //       const total = quantity * finalRate;
+    //       const gstAmount = (total * gstPerc) / 100;
 
-      return { item, quantity, unit: finalUnit, rate: finalRate, gstPercentage: gstPerc, gstAmount, total };
-    })
-  );
+    //       return { item, quantity, unit: finalUnit, rate: finalRate, gstPercentage: gstPerc, gstAmount, total };
+    //     })
+    //   );
 
-  const totalAmount = enrichedItems.reduce((s, i) => s + i.total, 0);
-  const totalGST = enrichedItems.reduce((s, i) => s + i.gstAmount, 0);
-  const netAmount = totalAmount + totalGST;
+    //   const totalAmount = enrichedItems.reduce((s, i) => s + i.total, 0);
+    //   const totalGST = enrichedItems.reduce((s, i) => s + i.gstAmount, 0);
+    //   const netAmount = totalAmount + totalGST;
 
-  const newInvoice = await SalesInvoice.create({
-    invoiceNumber: newInvoiceNumber,
-    invoiceDate: invoiceDate || Date.now(),
-    customer,
-    branch,
-    paymentMode: paymentMode || "CASH",
-    items: enrichedItems,
-    totalAmount,
-    totalGST,
-    netAmount,
-    paidAmount: 0,
-    balanceAmount: netAmount,
-    paymentStatus: "UNPAID",
-    gstType: gstType || "TAX_INVOICE",
-  });
+    //   const newInvoice = await SalesInvoice.create({
+    //     invoiceNumber: newInvoiceNumber,
+    //     invoiceDate: invoiceDate || Date.now(),
+    //     customer,
+    //     branch,
+    //     paymentMode: paymentMode || "CASH",
+    //     items: enrichedItems,
+    //     totalAmount,
+    //     totalGST,
+    //     netAmount,
+    //     paidAmount: 0,
+    //     balanceAmount: netAmount,
+    //     paymentStatus: "UNPAID",
+    //     gstType: gstType || "TAX_INVOICE",
+    //   });
 
-  await newInvoice.populate("branch").populate("customer").populate("items.item");
+    //   await newInvoice.populate("branch").populate("customer").populate("items.item");
 
-  return res.status(201).json({
-    message: "Sales invoice created successfully",
-    data: newInvoice,
-  });
-}
+    //   return res.status(201).json({
+    //     message: "Sales invoice created successfully",
+    //     data: newInvoice,
+    //   });
+    // }
+    // =====================================================
+    // POST (CREATE PAYMENT RECEIPT)
+    // =====================================================
+    if (req.method === "POST") {
+      const {
+        receiptNumber,
+        receiptDate,
+        branch,
+        customer,
+        invoices,
+        totalReceived,
+      } = req.body;
+
+      // ✅ Validate required fields
+      if (!receiptNumber || !branch || !customer || !invoices || invoices.length === 0) {
+        return res.status(400).json({
+          message: "Receipt number, branch, customer and invoices are required",
+        });
+      }
+
+      // ✅ Validate ObjectIds
+      if (!mongoose.Types.ObjectId.isValid(branch)) {
+        return res.status(400).json({ message: "Invalid branch ID" });
+      }
+
+      if (!mongoose.Types.ObjectId.isValid(customer)) {
+        return res.status(400).json({ message: "Invalid customer ID" });
+      }
+
+      // ✅ Check branch & customer existence
+      const branchExists = await Branch.findById(branch);
+      if (!branchExists) {
+        return res.status(404).json({ message: "Branch not found" });
+      }
+
+      const customerExists = await Customer.findById(customer);
+      if (!customerExists) {
+        return res.status(404).json({ message: "Customer not found" });
+      }
+
+      // ✅ Validate invoices
+      for (const inv of invoices) {
+        if (!mongoose.Types.ObjectId.isValid(inv.invoiceId)) {
+          return res.status(400).json({ message: `Invalid invoice ID: ${inv.invoiceId}` });
+        }
+
+        const invoiceDoc = await SalesInvoice.findById(inv.invoiceId);
+        if (!invoiceDoc) {
+          return res.status(404).json({ message: `Invoice not found: ${inv.invoiceId}` });
+        }
+      }
+
+      // ✅ Create receipt
+      const receipt = await PaymentReceipt.create({
+        receiptNumber,
+        receiptDate: receiptDate || Date.now(),
+        branch,
+        customer,
+        invoices: invoices.map((i) => ({
+          invoiceId: i.invoiceId,
+          amountPaid: Number(i.amountPaid),
+        })),
+        totalReceived: Number(totalReceived),
+      });
+
+      // ✅ UPDATE INVOICES (VERY IMPORTANT)
+      for (const inv of invoices) {
+        const invoiceDoc = await SalesInvoice.findById(inv.invoiceId);
+
+        const newPaid = (invoiceDoc.paidAmount || 0) + Number(inv.amountPaid);
+        const newBalance = invoiceDoc.netAmount - newPaid;
+
+        await SalesInvoice.findByIdAndUpdate(inv.invoiceId, {
+          paidAmount: newPaid,
+          balanceAmount: newBalance,
+          paymentStatus:
+            newBalance <= 0 ? "PAID" : "PARTIAL",
+        });
+      }
+
+      return res.status(201).json({
+        message: "Payment receipt created successfully",
+        data: receipt,
+      });
+    }
 
     // =====================================================
     // METHOD NOT ALLOWED
