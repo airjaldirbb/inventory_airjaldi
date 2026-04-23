@@ -12,6 +12,8 @@ import {
 export default function StockTrial() {
   const [stockData, setStockData] = useState([]);
   const [loading, setLoading] = useState(false);
+  const commonFieldProps = { size: "small", fullWidth: true };
+
   // Filters
   const [branch, setBranch] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -97,6 +99,8 @@ export default function StockTrial() {
         <Grid container spacing={2} alignItems="center">
           <Grid item xs={12} sm={3}>
             <TextField
+              {...commonFieldProps}
+
               label="Search Item"
               fullWidth
               value={search}
@@ -106,6 +110,14 @@ export default function StockTrial() {
 
           <Grid item xs={12} sm={2}>
             <TextField
+              {...commonFieldProps}
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               select
               label="Branch"
               fullWidth
@@ -123,6 +135,14 @@ export default function StockTrial() {
 
           <Grid item xs={12} sm={2}>
             <TextField
+               {...commonFieldProps}
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               label="Start Date"
               type="date"
               fullWidth
@@ -134,6 +154,14 @@ export default function StockTrial() {
 
           <Grid item xs={12} sm={2}>
             <TextField
+               {...commonFieldProps}
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               label="End Date"
               type="date"
               fullWidth
@@ -145,7 +173,7 @@ export default function StockTrial() {
 
           <Grid item xs={12} sm={2}>
             <Button
-              variant="contained"
+              variant="outlined"
               color="primary"
               fullWidth
               onClick={fetchStockTrail}

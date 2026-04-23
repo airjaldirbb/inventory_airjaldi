@@ -9,19 +9,13 @@ import {
     MenuItem,
     Paper,
 } from "@mui/material";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 export default function MaterialIssueRegister() {
     const [rows, setRows] = useState([]);
-    const [loading, setLoading] = useState(false);
-
-    // Filters
-    const [search, setSearch] = useState("");
-    const [branch, setBranch] = useState("");
-    const [startDate, setStartDate] = useState("");
-    const [endDate, setEndDate] = useState("");
-
     const [branches, setBranches] = useState([]);
 
+    const [loading, setLoading] = useState(false);
     /* ================= FETCH BRANCHES ================= */
     useEffect(() => {
         fetch("/api/branch")
@@ -97,7 +91,21 @@ export default function MaterialIssueRegister() {
             <Typography variant="h5" fontWeight={600} gutterBottom>
                 Material Issue Register
             </Typography>
-
+            <Button
+                variant="outlined"
+                color="success"
+                sx={{ mb: 2 }}
+                onClick={() =>
+                    exportToExcel({
+                        fileName: "materialReceiptRegister.xlsx",
+                        sheetName: "Material Receipt Register",
+                        columns,
+                        rows,
+                    })
+                }
+            >
+                Export Excel
+            </Button>
             {/* ================= FILTERS ================= */}
             {/* <Paper sx={{ p: 2, mb: 2 }}>
                 <Grid container spacing={2} alignItems="center">

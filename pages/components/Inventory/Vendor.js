@@ -11,6 +11,10 @@ import {
   MenuItem,
   Typography,
 } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+
+import AddIcon from '@mui/icons-material/Add';
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
 
@@ -18,8 +22,10 @@ export default function VendorPage() {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [ledgers, setLedgers] = useState([]);
-
+  const [editingVendorId, setEditingVendorId] = useState(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
+
   const [vendorData, setVendorData] = useState({
     gstNo: "",
     name: "",
@@ -34,13 +40,28 @@ export default function VendorPage() {
     { id: 1, name: "Common" },
     { id: 2, name: "SubVendor" },
   ];
+  const handleEditVendor = (vendor) => {
+    setVendorData({
+      gstNo: vendor.gstNo || "",
+      name: vendor.name || "",
+      printName: vendor.printName || "",
+      identificationCode: vendor.identificationCode || "",
+      vendorType: vendor.vendorType || "Common",
+      isSubVendor: vendor.isSubVendor || false,
+      email: vendor.email || "",
+      underLedger: vendor.underLedger || "",
+    });
 
+    setEditingVendorId(vendor._id);
+
+    setOpenDialog(true); // 🔥 THIS OPENS DIALOG
+  };
   // Fetch vendor list
   const fetchVendors = async () => {
     setLoading(true);
     try {
       const res = await axios.get("/api/vendorApi");
-        console.log(res,"vendro")
+      console.log(res, "vendro")
       setVendors(res.data);
     } catch (err) {
       console.error("Error fetching vendors:", err);
@@ -52,24 +73,24 @@ export default function VendorPage() {
   // useEffect(() => {
   //   fetchVendors();
   // }, []);
-const handleDeleteVendor = async (_id) => {
-  if (!window.confirm("Are you sure you want to delete this vendor?")) return;
+  const handleDeleteVendor = async (_id) => {
+    if (!window.confirm("Are you sure you want to delete this vendor?")) return;
 
-  try {
-    await axios.delete(`/api/vendorApi?id=${_id}`); // ✅ FIX
-    fetchVendors();
-  } catch (err) {
-    console.error("Error deleting vendor:", err);
-    alert(err.response?.data?.message || "Failed to delete vendor");
-  }
-};
+    try {
+      await axios.delete(`/api/vendorApi?id=${_id}`); // ✅ FIX
+      fetchVendors();
+    } catch (err) {
+      console.error("Error deleting vendor:", err);
+      alert(err.response?.data?.message || "Failed to delete vendor");
+    }
+  };
 
 
 
   const fetchDropdowns = async () => {
     try {
       const res = await axios.get("/api/vendorApi?dropdown=true");
-    
+
       setLedgers(res.data.ledgers || []);
       // Optionally set default underLedger
       if (res.data.ledgers?.length > 0) {
@@ -97,6 +118,8 @@ const handleDeleteVendor = async (_id) => {
   };
 
   // Handle create vendor
+
+
   const handleSubmit = async () => {
     if (!vendorData.gstNo) {
       alert("GST No is mandatory");
@@ -104,8 +127,34 @@ const handleDeleteVendor = async (_id) => {
     }
 
     try {
-      await axios.post("/api/vendorApi", { vendors: [vendorData] });
+      if (editingVendorId) {
+        // ✅ UPDATE
+        await axios.put(
+          `/api/vendorApi?id=${editingVendorId}`,
+          vendorData
+        );
+
+        setSnackbar({
+          open: true,
+          message: "Vendor updated successfully",
+          severity: "success",
+        });
+
+      } else {
+        // ✅ CREATE
+        await axios.post("/api/vendorApi", { vendors: [vendorData] });
+
+        setSnackbar({
+          open: true,
+          message: "Vendor created successfully",
+          severity: "success",
+        });
+      }
+
+      // reset
       setOpenDialog(false);
+      setEditingVendorId(null);
+
       setVendorData({
         gstNo: "",
         name: "",
@@ -114,16 +163,33 @@ const handleDeleteVendor = async (_id) => {
         vendorType: "Common",
         isSubVendor: false,
         email: "",
+        underLedger: "",
       });
+
       fetchVendors();
+
     } catch (err) {
-      console.error("Error creating vendor:", err);
-      alert(err.response?.data?.message || "Error creating vendor");
+      console.error(err);
+      alert(err.response?.data?.message || "Operation failed");
     }
   };
 
   // Columns for DataGrid
   const columns = [
+    {
+      field: "edit", headerName: "Edit", width: 80,
+      renderCell: params => <Button color="primary"
+        onClick={() => handleEditVendor(params.row)} size="small">
+        <EditIcon /></Button>
+    },
+    {
+      field: "delete", headerName: "Delete",
+      width: 90,
+      renderCell: params => <Button color="error"
+        onClick={() => handleDeleteVendor(params.row._id)}
+        size="small"><DeleteIcon /></Button>
+    },
+
     { field: "gstNo", headerName: "GST No", width: 150 },
     { field: "name", headerName: "Name", width: 150 },
     { field: "printName", headerName: "Print Name", width: 150 },
@@ -131,21 +197,7 @@ const handleDeleteVendor = async (_id) => {
     { field: "vendorType", headerName: "Type", width: 120 },
     { field: "email", headerName: "Email", width: 200 },
     { field: "isSubVendor", headerName: "Sub Vendor", width: 120, type: "boolean" },
-      {
-    field: "actions",
-    headerName: "Actions",
-    width: 120,
-    sortable: false,
-    renderCell: (params) => (
-      <Button
-        color="error"
-        size="small"
-        onClick={() => handleDeleteVendor(params.row.id)}
-      >
-        Delete
-      </Button>
-    ),
-  },
+
   ];
 
   return (
@@ -154,8 +206,8 @@ const handleDeleteVendor = async (_id) => {
         Vendors
       </Typography>
 
-      <Button variant="contained" onClick={() => setOpenDialog(true)} sx={{ mb: 2 }}>
-        Create New Vendor
+      <Button variant="outlined" onClick={() => setOpenDialog(true)} sx={{ mb: 2 }}>
+        <AddIcon /> Create New Vendor
       </Button>
 
       <div style={{ height: 400, width: "100%" }}>
@@ -168,7 +220,12 @@ const handleDeleteVendor = async (_id) => {
       </div>
 
       {/* Dialog for Creating Vendor */}
-      <Dialog open={openDialog} onClose={() => setOpenDialog(false)} maxWidth="sm" fullWidth>
+      <Dialog open={openDialog}
+        onClose={() => {
+          setOpenDialog(false);
+          setEditingVendorId(null); // 🔥 important
+        }}
+        maxWidth="sm" fullWidth>
         <DialogTitle>Create Vendor</DialogTitle>
         <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 1 }}>
           <TextField
@@ -232,6 +289,7 @@ const handleDeleteVendor = async (_id) => {
             onChange={handleChange}
           />
         </DialogContent>
+
         <DialogActions>
           <Button onClick={() => setOpenDialog(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleSubmit}>

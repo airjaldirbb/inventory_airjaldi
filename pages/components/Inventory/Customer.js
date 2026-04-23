@@ -19,6 +19,8 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from '@mui/icons-material/Add';
+
 import { CleaningServices } from "@mui/icons-material";
 
 export default function Customer() {
@@ -130,6 +132,7 @@ export default function Customer() {
 
 
   const columns = [
+    
     { field: "edit", headerName: "Edit", width: 80, renderCell: params => <Button color="primary" onClick={() => handleEditRow(params.row)} size="small"><EditIcon /></Button> },
     { field: "delete", headerName: "Delete", width: 90, renderCell: params => <Button color="error" onClick={() => handleOpenDeleteConfirm(params.row._id)} size="small"><DeleteIcon /></Button> },
     { field: "_id", headerName: "Customer ID", width: 100 },
@@ -247,7 +250,7 @@ export default function Customer() {
           }
         }}
       >
-        <Button variant="contained" onClick={() => setAddOpen(true)} >➕ Add Customer</Button>
+        <Button variant="outlined" onClick={() => setAddOpen(true)} ><AddIcon/>Add Customer</Button>
         {/* <TextField
           label="Search by Phone"
           variant="outlined"

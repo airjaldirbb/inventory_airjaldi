@@ -14,6 +14,7 @@ import {
 export default function MaterialReceiptRegister() {
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
+    const commonFieldProps = { size: "small", fullWidth: true };
 
     // Filters
     const [search, setSearch] = useState("");
@@ -100,7 +101,8 @@ export default function MaterialReceiptRegister() {
                 Material Receipt Register
             </Typography>
             <Button
-                variant="contained"
+            
+                variant="outlined"
                 color="success"
                 sx={{ mb: 2 }}
                 onClick={() =>

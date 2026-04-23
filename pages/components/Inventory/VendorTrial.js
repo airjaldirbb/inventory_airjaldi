@@ -1,7 +1,8 @@
 import { DataGrid } from "@mui/x-data-grid";
 import { useEffect, useState } from "react";
-import { Box, Typography, CircularProgress } from "@mui/material";
+import { Box, Typography, CircularProgress ,Button  } from "@mui/material";
 import axios from "axios";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 export default function VendorTrial() {
   const [rows, setRows] = useState([]);
@@ -38,6 +39,22 @@ export default function VendorTrial() {
 
   return (
     <Box sx={{ width: "100%" }}>
+       <Button
+        variant="outlined"
+        color="success"
+        sx={{ mb: 2 }}
+        onClick={() =>
+          exportToExcel({
+            fileName: "vendor-trial.xlsx",
+            sheetName: "Vendor Trial",
+            columns,
+            rows,
+          })
+        }
+      >
+        Export Excel
+      </Button>
+
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
           <CircularProgress />

@@ -60,25 +60,59 @@ export default async function handler(req, res) {
       return res.status(201).json(newVendors);
     }
 
-      // =======================================
+    if (req.method === "PUT") {
+      const { id, _id } = req.query;
+      const vendorId = id || _id;
+
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor ID is required" });
+      }
+
+      try {
+        const updatedVendor = await Vendor.findByIdAndUpdate(
+          vendorId,
+          req.body, // data to update
+          {
+            new: true,        // return updated document
+            runValidators: true, // apply schema validation
+          }
+        );
+
+        if (!updatedVendor) {
+          return res.status(404).json({ message: "Vendor not found" });
+        }
+
+        return res.status(200).json({
+          message: "Vendor updated successfully",
+          data: updatedVendor,
+        });
+
+      } catch (error) {
+        return res.status(500).json({
+          message: "Error updating vendor",
+          error: error.message,
+        });
+      }
+    }
+    // =======================================
     //      3️⃣ DELETE → Delete Vendor by ID
     // =======================================
- if (req.method === "DELETE") {
-  const { id, _id } = req.query;
-  const vendorId = id || _id;
+    if (req.method === "DELETE") {
+      const { id, _id } = req.query;
+      const vendorId = id || _id;
 
-  if (!vendorId) {
-    return res.status(400).json({ message: "Vendor ID is required" });
-  }
+      if (!vendorId) {
+        return res.status(400).json({ message: "Vendor ID is required" });
+      }
 
-  const deletedVendor = await Vendor.findByIdAndDelete(vendorId);
+      const deletedVendor = await Vendor.findByIdAndDelete(vendorId);
 
-  if (!deletedVendor) {
-    return res.status(404).json({ message: "Vendor not found" });
-  }
+      if (!deletedVendor) {
+        return res.status(404).json({ message: "Vendor not found" });
+      }
 
-  return res.status(200).json({ message: "Vendor deleted successfully" });
-}
+      return res.status(200).json({ message: "Vendor deleted successfully" });
+    }
 
     // =======================================
     //          METHOD NOT ALLOWED

@@ -208,21 +208,7 @@ export default function SalesInvoice() {
     setOpenAddItem(false);
     showSnackbar(editingRowId ? "Item updated" : "Item added");
   };
-  // const totals = React.useMemo(() => {
-  //   let totalAmount = 0;
-  //   let totalGST = 0;
 
-  //   rows.forEach(r => {
-  //     totalAmount += r.total || 0;
-  //     totalGST += r.gstAmount || 0;
-  //   });
-
-  //   return {
-  //     totalAmount,
-  //     totalGST,
-  //     netAmount: totalAmount + totalGST,
-  //   };
-  // }, [rows]);
 
   const totals = React.useMemo(() => {
     let totalAmount = 0;
@@ -268,7 +254,6 @@ export default function SalesInvoice() {
     { field: "itemName", headerName: "Item", width: 150 },
     { field: "itemCode", headerName: "Code", width: 120 },
     { field: "name", headerName: "Agent", width: 120 },
-
     { field: "openingStock", headerName: "Stock", width: 120 },
     { field: "quantity", headerName: "Qty", width: 100 },
     { field: "rate", headerName: "Rate", width: 100 },
@@ -453,7 +438,7 @@ export default function SalesInvoice() {
                 onChange={(e) => setPhone(e.target.value)}
               />
               <Button
-                
+
                 variant="outlined"
                 onClick={() => fetchUserDetails(phone)}
               >
@@ -471,7 +456,13 @@ export default function SalesInvoice() {
                 label="Invoice Date"
                 type="date"
                 {...commonFieldProps}
-            
+                sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
                 value={formState.date}
                 onChange={(e) =>
                   setFormState({ ...formState, date: e.target.value })
@@ -517,6 +508,13 @@ export default function SalesInvoice() {
                 label="Ref Date"
                 type="date"
                 {...commonFieldProps}
+                sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
                 InputLabelProps={{ shrink: true }}
                 value={formState.refDate}
                 onChange={(e) =>
@@ -527,16 +525,16 @@ export default function SalesInvoice() {
           </Grid>
         </Grid>
 
-        
+
       </Container>
- {/* BUTTON */}
+      {/* BUTTON */}
       <Box mt={3}>
-        <Button variant="outlined" onClick={() => setOpenAddItem(true)} sx={{float:''}}>
-        <AddIcon> </AddIcon> Add Items to Inventory
+        <Button variant="outlined" onClick={() => setOpenAddItem(true)} sx={{ float: '' }}>
+          <AddIcon> </AddIcon> Add Items to Inventory
         </Button>
       </Box>
 
-     
+
 
 
       {/* GRID */}

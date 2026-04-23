@@ -39,7 +39,7 @@ export default function CustomerTrial() {
   return (
     <div style={{ height: 600, width: "100%" }}>
       <Button
-        variant="contained"
+        variant="outlined"
         color="success"
         sx={{ mb: 2 }}
         onClick={() =>

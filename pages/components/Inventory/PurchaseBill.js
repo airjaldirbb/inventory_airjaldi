@@ -14,9 +14,11 @@ import {
   Paper,
 } from "@mui/material";
 import {
-  
+
   IconButton
 } from "@mui/material";
+import AddIcon from '@mui/icons-material/Add';
+
 import CloseIcon from "@mui/icons-material/Close";
 import Autocomplete from "@mui/material/Autocomplete";
 import { DataGrid } from "@mui/x-data-grid";
@@ -25,6 +27,8 @@ import axios from "axios";
 export default function PurchaseBill() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState("");
+  const commonFieldProps = { size: "small", fullWidth: true };
+
   const fileInputRef = useRef();
   const [branches, setBranches] = useState([]);
   const [vendors, setVendors] = useState([]);
@@ -238,6 +242,16 @@ export default function PurchaseBill() {
         <Grid container spacing={2}>
           <Grid item xs={12} sm={3}>
             <TextField
+              {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               select fullWidth label="GST Type" value={billData.gstType}
               onChange={(e) => setBillData({ ...billData, gstType: e.target.value })}
             >
@@ -247,6 +261,16 @@ export default function PurchaseBill() {
 
           <Grid item xs={12} sm={3}>
             <TextField
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               select fullWidth label="Cash / Credit" value={billData.cashOrCredit}
               onChange={(e) => setBillData({ ...billData, cashOrCredit: e.target.value })}
             >
@@ -257,6 +281,16 @@ export default function PurchaseBill() {
 
           <Grid item xs={12} sm={3}>
             <Autocomplete
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               options={branches}
               getOptionLabel={(o) => o.name || ""}
               value={branches.find(b => b._id === billData.branch) || null}
@@ -267,6 +301,16 @@ export default function PurchaseBill() {
 
           <Grid item xs={12} sm={3}>
             <Autocomplete
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               options={vendors}
               getOptionLabel={(o) => o.name || ""}
               value={vendors.find(v => v._id === billData.vendor) || null}
@@ -279,11 +323,32 @@ export default function PurchaseBill() {
           </Grid>
 
           <Grid item xs={12} sm={3}>
-            <TextField fullWidth label="Email" value={vendorEmail} disabled />
+            <TextField 
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
+            fullWidth label="Email" value={vendorEmail} disabled />
           </Grid>
 
           <Grid item xs={12} sm={3}>
             <TextField type="date" fullWidth label="Date"
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               InputLabelProps={{ shrink: true }}
               value={billData.date}
               onChange={(e) => setBillData({ ...billData, date: e.target.value })}
@@ -292,13 +357,33 @@ export default function PurchaseBill() {
 
           <Grid item xs={12} sm={3}>
             <TextField fullWidth label="Supplier Inv No ★"
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               value={billData.supplierInvNo}
               onChange={(e) => setBillData({ ...billData, supplierInvNo: e.target.value })}
             />
           </Grid>
 
           <Grid item xs={12} sm={3}>
-            <TextField type="date" fullWidth label="Supplier Inv Date"
+            <TextField type="date" fullWidth label="Supplier Inv Date" 
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               InputLabelProps={{ shrink: true }}
               value={billData.supplierInvDate}
               onChange={(e) => setBillData({ ...billData, supplierInvDate: e.target.value })}
@@ -307,6 +392,16 @@ export default function PurchaseBill() {
 
           <Grid item xs={12} sm={3}>
             <TextField select fullWidth label="Payment Terms"
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               value={billData.paymentTerms}
               onChange={(e) => setBillData({ ...billData, paymentTerms: e.target.value })}
             >
@@ -317,6 +412,16 @@ export default function PurchaseBill() {
 
           <Grid item xs={12} sm={3}>
             <TextField type="date" fullWidth label="Due Date"
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               InputLabelProps={{ shrink: true }}
               value={billData.dueDate}
               onChange={(e) => setBillData({ ...billData, dueDate: e.target.value })}
@@ -352,41 +457,51 @@ export default function PurchaseBill() {
             );
           })}
           <Dialog
-  open={previewOpen}
-  onClose={() => setPreviewOpen(false)}
-  maxWidth="lg"
->
-  <div style={{ position: "relative", padding: 10 }}>
-    
-    {/* ❌ Close Button */}
-    <IconButton
-      onClick={() => setPreviewOpen(false)}
-      style={{
-        position: "absolute",
-        top: 10,
-        right: 10,
-        zIndex: 10,
-        background: "white",
-      }}
-    >
-      <CloseIcon />
-    </IconButton>
+            open={previewOpen}
+            onClose={() => setPreviewOpen(false)}
+            maxWidth="lg"
+          >
+            <div style={{ position: "relative", padding: 10 }}>
 
-    {/* 🖼 Full Image */}
-    <img
-      src={previewImage}
-      alt="Preview"
-      style={{
-        maxWidth: "90vw",
-        maxHeight: "80vh",
-        objectFit: "contain",
-        borderRadius: 8,
-      }}
-    />
-  </div>
-</Dialog>
+              {/* ❌ Close Button */}
+              <IconButton
+                onClick={() => setPreviewOpen(false)}
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  right: 10,
+                  zIndex: 10,
+                  background: "white",
+                }}
+              >
+                <CloseIcon />
+              </IconButton>
+
+              {/* 🖼 Full Image */}
+              <img
+                src={previewImage}
+                alt="Preview"
+                style={{
+                  maxWidth: "90vw",
+                  maxHeight: "80vh",
+                  objectFit: "contain",
+                  borderRadius: 8,
+                }}
+              />
+            </div>
+          </Dialog>
           <Grid item xs={12}>
             <TextField
+            {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               label="Remarks"
               value={billData.remarks}
@@ -398,7 +513,7 @@ export default function PurchaseBill() {
       </Paper>
 
       {/* ================= ITEMS ================= */}
-      <Button variant="contained" onClick={() => setOpenDialog(true)}>+ Add Item</Button>
+      <Button variant="outlined" onClick={() => setOpenDialog(true)}> <AddIcon/>Add Items To inventory</Button>
       <Paper sx={{ mt: 2 }}>
         <DataGrid rows={items} columns={itemColumns} autoHeight />
       </Paper>
@@ -421,7 +536,7 @@ export default function PurchaseBill() {
         </Typography>
       </Box>
       <Box textAlign="right" mt={3}>
-        <Button variant="contained" size="large" onClick={handleSubmit}>Save Purchase Bill</Button>
+        <Button variant="outlined" size="large" onClick={handleSubmit}>Save Purchase Bill</Button>
       </Box>
 
       {/* ================= ADD ITEM DIALOG ================= */}

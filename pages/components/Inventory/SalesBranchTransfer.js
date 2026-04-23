@@ -11,7 +11,7 @@ import {
   DialogActions,
   Snackbar,
   Alert,
-  Typography,
+  Typography, Container
 } from "@mui/material";
 import { Autocomplete } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
@@ -316,65 +316,7 @@ export default function SalesBranchTransfer() {
     setFormState(prev => ({ ...prev, tax: "" }));
   };
 
-  const fetchUserDetails = async (phoneNumber) => {
-    if (!phoneNumber) {
-      console.log("No phone number entered");
-      return;
-    }
 
-    try {
-      const res = await axios.get(
-        `/api/jazeApi?type=phone&value=${phoneNumber}`
-      );
-
-      console.log("RAW API RESPONSE:", res.data);
-
-      let responseData = res.data;
-
-      // ✅ unwrap if needed
-      if (responseData?.data) {
-        responseData = responseData.data;
-      }
-
-      if (!Array.isArray(responseData)) {
-        responseData = [responseData];
-      }
-
-      // ✅ find user block
-      const userBlock = responseData.find((item) => item?.User);
-
-      if (!userBlock?.User) {
-        console.warn("User not found in API response");
-        return;
-      }
-
-      const user = userBlock.User;
-      const gstNumber = userBlock.UserSetting?.gstNumber || "";
-
-      // ✅ SET CUSTOMER (IMPORTANT)
-      setFormState((prev) => ({
-        ...prev,
-        customer: String(user.id), // Jaze ID
-        email: user.email || "",
-      }));
-
-      // ✅ STORE FULL DETAILS (for backend)
-      setJazeCustomerDetails({
-        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
-        phone: user.phone || "",
-        email: user.email || "",
-        city: user.address_city || "",
-        location: user.address_line1 || "",
-        gst: gstNumber || "",
-        company: user.company_name || "",
-      });
-
-      console.log("✅ Jaze customer set successfully");
-
-    } catch (err) {
-      console.error("Error fetching AirJaldi user:", err);
-    }
-  };
   const combinedRows = rows.filter((row) =>
     Object.values(row).some(
       (value) =>
@@ -385,177 +327,280 @@ export default function SalesBranchTransfer() {
   return (
     <>
 
-      <Box sx={{ width: "100%", p: 1, }}>
-        <Grid container spacing={2} sx={{ justifyContent: "center" }} >
-          {/* Left Column */}
-          <Grid item xs={12} sm={6}>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              select
-              label="GST Type"
+      <Container maxWidth="xl" sx={{ width: "100%", p: 1 }}>
+        <Grid container spacing={2}>
+
+          {/* GST Type */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField {...commonFieldProps} fullWidth select label="GST Type"
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               value={formState.gstType}
-              onChange={(e) =>
-                setFormState({ ...formState, gstType: e.target.value })
-              }
-              sx={{ mb: 2 }}
+              onChange={(e) => setFormState({ ...formState, gstType: e.target.value })}
             >
               <MenuItem value="TAX_INVOICE">Tax Invoice</MenuItem>
               <MenuItem value="REGISTERED">Registered</MenuItem>
               <MenuItem value="COMPOSITION">Composition</MenuItem>
             </TextField>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              select
-              label="Cash"
+          </Grid>
+
+          {/* Cash */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField {...commonFieldProps} fullWidth select label="Cash"
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               value={formState.cashCredit}
-              onChange={(e) =>
-                setFormState({ ...formState, cashCredit: e.target.value })
-              }
-              sx={{ mb: 2 }}
+              onChange={(e) => setFormState({ ...formState, cashCredit: e.target.value })}
             >
               <MenuItem value="CASH">Cash</MenuItem>
             </TextField>
+          </Grid>
 
-
+          {/* From Branch */}
+          <Grid item xs={12} sm={6} md={3}>
             <Autocomplete
               {...commonFieldProps}
-              sx={{ mb: 2 }}
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               options={branches}
               value={selectedFromBranch}
-              onChange={(event, newValue) => {
+              onChange={(e, newValue) => {
                 setSelectedFromBranch(newValue);
-                setFormState(prev => ({
-                  ...prev,
-                  fromBranch: newValue?._id || ""
-                }));
+                setFormState(prev => ({ ...prev, fromBranch: newValue?._id || "" }));
               }}
               getOptionLabel={(o) => o?.name || ""}
-              isOptionEqualToValue={(o, v) => o._id === v._id}
-              renderInput={(params) => (
-                <TextField {...params} label="From Branch" fullWidth />
-              )}
-            />
-
-            <Autocomplete
-              sx={{ mb: 2 }}
-              {...commonFieldProps}
-              options={branches}
-              value={selectedToBranch}
-              onChange={(event, newValue) => {
-                setSelectedToBranch(newValue);
-                setFormState(prev => ({
-                  ...prev,
-                  toBranch: newValue?._id || ""
-                }));
-              }}
-              getOptionLabel={(o) => o?.name || ""}
-              isOptionEqualToValue={(o, v) => o._id === v._id}
-              renderInput={(params) => (
-                <TextField {...params} label="To Branch" fullWidth />
-              )}
+              renderInput={(params) => <TextField {...params} label="From Branch" />}
             />
           </Grid>
-          {/* Right Column */}
-          <Grid item xs={12} sm={6}>
-            <TextField
+
+          {/* To Branch */}
+          <Grid item xs={12} sm={6} md={3}>
+            <Autocomplete
               {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
-              label="Invoice Date"
-              type="date"
+              options={branches}
+              value={selectedToBranch}
+              onChange={(e, newValue) => {
+                setSelectedToBranch(newValue);
+                setFormState(prev => ({ ...prev, toBranch: newValue?._id || "" }));
+              }}
+              getOptionLabel={(o) => o?.name || ""}
+              renderInput={(params) => <TextField {...params} label="To Branch" />}
+            />
+          </Grid>
+
+          {/* Invoice Date */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField {...commonFieldProps}
+             
+              fullWidth type="date" label="Invoice Date"
+
               InputLabelProps={{ shrink: true }}
               value={formState.date}
               onChange={(e) => setFormState({ ...formState, date: e.target.value })}
-              sx={{ mb: 2 }}
+                 sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
             />
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Invoice No (Optional)"
-              placeholder="Leave empty to auto-generate"
+          </Grid>
+
+          {/* Invoice No */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField {...commonFieldProps}
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
+             fullWidth label="Invoice No"
               value={formState.invoiceNo}
               onChange={(e) => setFormState({ ...formState, invoiceNo: e.target.value })}
-              sx={{ mb: 2 }}
             />
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              select
-              label="Agent"
+          </Grid>
+
+          {/* Agent */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField {...commonFieldProps} fullWidth select label="Agent"
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               value={formState.agent}
               onChange={(e) => setFormState({ ...formState, agent: e.target.value })}
-              sx={{ mb: 2 }}
             >
-              <MenuItem value="">Select Agent</MenuItem>
               {agents.map(a => (
                 <MenuItem key={a._id} value={a._id}>{a.name}</MenuItem>
               ))}
             </TextField>
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Ref No"
+          </Grid>
+
+          {/* Ref No */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField {...commonFieldProps} fullWidth label="Ref No"   sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               value={formState.refNo}
               onChange={(e) => setFormState({ ...formState, refNo: e.target.value })}
-              sx={{ mb: 2 }}
             />
-            <TextField
-              {...commonFieldProps}
-              fullWidth
-              label="Ref Date"
-              type="date"
+          </Grid>
+
+          {/* Ref Date */}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField {...commonFieldProps} fullWidth type="date" label="Ref Date"
               InputLabelProps={{ shrink: true }}
               value={formState.refDate}
               onChange={(e) => setFormState({ ...formState, refDate: e.target.value })}
-              sx={{ mb: 2 }}
+              sx={{
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)',
+                },
+              }}
             />
           </Grid>
+
         </Grid>
-        <Box mt={3}>
-          <Button variant="outlined" onClick={() => setOpenAddItem(true)} color="primary">
-            <AddIcon></AddIcon>Add Items to Inventory</Button>
-        </Box>
-        <Box sx={{ height: 350, width: "100%", mt: 2 }}>
-          {/* <DataGrid rows={rows} columns={columns} getRowId={(r) => r.rowId} /> */}
-          <DataGrid
-            rows={combinedRows}
-            columns={columns}
-            getRowId={(row) => row._id}
-            pageSize={10}
-            disableRowSelectionOnClick
-          />
-        </Box>
-        {/* <Box mt={2} sx={{ textAlign: "right" }}>
-                   <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
-                   <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
-                   <Typography fontWeight="bold">
-                     Net Amount: ₹ {totals.netAmount.toFixed(2)}
-                   </Typography>
-                 </Box> */}
-        <Box mt={2} sx={{ textAlign: "right" }}>
-          <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
-          <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
+      </Container>
+      <Box
+        mt={2}
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* <Typography variant="h6">Items</Typography> */}
 
-          {/* ✅ ADD THIS */}
-          <Typography>
-            Round Off: ₹ {totals.roundOff.toFixed(2)}
-          </Typography>
-          {/* <Typography>
-                     Round Off: ₹ {totals.roundOff >= 0 ? "+" : ""}
-                     {totals.roundOff.toFixed(2)}
-                   </Typography> */}
-
-          {/* <Typography fontWeight="bold">
-                     Net Amount: ₹ {totals.roundedNetAmount.toFixed(2)}
-                   </Typography> */}
-        </Box>
-        <Box mt={3}>
-          <Button variant="outlined" color="success" style={{ float: 'right' }} onClick={handleSaveInvoice}>Save Invoice</Button>
-        </Box>
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => setOpenAddItem(true)}
+        >
+          <AddIcon></AddIcon> Add Item to inventory
+        </Button>
       </Box>
 
+      <Box sx={{ height: 350, width: "100%", mt: 2 }}>
+        <DataGrid
+          rows={combinedRows}
+          columns={columns}
+          getRowId={(row) => row._id}
+          pageSize={10}
+          disableRowSelectionOnClick
+        />
+      </Box>
+      <Box mt={2} sx={{ textAlign: "right", pr: 2 }}>
+        <Typography>Total Amount: ₹ {totals.totalAmount.toFixed(2)}</Typography>
+        <Typography>Total GST: ₹ {totals.totalGST.toFixed(2)}</Typography>
+        <Typography>Round Off: ₹ {totals.roundOff.toFixed(2)}</Typography>
+
+        <Typography fontWeight="bold" fontSize={16}>
+          Net Amount: ₹ {totals.roundedNetAmount?.toFixed(2)}
+        </Typography>
+      </Box>
+      <Dialog open={openAddItem} fullWidth maxWidth="sm">
+        <DialogTitle>Add Item</DialogTitle>
+
+        <DialogContent dividers>
+
+          <TextField
+            select fullWidth label="Select Item"
+            value={selectedItem?._id || ""}
+            onChange={(e) => {
+              const item = items.find(i => i._id === e.target.value);
+              if (!item) return clearItemDialog();
+
+              setSelectedItem(item);
+              setRate(item.rate || 0);
+              setQuantity(1);
+              setSelectedUnit(item.stockUnit || "Pcs");
+            }}
+            sx={{ mt: 1 }}
+          >
+            {items.map(i => (
+              <MenuItem key={i._id} value={i._id}>
+                {i.itemName}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField fullWidth label="Unit" value={selectedUnit} InputProps={{ readOnly: true }} sx={{ mt: 2 }} />
+          <TextField fullWidth type="number" label="Quantity" sx={{ mt: 2 }} value={quantity} onChange={(e) => setQuantity(+e.target.value)} />
+          <TextField fullWidth type="number" label="Rate" sx={{ mt: 2 }} value={rate} onChange={(e) => setRate(+e.target.value)} />
+          <TextField fullWidth label="Amount" sx={{ mt: 2 }} value={amount.toFixed(2)} InputProps={{ readOnly: true }} />
+
+        </DialogContent>
+
+        <DialogActions>
+          <Button onClick={() => setOpenAddItem(false)}>Cancel</Button>
+          <Box
+            mt={2}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
+            <Typography variant="h6">Items</Typography>
+
+            <Button
+              variant="outlined"
+              color="primary"
+              startIcon={<AddIcon />}
+              onClick={() => setOpenAddItem(true)}
+            >
+              <AddIcon> </AddIcon>
+              Add Items to Inventory
+            </Button>
+          </Box>
+
+        </DialogActions>
+      </Dialog>
+      <Box mt={3} textAlign="right">
+        <Button
+          variant="outlined"
+          color="success"
+          onClick={handleSaveInvoice}
+        >
+          Save Invoice
+        </Button>
+      </Box>
       <Dialog
         open={openAddItem}
         onClose={() => {

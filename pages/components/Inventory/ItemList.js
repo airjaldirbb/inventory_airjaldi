@@ -6,9 +6,11 @@ import {
 import MuiAlert from "@mui/material/Alert";
 import { DataGrid } from "@mui/x-data-grid";
 import axios from "axios";
+import AddIcon from '@mui/icons-material/Add';
 
 export default function ItemMasterGrid() {
   const [items, setItems] = useState([]);
+
   const [snackbar, setSnackbar] = useState({ open: false, message: "", severity: "success" });
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -140,8 +142,8 @@ export default function ItemMasterGrid() {
       </Typography>
 
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-        <Button variant="contained" onClick={() => setAddOpen(true)}>Add Item</Button>
-        <Button variant="outlined" onClick={fetchItems}>Refresh</Button>
+        <Button variant="outlined" onClick={() => setAddOpen(true)}><AddIcon/>Add Items to Inventory</Button>
+        <Button variant="outlined" color="success" onClick={fetchItems}>Refresh</Button>
       </Stack>
 
       <Box sx={{ height: 600, width: "100%" }}>
@@ -192,13 +194,13 @@ export default function ItemMasterGrid() {
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Edit Item</DialogTitle>
         <DialogContent>
-          {editItem && ["Name","Code","HSN_Code","Category_Name","Group","BAR_CODE_TRACKING","stockUnit"].map(field => (
+          {editItem && ["Name", "Code", "HSN_Code", "Category_Name", "Group", "BAR_CODE_TRACKING", "stockUnit"].map(field => (
             <TextField
               key={field}
               margin="dense"
-              label={field.replace("_"," ")}
+              label={field.replace("_", " ")}
               fullWidth
-              select={["Group","BAR_CODE_TRACKING","stockUnit"].includes(field)}
+              select={["Group", "BAR_CODE_TRACKING", "stockUnit"].includes(field)}
               value={editItem[field]}
               onChange={(e) => setEditItem({ ...editItem, [field]: e.target.value })}
             >

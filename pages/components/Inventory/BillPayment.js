@@ -8,6 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
+
 import axios from "axios";
 import { Autocomplete } from "@mui/material";
 
@@ -21,6 +22,8 @@ const BillPayment = () => {
     refDate: new Date().toISOString().substring(0, 10),
     remark: "",
   });
+  const commonFieldProps = { size: "small", fullWidth: true };
+
 
   const [records, setRecords] = useState([]);
   const [branches, setBranches] = useState([]);
@@ -28,7 +31,7 @@ const BillPayment = () => {
   const loadVendors = async () => {
     try {
       const res = await axios.get("/api/vendorApi");
-      console.log('vendor',res)
+      console.log('vendor', res)
       setVendors(res.data);
     } catch (err) {
       console.error("Error loading vendors:", err);
@@ -132,7 +135,7 @@ const BillPayment = () => {
   ];
 
   return (
-    <Container maxWidth="lg">
+    <Container maxWidth="xl">
       <Typography variant="h5" gutterBottom>
         Bill Payment
       </Typography>
@@ -144,6 +147,16 @@ const BillPayment = () => {
           <Grid item xs={6}>
 
             <Autocomplete
+              {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               options={vendors}
               getOptionLabel={(option) => option.name || ""}
               value={vendors.find(v => v._id === formData.vendor) || null}
@@ -154,7 +167,7 @@ const BillPayment = () => {
                   email: value?.email || "",
                 });
                 // 
-                
+
               }}
               renderInput={(params) => (
                 <TextField {...params} label="Vendor ★" fullWidth />
@@ -164,6 +177,16 @@ const BillPayment = () => {
 
           <Grid item xs={6}>
             <TextField
+             {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               type="date"
               label="Date"
@@ -176,6 +199,16 @@ const BillPayment = () => {
 
           <Grid item xs={6}>
             <TextField
+             {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               label="Cash / Bank A/C"
               name="cashBank"
@@ -186,6 +219,16 @@ const BillPayment = () => {
 
           <Grid item xs={6}>
             <TextField
+             {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               type="number"
               label="Amount"
@@ -197,6 +240,16 @@ const BillPayment = () => {
 
           <Grid item xs={6}>
             <TextField
+             {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               label="Reference No"
               name="refNo"
@@ -207,6 +260,16 @@ const BillPayment = () => {
 
           <Grid item xs={6}>
             <TextField
+             {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               type="date"
               label="Reference Date"
@@ -219,6 +282,16 @@ const BillPayment = () => {
 
           <Grid item xs={12}>
             <TextField
+             {...commonFieldProps}
+
+              sx={{
+                minWidth: 180,
+
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }}
               fullWidth
               multiline
               rows={2}
@@ -230,7 +303,7 @@ const BillPayment = () => {
           </Grid>
 
           <Grid item xs={12}>
-            <Button variant="contained" onClick={handleSubmit}>
+            <Button variant="outlined" onClick={handleSubmit}>
               Save Bill Payment
             </Button>
           </Grid>

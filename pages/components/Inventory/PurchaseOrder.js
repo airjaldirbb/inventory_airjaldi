@@ -241,17 +241,21 @@ export default function PurchaseOrder() {
       <Paper elevation={3} sx={{ p: 3, mb: 4 }}>
         <Grid container spacing={2}>
           {/* GST Type */}
-          <Grid item xs={12} sm={3}>
-            <TextField select fullWidth label="GST Type" value={poData.gstType}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField size="small"
+              select fullWidth label="GST Type" value={poData.gstType}
               onChange={(e) => setPoData({ ...poData, gstType: e.target.value })}>
               <MenuItem value="TaxInvoice">Tax Invoice</MenuItem>
             </TextField>
           </Grid>
 
           {/* Branch */}
-          <Grid item xs={12} sm={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Autocomplete
+              sx={{ minWidth: 180 }}
+              fullWidth
               options={branches}
+              size="small"
               getOptionLabel={(option) => option.name || ""}
               value={branches.find(b => b._id === poData.branch) || null}
               onChange={(_, value) => {
@@ -265,8 +269,10 @@ export default function PurchaseOrder() {
           </Grid>
 
           {/* Vendor */}
-          <Grid item xs={12} sm={3}>
+          <Grid item xs={12} sm={6} md={3}>
             <Autocomplete
+              size="small"
+              sx={{ minWidth: 180 }}
               options={vendors}
               getOptionLabel={(option) => option.name || ""}
               value={vendors.find(v => v._id === poData.vendor) || null}
@@ -286,47 +292,73 @@ export default function PurchaseOrder() {
           </Grid>
 
           {/* Email */}
-          <Grid item xs={12} sm={3}>
-            <TextField fullWidth label="Email" value={vendorEmail} disabled />
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField size="small" sx={{ minWidth: 180 }}
+              fullWidth label="Email" value={vendorEmail} disabled />
           </Grid>
 
           {/* Delivery & Order Dates */}
-          <Grid item xs={12} sm={3}>
-            <TextField type="date" fullWidth label="Delivery Date ★"
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField size="small"
+              type="date" fullWidth label="Delivery Date ★"
               value={poData.deliveryDate}
               onChange={(e) => setPoData({ ...poData, deliveryDate: e.target.value })}
-              InputLabelProps={{ shrink: true }} />
+              InputLabelProps={{ shrink: true }}
+              sx={{
+                minWidth: 180,
+                '& input::-webkit-calendar-picker-indicator': {
+                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                  cursor: 'pointer',
+                },
+              }} />
           </Grid>
 
-          <Grid item xs={12} sm={3}>
-            <TextField type="date" fullWidth label="Order Date ★"
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField size="small"    sx={{
+      minWidth: 180,
+      '& input::-webkit-calendar-picker-indicator': {
+        filter: 'invert(1)', // 🔥 makes icon white in dark mode
+        cursor: 'pointer',
+      },
+    }}
+              type="date" fullWidth label="Order Date ★"
               value={poData.orderDate}
               onChange={(e) => setPoData({ ...poData, orderDate: e.target.value })}
               InputLabelProps={{ shrink: true }} />
           </Grid>
 
           {/* Order & Ref No */}
-          <Grid item xs={12} sm={3}>
-            <TextField fullWidth label="Order No ★" value={poData.orderNo}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField size="small" sx={{ minWidth: 180 }}
+              fullWidth label="Order No ★" value={poData.orderNo}
               onChange={(e) => setPoData({ ...poData, orderNo: e.target.value })} />
           </Grid>
 
-          <Grid item xs={12} sm={3}>
-            <TextField fullWidth label="Ref No" value={poData.refNo}
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField fullWidth size="small" 
+              label="Ref No" value={poData.refNo}
               onChange={(e) => setPoData({ ...poData, refNo: e.target.value })} />
           </Grid>
 
           {/* Ref Date */}
-          <Grid item xs={12} sm={3}>
-            <TextField type="date" fullWidth label="Ref Date ★"
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField size="small"    sx={{
+      minWidth: 180,
+      '& input::-webkit-calendar-picker-indicator': {
+        filter: 'invert(1)', // 🔥 makes icon white in dark mode
+        cursor: 'pointer',
+      },
+    }}
+              type="date" fullWidth label="Ref Date ★"
               value={poData.refDate}
               onChange={(e) => setPoData({ ...poData, refDate: e.target.value })}
               InputLabelProps={{ shrink: true }} />
           </Grid>
 
           {/* Tax Mode */}
-          <Grid item xs={12} sm={3}>
-            <TextField select fullWidth label="Tax Mode"
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField size="small" sx={{ minWidth: 180 }}
+              select fullWidth label="Tax Mode"
               value={poData.taxMode}
               onChange={(e) => setPoData({ ...poData, taxMode: e.target.value })}>
               <MenuItem value="Exclusive">Exclusive</MenuItem>
@@ -334,30 +366,12 @@ export default function PurchaseOrder() {
             </TextField>
           </Grid>
 
-          {/* Billing Address */}
-
-
-          {/* Delivery At */}
-
-
-          {/* Payment Terms */}
-
-
-          {/* Advance Amount */}
-
-
-          {/* Advance Ledger */}
-          {/* <Grid item xs={12} sm={3}>
-            <TextField fullWidth label="Advance Ledger"
-              value={poData.advanceLedger || ""}
-              onChange={(e) => setPoData({ ...poData, advanceLedger: e.target.value })} />
-          </Grid> */}
         </Grid>
       </Paper>
 
       {/* ======================= ITEM GRID + BUTTON ======================= */}
       <Box mb={2}>
-        <Button variant="contained" onClick={() => setOpenDialog(true)}>+ Add Item</Button>
+        <Button variant="outlined" onClick={() => setOpenDialog(true)}>+ Add Item</Button>
       </Box>
 
       <Paper elevation={3}>
@@ -374,7 +388,7 @@ export default function PurchaseOrder() {
 
       {/* ======================= SAVE BUTTON ======================= */}
       <Box textAlign="right" mt={3}>
-        <Button variant="contained" size="large" onClick={handleSubmit}>
+        <Button variant="outlined" size="large" onClick={handleSubmit}>
           Save Purchase Order
         </Button>
       </Box>

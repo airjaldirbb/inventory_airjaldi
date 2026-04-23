@@ -16,6 +16,7 @@ import {
   DataGrid, useGridApiRef,
   DEFAULT_GRID_AUTOSIZE_OPTIONS, gridClasses, GridAutosizeOptions,
 } from "@mui/x-data-grid";
+import AddIcon from '@mui/icons-material/Add';
 
 import MuiAlert from "@mui/material/Alert";
 import axios from "axios";
@@ -31,6 +32,7 @@ export default function MaterialReceipt() {
   const [party, setParty] = useState("");
   const [receiptDate, setReceiptDate] = useState(dayjs().format("YYYY-MM-DD"));
   const [receiptNo, setReceiptNo] = useState("");
+  const commonFieldProps = { size: "small", fullWidth: true };
 
   const [items, setItems] = useState([]);
   const [rows, setRows] = useState([]);
@@ -320,7 +322,7 @@ export default function MaterialReceipt() {
     <Box sx={{ p: 3 }}>
       <Box sx={{ display: "flex", justifyContent: { mb: 2, xs: 'center', sm: 'flex-end' } }}>
         <Button
-          variant="contained"
+          variant="outlined"
           color="success"
           onClick={handleSaveAndExport}
         >
@@ -331,6 +333,14 @@ export default function MaterialReceipt() {
 
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} sx={{ my: 2 }}>
         <TextField select label="Branch ★" fullWidth
+              {...commonFieldProps}
+                sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
           value={selectedBranch}
           onChange={e => setSelectedBranch(e.target.value)}>
           {branches.map(b => (
@@ -338,30 +348,49 @@ export default function MaterialReceipt() {
           ))}
         </TextField>
 
-        <TextField label="Party" fullWidth value={party}
+        <TextField label="Party" fullWidth
+              {...commonFieldProps}
+                sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }} value={party}
           onChange={e => setParty(e.target.value)} />
 
         <TextField type="date" label="Receipt Date" fullWidth
+              {...commonFieldProps}
+                sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
           value={receiptDate}
           onChange={e => setReceiptDate(e.target.value)} />
 
         <TextField label="Receipt No" fullWidth
+              {...commonFieldProps}
+                sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
           value={receiptNo}
           onChange={e => setReceiptNo(e.target.value)}
           inputProps={{ style: { textTransform: "uppercase" } }}
         />
       </Stack>
 
-      {/* <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
-        <TextField label="Scan Barcode" fullWidth
-          inputRef={barcodeRef}
-          value={barcodeInput}
-          onChange={e => setBarcodeInput(e.target.value)}
-          onKeyDown={e => e.key === "Enter" && handleBarcodeScan()} />
-        <Button variant="contained" onClick={handleBarcodeScan}>Add</Button>
-      </Stack> */}
 
-      <Button variant="contained" sx={{ mb: 2, float: 'right', m: 2, justifyContent: { xs: "center", sm: "flex-end" } }} onClick={() => setAddOpen(true)}>Add Item</Button>
+      <Button variant="outlined"
+       sx={{ mb: 2, float: 'right', m: 2, 
+       justifyContent: { xs: "center", sm: "flex-end" } }} 
+       onClick={() => setAddOpen(true)}><AddIcon/>Add Items to inventory</Button>
       <Box sx={{ width: "100%", overflowX: "auto" }}>
         <DataGrid
           apiRef={apiRef}
@@ -380,7 +409,7 @@ export default function MaterialReceipt() {
       </Typography>
 
       <Box sx={{ mt: 2, textAlign: "right" }}>
-        <Button variant="contained" onClick={handleSubmit}>Save Receipt</Button>
+        <Button variant="outlined" color="success" onClick={handleSubmit}>Save Receipt</Button>
       </Box>
 
       {/* ================= ADD ITEM DIALOG ================= */}

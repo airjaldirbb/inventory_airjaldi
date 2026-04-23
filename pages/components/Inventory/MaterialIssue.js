@@ -16,8 +16,12 @@ import { DataGrid } from "@mui/x-data-grid";
 import MuiAlert from "@mui/material/Alert";
 import axios from "axios";
 import dayjs from "dayjs";
+import AddIcon from '@mui/icons-material/Add';
+
 
 export default function MaterialIssue() {
+  const commonFieldProps = { size: "small", fullWidth: true };
+
   const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
   const [issuedTo, setIssuedTo] = useState("");
@@ -162,7 +166,7 @@ export default function MaterialIssue() {
     { field: "amount", headerName: "Amount (₹)", width: 150 },
     { field: "remarks", headerName: "Remarks", width: 180 },
   ];
-    const clearItemDialog = () => {
+  const clearItemDialog = () => {
     setSelectedItem(null);
     setQuantity(1);
     setRate(0);
@@ -185,6 +189,14 @@ export default function MaterialIssue() {
           fullWidth
           value={selectedBranch}
           onChange={(e) => setSelectedBranch(e.target.value)}
+          {...commonFieldProps}
+          sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
         >
           {branches.map((b) => (
             <MenuItem key={b._id} value={b._id}>
@@ -198,6 +210,15 @@ export default function MaterialIssue() {
           fullWidth
           value={issuedTo}
           onChange={(e) => setIssuedTo(e.target.value)}
+              {...commonFieldProps}
+          sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
+
         />
 
         <TextField
@@ -206,6 +227,14 @@ export default function MaterialIssue() {
           fullWidth
           value={issueDate}
           onChange={(e) => setIssueDate(e.target.value)}
+              {...commonFieldProps}
+          sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
         />
 
         <TextField
@@ -213,12 +242,21 @@ export default function MaterialIssue() {
           fullWidth
           value={issueNo}
           onChange={(e) => setIssueNo(e.target.value)}
+              {...commonFieldProps}
+          sx={{
+                  minWidth: 180,
+                  '& input::-webkit-calendar-picker-indicator': {
+                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                    cursor: 'pointer',
+                  },
+                }}
         />
+
       </Stack>
 
       <Stack direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
         <Typography variant="h6">Issued Items</Typography>
-        <Button variant="contained" onClick={handleAddRow}>Add Item</Button>
+        <Button variant="outlined" onClick={handleAddRow}><AddIcon/>Add Items to inventory</Button>
       </Stack>
 
       <DataGrid
@@ -233,11 +271,11 @@ export default function MaterialIssue() {
       <Box sx={{ mt: 2, textAlign: "right" }}>
         <Typography variant="subtitle1">
           <b>Total Amount: ₹{totalAmount.toFixed(2)}</b>
-        </Typography>
+        </Typography >
       </Box>
 
       <Box sx={{ mt: 2, textAlign: "right" }}>
-        <Button variant="contained" onClick={handleSubmit}>Save Issue</Button>
+        <Button variant="outlined" color="success" onClick={handleSubmit}>Save Issue</Button>
       </Box>
 
       {/* Add Item Dialog */}
@@ -245,41 +283,41 @@ export default function MaterialIssue() {
         <DialogTitle>Add Item</DialogTitle>
         <DialogContent>
 
-               <TextField
-                        select
-                        fullWidth
-                        label="Select Item"
-                        value={selectedItem?._id || ""}
-                        onChange={(e) => {
-                          const item = items.find(i => i._id === e.target.value);
-          
-                          if (!item) {
-                            clearItemDialog();
-                            return;
-                          }
-          
-                          setSelectedItem(item);
-                          setRate(item.rate || 0);
-                          setQuantity(1);
-                          setSelectedUnit(item.stockUnit || "Pcs");
-                        }}
-                        sx={{ mt: 2 }}
-                      >
-                        {items.map(i => (
-                          <MenuItem key={i._id} value={i._id}>
-                            {i.itemName}
-                          </MenuItem>
-                        ))}
-                      </TextField>
-          
-                      <TextField
-                        fullWidth
-                        label="Unit"
-                        value={selectedUnit}
-                        InputProps={{ readOnly: true }}
-                        sx={{ mt: 2 }}
-                      />
-     
+          <TextField
+            select
+            fullWidth
+            label="Select Item"
+            value={selectedItem?._id || ""}
+            onChange={(e) => {
+              const item = items.find(i => i._id === e.target.value);
+
+              if (!item) {
+                clearItemDialog();
+                return;
+              }
+
+              setSelectedItem(item);
+              setRate(item.rate || 0);
+              setQuantity(1);
+              setSelectedUnit(item.stockUnit || "Pcs");
+            }}
+            sx={{ mt: 2 }}
+          >
+            {items.map(i => (
+              <MenuItem key={i._id} value={i._id}>
+                {i.itemName}
+              </MenuItem>
+            ))}
+          </TextField>
+
+          <TextField
+            fullWidth
+            label="Unit"
+            value={selectedUnit}
+            InputProps={{ readOnly: true }}
+            sx={{ mt: 2 }}
+          />
+
 
           <TextField
             margin="dense"

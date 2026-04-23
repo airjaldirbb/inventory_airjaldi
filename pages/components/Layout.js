@@ -68,7 +68,7 @@ const menuItems = [
         path: "/reports",
         subMenu: [
             { label: "All Reports", path: "/AllReports" },
-            { label: "Trial Balance", path: "/TrailBalance" },
+            // { label: "Trial Balance", path: "/TrailBalance" },
             { label: "Customer Trial", path: "/CustomerTrial" },
             { label: "Vendor Trial", path: "/VendorTrial" },
             { label: "Stock Trail", path: "/StockTrail" },

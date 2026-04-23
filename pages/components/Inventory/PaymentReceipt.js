@@ -16,7 +16,7 @@ import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid";
 
 export default function PaymentReceiptForm() {
-  const commonFieldProps = { size: "small", fullWidth: true};
+  const commonFieldProps = { size: "small", fullWidth: true };
 
   const [branches, setBranches] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -174,18 +174,18 @@ export default function PaymentReceiptForm() {
     //   })),
     // };
     const payload = {
-  receiptNumber: form.receiptNumber,
-  receiptDate: form.receiptDate,
-  branch: form.branch,
-  customer: form.customerId, // ✅ FIXED KEY
+      receiptNumber: form.receiptNumber,
+      receiptDate: form.receiptDate,
+      branch: form.branch,
+      customer: form.customerId, // ✅ FIXED KEY
 
-  invoices: form.invoices.map((i) => ({
-    invoiceId: i.invoiceId, // must be Mongo _id
-    amountPaid: Number(i.amountPaid),
-  })),
+      invoices: form.invoices.map((i) => ({
+        invoiceId: i.invoiceId, // must be Mongo _id
+        amountPaid: Number(i.amountPaid),
+      })),
 
-  totalReceived: Number(form.totalReceived),
-};
+      totalReceived: Number(form.totalReceived),
+    };
 
     try {
       await axios.post("/api/paymentReceipt", payload);
@@ -210,8 +210,8 @@ export default function PaymentReceiptForm() {
   };
 
   return (
-    <Paper sx={{ p: 10, maxWidth: "auto", mx: "auto",minHeight:"100" }}>
-      <Typography variant="h4" gutterBottom sx={{ textAlign: 'center',margin:'1rem' }}>
+    <Paper sx={{ p: 5, maxWidth: "auto", mx: "auto", minHeight: "100" }}>
+      <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', margin: '1rem' }}>
         Payment Receipt
       </Typography>
 
@@ -223,7 +223,13 @@ export default function PaymentReceiptForm() {
         <TextField
           {...commonFieldProps}
           size="small"
-          sx={{ mb: 2 }}
+          sx={{
+            minWidth: 180,
+            '& input::-webkit-calendar-picker-indicator': {
+              filter: 'invert(1)', // 🔥 makes icon white in dark mode
+              cursor: 'pointer',
+            },
+          }}
           type="date"
           label="Receipt Date"
           value={form.receiptDate}
@@ -234,7 +240,7 @@ export default function PaymentReceiptForm() {
         />
 
         <Autocomplete
-        fullWidth
+          fullWidth
           {...commonFieldProps}
 
           sx={{ mb: 2 }}
@@ -252,9 +258,9 @@ export default function PaymentReceiptForm() {
         />
 
         <Autocomplete
-       {...commonFieldProps}
+          {...commonFieldProps}
 
-          
+
           sx={{ mb: 2 }}
           options={customers}
           value={selectedCustomer}
@@ -368,7 +374,7 @@ export default function PaymentReceiptForm() {
             Total Received: ₹{form.totalReceived.toFixed(2)}
           </Typography>
 
-          <Button variant="outlined"  sx={{ mt: 2 ,float:'right'}} onClick={saveReceipt}>
+          <Button variant="outlined" sx={{ mt: 2, float: 'right' }} onClick={saveReceipt}>
             Save Payment Receipt
           </Button>
         </>
