@@ -44,7 +44,6 @@ export default function StockAdjustmentForm() {
           axios.get("/api/stockAdjustment"),
         ]);
 
-        console.log("🔹 Branch Response:", branchRes.data);
 
         // The key here depends on how your API returns data
         setBranches(branchRes.data.data || branchRes.data || []);

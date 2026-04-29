@@ -40,7 +40,6 @@ export default function MaterialReceiptRegister() {
             console.log(res)
             const data = await res.json();
 
-            console.log("ISSUE API DATA Receipt 👉", data);
             const formattedRows = [];
 
             data.data.forEach((issue) => {
