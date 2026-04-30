@@ -1,9 +1,18 @@
 import mongoose from "mongoose";
 
+/* ================= ITEM SCHEMA ================= */
 const salesInvoiceItemSchema = new mongoose.Schema(
   {
-    invoiceNo: { type: String, required: true },
-    invoiceDate: { type: Date, required: true },
+    invoiceNo: {
+      type: String,
+      required: false,
+      trim: true,
+    },
+
+    invoiceDate: {
+      type: Date,
+      required: true,
+    },
 
     customer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -23,14 +32,43 @@ const salesInvoiceItemSchema = new mongoose.Schema(
       required: true,
     },
 
-    qty: { type: Number, required: true }, // negative not recommended for sales
-    uom: { type: String, default: "pcs" },
+    qty: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1,
+    },
 
-    rate: { type: Number, required: true },
-    taxPercent: { type: Number, default: 0 },
-    taxAmount: { type: Number, default: 0 },
+    uom: {
+      type: String,
+      default: "pcs",
+      trim: true,
+    },
 
-    invoiceAmount: { type: Number, required: true },
+    rate: {
+      type: Number,
+      required: true,
+      min: 0,
+      default: 0,
+    },
+
+    taxPercent: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    taxAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    invoiceAmount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
 
     paymentStatus: {
       type: String,
@@ -44,21 +82,53 @@ const salesInvoiceItemSchema = new mongoose.Schema(
       default: "SALE",
     },
   },
-  { _id: false }
+  {
+    _id: true,
+  }
 );
 
+/* ================= MAIN SCHEMA ================= */
 const salesInvoiceRegisterSchema = new mongoose.Schema(
   {
     items: [salesInvoiceItemSchema],
 
     totalAmount: {
       type: Number,
-      required: true,
       default: 0,
+      min: 0,
     },
   },
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
+/* ================= AUTO CALCULATIONS ================= */
+salesInvoiceRegisterSchema.pre("save", function (next) {
+  this.items = this.items.map((row) => {
+    const qty = Number(row.qty || 0);
+    const rate = Number(row.rate || 0);
+    const taxPercent = Number(row.taxPercent || 0);
+
+    const basicAmount = qty * rate;
+
+    row.taxAmount = (basicAmount * taxPercent) / 100;
+
+    row.invoiceAmount = basicAmount + row.taxAmount;
+
+    return row;
+  });
+
+  this.totalAmount = this.items.reduce((sum, row) => {
+    return sum + Number(row.invoiceAmount || 0);
+  }, 0);
+
+  next();
+});
+
+/* ================= EXPORT MODEL ================= */
 export default mongoose.models.SalesInvoiceRegister ||
-  mongoose.model("SalesInvoiceRegister", salesInvoiceRegisterSchema);
+  mongoose.model(
+    "SalesInvoiceRegister",
+    salesInvoiceRegisterSchema
+  );

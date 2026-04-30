@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { styled } from "@mui/material/styles";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchBranches } from "@/store/branchSlice";
 import {
   Grid,
   Paper,
@@ -21,7 +22,16 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 
 export default function SalesInvoice() {
+  const dispatch = useDispatch();
+  const { branches, loaded, loading } = useSelector((state) => state.branch)
+
+  useEffect(() => {
+    if (!loaded) {
+      dispatch(fetchBranches())
+    }
+  })
   const [phone, setPhone] = useState("");
+
 
   const commonFieldProps = { size: "small", fullWidth: true };
   const [jazeCustomerDetails, setJazeCustomerDetails] = useState(null);
@@ -42,7 +52,7 @@ export default function SalesInvoice() {
   });
 
   // ========== DROPDOWN DATA ==========
-  const [branches, setBranches] = useState([]);
+  // const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [items, setItems] = useState([]);
@@ -71,7 +81,7 @@ export default function SalesInvoice() {
   };
   // ================= LOAD DATA =================
   useEffect(() => {
-    axios.get("/api/branch").then(res => setBranches(res.data)).catch(err => console.error(err));
+    // axios.get("/api/branch").then(res => setBranches(res.data)).catch(err => console.error(err));
     axios.get("/api/customer").then(res => setCustomers(res.data)).catch(err => console.error(err));
     axios.get("/api/AgentDropDown").then(res => setAgents(res.data.data || [])).catch(err => console.error(err));
   }, []);
@@ -284,23 +294,16 @@ export default function SalesInvoice() {
     setSelectedUnit("");
     setFormState(prev => ({ ...prev, tax: "" }));
   };
-
   const fetchUserDetails = async (phoneNumber) => {
-    if (!phoneNumber) {
-      console.log("No phone number entered");
-      return;
-    }
+    if (!phoneNumber) return;
 
     try {
       const res = await axios.get(
         `/api/jazeApi?type=phone&value=${phoneNumber}`
       );
 
-      console.log("RAW API RESPONSE:", res.data);
-
       let responseData = res.data;
 
-      // ✅ unwrap if needed
       if (responseData?.data) {
         responseData = responseData.data;
       }
@@ -309,41 +312,127 @@ export default function SalesInvoice() {
         responseData = [responseData];
       }
 
-      // ✅ find user block
-      const userBlock = responseData.find((item) => item?.User);
+      const userBlock = responseData.find(
+        (item) => item?.User
+      );
 
       if (!userBlock?.User) {
-        console.warn("User not found in API response");
+        console.warn("User not found");
         return;
       }
 
       const user = userBlock.User;
-      const gstNumber = userBlock.UserSetting?.gstNumber || "";
+      const gstNumber =
+        userBlock.UserSetting?.gstNumber || "";
 
-      // ✅ SET CUSTOMER (IMPORTANT)
+      const customerObj = {
+        _id: String(user.id),
+        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+        email: user.email || "",
+        phone: user.phone || "",
+      };
+
+      // Add in dropdown list
+      setCustomers((prev) => {
+        const exists = prev.find(
+          (c) =>
+            String(c._id) === customerObj._id
+        );
+
+        if (exists) return prev;
+
+        return [...prev, customerObj];
+      });
+
+      // Select customer
       setFormState((prev) => ({
         ...prev,
-        customer: String(user.id), // Jaze ID
-        email: user.email || "",
+        customer: customerObj._id,
+        email: customerObj.email,
       }));
 
-      // ✅ STORE FULL DETAILS (for backend)
+      // Store extra details
       setJazeCustomerDetails({
-        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+        customerId: customerObj._id,
+        custName: customerObj.custName,
         phone: user.phone || "",
         email: user.email || "",
         city: user.address_city || "",
         location: user.address_line1 || "",
-        gst: gstNumber || "",
+        gst: gstNumber,
         company: user.company_name || "",
       });
 
-      console.log("✅ Jaze customer set successfully");
+      console.log(
+        "✅ Jaze customer set successfully",
+        customerObj._id
+      );
 
     } catch (err) {
-      console.error("Error fetching AirJaldi user:", err);
+      console.error(err);
     }
   };
+
+  // const fetchUserDetails = async (phoneNumber) => {
+  //   if (!phoneNumber) {
+  //     console.log("No phone number entered");
+  //     return;
+  //   }
+
+  //   try {
+  //     const res = await axios.get(
+  //       `/api/jazeApi?type=phone&value=${phoneNumber}`
+  //     );
+
+  //     console.log("RAW API RESPONSE:", res.data);
+
+  //     let responseData = res.data;
+
+  //     // ✅ unwrap if needed
+  //     if (responseData?.data) {
+  //       responseData = responseData.data;
+  //     }
+
+  //     if (!Array.isArray(responseData)) {
+  //       responseData = [responseData];
+  //     }
+
+  //     // ✅ find user block
+  //     const userBlock = responseData.find((item) => item?.User);
+
+  //     if (!userBlock?.User) {
+  //       console.warn("User not found in API response");
+  //       return;
+  //     }
+
+  //     const user = userBlock.User;
+  //     const gstNumber = userBlock.UserSetting?.gstNumber || "";
+
+  //     // ✅ SET CUSTOMER (IMPORTANT)
+  //     setFormState((prev) => ({
+  //       ...prev,
+  //       customer: String(user.id), // Jaze ID
+  //       email: user.email || "",
+  //     }));
+
+  //     // ✅ STORE FULL DETAILS (for backend)
+  //     setJazeCustomerDetails({
+  //       customerId: String(user.id),
+  //       custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+  //       phone: user.phone || "",
+  //       email: user.email || "",
+  //       city: user.address_city || "",
+  //       location: user.address_line1 || "",
+  //       gst: gstNumber || "",
+  //       company: user.company_name || "",
+  //     });
+
+  //     console.log("✅ Jaze customer set successfully",user.id);
+
+  //   } catch (err) {
+  //     console.error("Error fetching AirJaldi user:", err);
+  //   }
+  // };
   const combinedRows = rows.filter((row) =>
     Object.values(row).some(
       (value) =>
@@ -403,6 +492,7 @@ export default function SalesInvoice() {
                   <TextField {...params} label="Branch" {...commonFieldProps} />
                 )}
               />
+          
 
               <Autocomplete
                 {...commonFieldProps}
@@ -415,8 +505,13 @@ export default function SalesInvoice() {
                     email: v?.email || "",
                   })
                 }
-                getOptionLabel={(o) => o?.custName || ""}
-                isOptionEqualToValue={(o, v) => o._id === v._id}
+                getOptionLabel={(o) =>
+                  o?.custName
+                    ? `${o.custName} - ${o._id}`
+                    : String(o?._id || "")
+                } isOptionEqualToValue={(o, v) =>
+                  String(o._id) === String(v._id)
+                }
                 renderInput={(params) => (
                   <TextField {...params} label="Customer" {...commonFieldProps} />
                 )}

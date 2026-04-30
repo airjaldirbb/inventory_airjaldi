@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { DataGrid } from "@mui/x-data-grid";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, CircularProgress,Button } from "@mui/material";
 import axios from "axios";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 const PurchaseInvoiceRegisterGrid = () => {
   const [rows, setRows] = useState([]);
@@ -62,7 +63,30 @@ const PurchaseInvoiceRegisterGrid = () => {
   ];
 
   return (
-    <Box sx={{ height: 500, width: "100%" }}>
+    <>
+          <Box
+      sx={{
+        display: "flex",
+        justifyContent: "flex-end",
+        mb: 2,
+      }}
+    >
+      <Button
+        variant="outlined"
+        color="success"
+        onClick={() =>
+          exportToExcel({
+            fileName: "PurchaseRegister.xlsx",
+            sheetName: "Purchase Invoice Register",
+            columns,
+            rows,
+          })
+        }
+      >
+        Export Excel
+      </Button>
+    </Box>
+       <Box sx={{ height: 500, width: "100%" }}>
       {loading ? (
         <CircularProgress />
       ) : (
@@ -80,6 +104,8 @@ const PurchaseInvoiceRegisterGrid = () => {
         </>
       )}
     </Box>
+    </>
+ 
   );
 };
 

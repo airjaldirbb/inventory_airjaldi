@@ -15,10 +15,8 @@ const SalesInvoiceRegister = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-
   const [editingRowId, setEditingRowId] = useState(null);
   const [editValues, setEditValues] = useState({ qty: "", rate: "" });
-
   const [snackbar, setSnackbar] = useState({
     open: false,
     message: "",
@@ -82,22 +80,22 @@ const SalesInvoiceRegister = () => {
     });
   };
 
-const handleUpdateRow = async (row) => {
-  try {
-    await axios.put(
-      `/api/salesInvoiceREgister?id=${row.parentId}&type=SALE&itemId=${row.itemId}`,
-      {
-        qty: Number(editValues.qty),
-        rate: Number(editValues.rate),
-        itemName: editValues.itemName,
-      }
-    );
+  const handleUpdateRow = async (row) => {
+    try {
+      await axios.put(
+        `/api/salesInvoiceREgister?id=${row.parentId}&type=SALE&itemId=${row.itemId}`,
+        {
+          qty: Number(editValues.qty),
+          rate: Number(editValues.rate),
+          itemName: editValues.itemName,
+        }
+      );
 
-    // ✅ update UI
-    setRows((prev) =>
-      prev.map((r) =>
-        r.id === row.id
-          ? {
+      // ✅ update UI
+      setRows((prev) =>
+        prev.map((r) =>
+          r.id === row.id
+            ? {
               ...r,
               qty: Number(editValues.qty),
               rate: Number(editValues.rate),
@@ -108,20 +106,20 @@ const handleUpdateRow = async (row) => {
               invoiceAmount:
                 Number(editValues.qty) * Number(editValues.rate),
             }
-          : r
-      )
-    );
+            : r
+        )
+      );
 
-    setEditingRowId(null);
-    showSnackbar("Updated successfully", "success");
+      setEditingRowId(null);
+      showSnackbar("Updated successfully", "success");
 
-    fetchData(); // optional
+      fetchData(); // optional
 
-  } catch (err) {
-    console.error(err);
-    showSnackbar("Update failed", "error");
-  }
-};
+    } catch (err) {
+      console.error(err);
+      showSnackbar("Update failed", "error");
+    }
+  };
 
   // ================= DELETE =================
   const handleDeleteRow = async (row) => {
@@ -197,6 +195,20 @@ const handleUpdateRow = async (row) => {
     { field: "taxPercent", headerName: "Tax %", width: 80 },
     { field: "taxAmount", headerName: "Tax Amt", width: 100 },
     { field: "invoiceAmount", headerName: "Amount", width: 120 },
+    {
+      field: "invoiceAmount",
+      headerName: "Amount",
+      width: 120,
+      renderCell: (params) => {
+        const rate = Number(params.row.rate || 0);
+        const taxAmount = Number(params.row.taxAmount || 0);
+
+        const amount = rate + taxAmount;
+
+        return Math.abs(Number(amount.toFixed(2)));
+      },
+    },
+
     { field: "paymentStatus", headerName: "Status", width: 120 },
 
     {
@@ -238,11 +250,35 @@ const handleUpdateRow = async (row) => {
   // ================= UI =================
   return (
     <>
+         <Box
+      sx={{
+        display: "flex",
+        justifyContent: "flex-end",
+        mb: 2,
+      }}
+    >
+      <Button
+        variant="outlined"
+        color="success"
+        onClick={() =>
+          exportToExcel({
+            fileName: "customer-trial.xlsx",
+            sheetName: "Customer Trial",
+            columns,
+            rows,
+          })
+        }
+      >
+        Export Excel
+      </Button>
+    </Box>
       <Box sx={{ height: 500, width: "100%" }}>
+
         {loading ? (
           <CircularProgress />
         ) : (
           <>
+
             <DataGrid
               rows={rows}
               columns={columns}
@@ -264,6 +300,7 @@ const handleUpdateRow = async (row) => {
         )}
       </Box>
 
+
       {/* Snackbar */}
       <Snackbar
         open={snackbar.open}
@@ -278,7 +315,9 @@ const handleUpdateRow = async (row) => {
         >
           {snackbar.message}
         </Alert>
+
       </Snackbar>
+      
     </>
   );
 };

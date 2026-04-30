@@ -1,4 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
+import { useDispatch,useSelector } from "react-redux";
+import { fetchBranches } from "@/store/branchSlice";
 import {
   Box,
   Stack,
@@ -24,10 +26,17 @@ import dayjs from "dayjs";
 import { exportToExcel } from "@/utils/exportToExcel";
 
 export default function MaterialReceipt() {
+  const dispatch=useDispatch();
+  const {branches,loaded,loading}=useSelector((state)=>state.branch)
+     useEffect(()=>{
+          if(!loaded){
+              dispatch(fetchBranches())
+          }
+      })
   /* ================= STATES ================= */
   const apiRef = useGridApiRef();
 
-  const [branches, setBranches] = useState([]);
+  // const [branches, setBranches] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("");
   const [party, setParty] = useState("");
   const [receiptDate, setReceiptDate] = useState(dayjs().format("YYYY-MM-DD"));
@@ -58,12 +67,12 @@ export default function MaterialReceipt() {
   const barcodeRef = useRef(null);
 
   /* ================= FETCH ================= */
-  useEffect(() => {
-    // Fetch all branches
-    axios.get("/api/branch")
-      .then(res => setBranches(res.data.data || res.data))
-      .catch(err => console.error("Branch error", err));
-  }, []);
+  // useEffect(() => {
+  //   // Fetch all branches
+  //   axios.get("/api/branch")
+  //     .then(res => setBranches(res.data.data || res.data))
+  //     .catch(err => console.error("Branch error", err));
+  // }, []);
 
   useEffect(() => {
     if (!selectedBranch) return;

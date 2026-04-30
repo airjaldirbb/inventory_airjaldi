@@ -10,8 +10,16 @@ import {
     MenuItem,
     Paper,
 } from "@mui/material";
-
+import { useDispatch,useSelector } from "react-redux";
+import { fetchBranches } from "@/store/branchSlice";
 export default function MaterialReceiptRegister() {
+    const dispatch= useDispatch();
+    const {branches,loaded}=useSelector((state)=>state.branch)
+    useEffect(()=>{
+        if(!loaded){
+            dispatch(fetchBranches())
+        }
+    })
     const [rows, setRows] = useState([]);
     const [loading, setLoading] = useState(false);
     const commonFieldProps = { size: "small", fullWidth: true };
@@ -22,14 +30,14 @@ export default function MaterialReceiptRegister() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
 
-    const [branches, setBranches] = useState([]);
+    // const [branches, setBranches] = useState([]);
 
     /* ================= FETCH BRANCHES ================= */
-    useEffect(() => {
-        fetch("/api/branch")
-            .then(res => res.json())
-            .then(data => setBranches(data.data || []));
-    }, []);
+    // useEffect(() => {
+    //     fetch("/api/branch")
+    //         .then(res => res.json())
+    //         .then(data => setBranches(data.data || []));
+    // }, []);
 
     /* ================= FETCH REGISTER ================= */
 
