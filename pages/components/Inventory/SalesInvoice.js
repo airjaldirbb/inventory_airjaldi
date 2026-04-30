@@ -303,7 +303,7 @@ export default function SalesInvoice() {
       );
 
       let responseData = res.data;
-
+      console.log(responseData)
       if (responseData?.data) {
         responseData = responseData.data;
       }
@@ -327,6 +327,7 @@ export default function SalesInvoice() {
 
       const customerObj = {
         _id: String(user.id),
+        username: user.username || "",
         custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
         email: user.email || "",
         phone: user.phone || "",
@@ -354,6 +355,7 @@ export default function SalesInvoice() {
       // Store extra details
       setJazeCustomerDetails({
         customerId: customerObj._id,
+        username: customerObj.username,
         custName: customerObj.custName,
         phone: user.phone || "",
         email: user.email || "",
@@ -492,7 +494,7 @@ export default function SalesInvoice() {
                   <TextField {...params} label="Branch" {...commonFieldProps} />
                 )}
               />
-          
+
 
               <Autocomplete
                 {...commonFieldProps}
@@ -506,17 +508,21 @@ export default function SalesInvoice() {
                   })
                 }
                 getOptionLabel={(o) =>
-                  o?.custName
-                    ? `${o.custName} - ${o._id}`
-                    : String(o?._id || "")
-                } isOptionEqualToValue={(o, v) =>
+                  o?.username
+                    ? `${o.username} (${o.custName || ""})`
+                    : o?.custName || ""
+                }
+                isOptionEqualToValue={(o, v) =>
                   String(o._id) === String(v._id)
                 }
                 renderInput={(params) => (
-                  <TextField {...params} label="Customer" {...commonFieldProps} />
+                  <TextField
+                    {...params}
+                    label="Customer"
+                    {...commonFieldProps}
+                  />
                 )}
               />
-
 
               <TextField
 

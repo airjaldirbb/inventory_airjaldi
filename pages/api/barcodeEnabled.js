@@ -10,7 +10,6 @@ export default async function handler(req, res) {
     }
 
     const items = await Item.find({ barcodeTracking: "ENABLE" });
-    console.log("✅ Items fetched:", items.length);
 
     return res.status(200).json({
       message: `Fetched ${items.length} barcode-enabled items`,

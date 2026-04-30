@@ -13,7 +13,6 @@ export default function CustomerTrial() {
       .get("/api/customerTrail")
       .then((res) => {
         const data = res.data.data || [];
-        console.log(data,"customer trial")
         setRows(data);
 
         // Calculate totals

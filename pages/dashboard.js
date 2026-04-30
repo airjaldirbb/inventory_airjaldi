@@ -39,6 +39,8 @@ import StockTrail from "./components/Inventory/StockTrial";
 import MaterialIssueRegister from "./components/Inventory/MaterialIssueRegister";
 import MaterialReceiptRegister from "./components/Inventory/MaterialReceiptRegister";
 import PurchaseBranchTransfer from "./components/Inventory/PurchaseBranchTranser";
+import SalesBranchTransferReg from "./components/Inventory/SalesBranchTransferReg";
+import PurchaseBranchTransferReg from "./components/Inventory/PurchaseBranchTransferReg";
 /* =====================================================
    🔹 TAB REGISTRY (SINGLE SOURCE OF TRUTH)
 ===================================================== */
@@ -59,8 +61,11 @@ const TAB_REGISTRY = {
   customerTrial: { label: "Customer Trial", component: <CustomerTrial /> },
   vendorTrial: { label: "Vendor Trial", component: <VendorTrial /> },
   salesInvoiceRegister: { label: "Sales Invoice Register", component: <SalesInvoiceRegister /> },
-  salesBranchTransfer:{label:"Sales Branch Transfer", component:<SalesBranchTransfer/>},
-  purchaseBranchTransfer:{label:"Purchase Branch Transfer", component:<PurchaseBranchTransfer/>},
+  salesBranchTransfer: { label: "Sales Branch Transfer", component: <SalesBranchTransfer /> },
+  purchaseBranchTransfer: { label: "Purchase Branch Transfer", component: <PurchaseBranchTransfer /> },
+  salesBranchTransferRegister: { label: "Sales Branch Transfer Register", component: <SalesBranchTransferReg /> },
+  purchaseBranchTransferRegister: { label: "Purchase Branch Transfer Register", component: <PurchaseBranchTransferReg /> },
+
   stockTrail: { label: "Stock Trial", component: <StockTrail /> },
   allReports: {
     label: "All Reports",
@@ -70,11 +75,16 @@ const TAB_REGISTRY = {
     label: "Purchase Invoice Register",
     component: <PurchaseInvoiceRegisterGrid />,
   },
+
   materialIssueRegister: {
     label: "Material Issue Register",
     component: <MaterialIssueRegister />,
   },
-  materialreceiptRegister: { label: "Material Receipt Register", component: <MaterialReceiptRegister /> },
+  materialreceiptRegister: {
+    label: "Material Receipt Register",
+    component: <MaterialReceiptRegister />
+    
+  },
 };
 
 /* =====================================================
@@ -146,13 +156,13 @@ export default function Dashboard() {
           "/MaterialReceipt": "materialReceipt",
           "/StockManagement": "stockManagement",
           "/SalesInvoice": "salesInvoice",
-          "/SalesBranchTransfer":"salesBranchTransfer",
+          "/SalesBranchTransfer": "salesBranchTransfer",
           "/Customer": "customer",
           "/PaymentReceipt": "paymentReceipt",
           "/Vendor": "vendor",
           "/PurchaseOrder": "purchaseOrder",
           "/PurchaseBill": "purchaseBill",
-          "/PurchaseBranchTransfer":"purchaseBranchTransfer",
+          "/PurchaseBranchTransfer": "purchaseBranchTransfer",
           "/BillPayment": "billPayment",
           "/AllReports": "allReports",
           "/CustomerTrial": "customerTrial",
@@ -209,7 +219,7 @@ export default function Dashboard() {
 ===================================================== */
 function AnalyticsContent() {
   return (
-    <Box sx={{ p: 5, backgroundColor: "#0086c7",minHeight:'80vh'}}>
+    <Box sx={{ p: 5, backgroundColor: "#0086c7", minHeight: '80vh' }}>
       <Container maxWidth="xl">
         <Typography variant="h4" align="center" gutterBottom fontWeight={600} color="#fff">
           Dashboard Analytics

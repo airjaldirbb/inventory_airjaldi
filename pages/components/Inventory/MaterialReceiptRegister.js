@@ -45,7 +45,6 @@ export default function MaterialReceiptRegister() {
         setLoading(true);
         try {
             const res = await fetch("/api/receipt");
-            console.log(res)
             const data = await res.json();
 
             const formattedRows = [];

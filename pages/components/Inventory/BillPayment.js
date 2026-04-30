@@ -31,7 +31,6 @@ const BillPayment = () => {
   const loadVendors = async () => {
     try {
       const res = await axios.get("/api/vendorApi");
-      console.log('vendor', res)
       setVendors(res.data);
     } catch (err) {
       console.error("Error loading vendors:", err);

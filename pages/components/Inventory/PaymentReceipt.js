@@ -61,7 +61,6 @@ export default function PaymentReceiptForm() {
   const loadCustomers = async () => {
     try {
       const res = await axios.get("/api/customer");
-      console.log(res, "customre")
       setCustomers(res.data);
     } catch (err) {
       console.error("Failed to load customers", err);

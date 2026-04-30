@@ -31,7 +31,6 @@ export default function MaterialIssueRegister() {
             const res = await fetch("/api/issue");
             const data = await res.json();
 
-            console.log("ISSUE API DATA 👉", data);
             const formattedRows = [];
 
             data.data.forEach((issue) => {

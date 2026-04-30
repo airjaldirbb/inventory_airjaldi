@@ -39,7 +39,18 @@ export default function AllReports({ addTab }) {
               >
                 Sales Invoice Register
               </Link>
-              
+              <Divider sx={{ mb: 1 }} />
+
+              <Link
+                component="button"
+                underline="hover"
+                onClick={() => addTab("salesBranchTransferRegister")}
+              >
+                Sales Branch Transfer Register
+              </Link>
+
+
+
             </CardContent>
           </Card>
         </Grid>
@@ -61,6 +72,15 @@ export default function AllReports({ addTab }) {
                 onClick={() => addTab("purchaseInvoiceRegister")}
               >
                 Purchase Invoice Register
+              </Link>
+              <Divider sx={{ mb: 1 }} />
+
+              <Link
+                component="button"
+                underline="hover"
+                onClick={() => addTab("purchaseBranchTransferRegister")}
+              >
+                Purchase Branch Transfer Register
               </Link>
             </CardContent>
           </Card>

@@ -189,7 +189,6 @@ export default function Customer() {
       const res = await axios.get(
         `/api/jazeApi?type=phone&value=${phoneNumber}`
       );
-      console.log("RAW API RESPONSE:", res.data);
       let responseData = res.data?.data || [];
       // ✅ ALWAYS work with array
       if (!Array.isArray(responseData)) {
@@ -219,7 +218,6 @@ export default function Customer() {
             clientType: user["Client Type"] || "",
           };
         });
-      console.log("✅ Normalized Users:", users);
       // ✅ Merge into grid
       setRows(prev => {
         const newRows = users.filter(

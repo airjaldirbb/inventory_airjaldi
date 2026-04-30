@@ -6,7 +6,6 @@ const Test = () => {
         const a=-2;
         const b = 5;
         const x=a+b;
-        console.log(x)
     const [courseDuration, setCourseName] = useState('2 months')
     const [rollNo, setRollNo] = useState(123)
     const [isActive, setIsActive] = useState(false)
@@ -34,7 +33,6 @@ const Test = () => {
 
     const onActive = (event) => {
         setIsActive(event.target.checked)
-        console.log(event.target.checked)
     }
     return (
         <div>
