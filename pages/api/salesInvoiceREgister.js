@@ -68,10 +68,12 @@ export default async function handler(req, res) {
             invoiceNo: doc.invoiceNumber,
             invoiceDate: doc.invoiceDate,
 
+           
             customer: doc.customer
               ? {
                 _id: doc.customer._id,
-                name: doc.customer.name,
+                custName: doc.customer.custName,
+                username: doc.customer.username || "",
               }
               : null,
 

@@ -135,7 +135,7 @@ export default function Customer() {
     
     { field: "edit", headerName: "Edit", width: 80, renderCell: params => <Button color="primary" onClick={() => handleEditRow(params.row)} size="small"><EditIcon /></Button> },
     { field: "delete", headerName: "Delete", width: 90, renderCell: params => <Button color="error" onClick={() => handleOpenDeleteConfirm(params.row._id)} size="small"><DeleteIcon /></Button> },
-    { field: "_id", headerName: "Customer ID", width: 100 },
+    { field: "custName", headerName: "Customer ID", width: 100 },
     { field: "code", headerName: "Code", width: 120 },
     { field: "phone", headerName: "Phone", width: 130 },
     { field: "email", headerName: "Email", width: 180 },

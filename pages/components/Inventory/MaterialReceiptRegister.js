@@ -46,15 +46,13 @@ export default function MaterialReceiptRegister() {
         try {
             const res = await fetch("/api/receipt");
             const data = await res.json();
-
             const formattedRows = [];
-
             data.data.forEach((issue) => {
                 issue.items.forEach((item, index) => {
                     formattedRows.push({
-                        id: `${issue._id}-${index}`, // unique row id
+                        id: `${issue._id}-${index}`, 
                         partyName: issue.party || "-",
-                        branchName: issue.branch?.name || "-", // populated branch name
+                        branchName: issue.branch?.name || "-", 
                         itemName: item.itemId?.itemName || "-",
                         qty: item.qty,
                         uom: item.unit,

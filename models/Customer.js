@@ -6,45 +6,44 @@ const CustomerSchema = new mongoose.Schema(
 
     code: { type: String, required: true },
 
-    phone: { 
-      type: String, 
+    phone: {
+      type: String,
       required: true,
-      default: "9999999999" // ✅ fallback
+      default: "9999999999"
     },
 
-    email: { 
-      type: String, 
+    email: {
+      type: String,
       required: true,
-      default: "noemail@test.com" // ✅ fallback
+      default: "noemail@test.com"
     },
 
-    city: { 
-      type: String, 
+    city: {
+      type: String,
       required: true,
       default: "NA"
     },
 
-    location: { 
-      type: String, 
+    location: {
+      type: String,
       required: true,
       default: "NA"
     },
 
-    gst: { 
-      type: String, 
+    gst: {
+      type: String,
       required: true,
       default: "NA"
     },
-        company: {
+    company: {
       type: String,
       default: ""
     },
 
-    // ✅ Jaze mapping
-    jazeCustomerId: { 
-      type: String, 
-      unique: true, // 🔥 prevent duplicates
-      sparse: true  // allows null for manual users
+    jazeCustomerId: {
+      type: String,
+      unique: true,
+      sparse: true
     },
 
     user: { type: String, default: 'Tester' },

@@ -35,16 +35,17 @@ const SalesInvoiceRegister = () => {
   const fetchData = async () => {
     try {
       const res = await axios.get("/api/salesInvoiceREgister");
-
       const data = res.data.data.map((item, index) => ({
         id: index + 1,
-
         parentId: item.parentId,
         itemId: item.itemId,
         transactionType: item.transactionType,
         invoiceNo: item.invoiceNo,
         invoiceDate: new Date(item.invoiceDate).toLocaleDateString(),
-        customer: item.customer?.name || "N/A",
+        customer:
+          item.customer?.username ||
+          item.customer?.custName ||
+          "N/A",
         branch: item.branch?.name || "N/A",
         itemName: item.item?.itemName || "N/A",
         qty: item.qty,
@@ -112,7 +113,6 @@ const SalesInvoiceRegister = () => {
 
       setEditingRowId(null);
       showSnackbar("Updated successfully", "success");
-
       fetchData(); // optional
 
     } catch (err) {
@@ -151,7 +151,6 @@ const SalesInvoiceRegister = () => {
     { field: "customer", headerName: "Customer", width: 150 },
     { field: "branch", headerName: "Branch", width: 120 },
     { field: "itemName", headerName: "Item Name", width: 150 },
-
     {
       field: "qty",
       headerName: "Qty",
@@ -170,9 +169,7 @@ const SalesInvoiceRegister = () => {
           params.value
         ),
     },
-
     { field: "uom", headerName: "UOM", width: 80 },
-
     {
       field: "rate",
       headerName: "Rate",
@@ -191,10 +188,8 @@ const SalesInvoiceRegister = () => {
           params.value
         ),
     },
-
     { field: "taxPercent", headerName: "Tax %", width: 80 },
     { field: "taxAmount", headerName: "Tax Amt", width: 100 },
-    { field: "invoiceAmount", headerName: "Amount", width: 120 },
     {
       field: "invoiceAmount",
       headerName: "Amount",
@@ -208,9 +203,7 @@ const SalesInvoiceRegister = () => {
         return Math.abs(Number(amount.toFixed(2)));
       },
     },
-
     { field: "paymentStatus", headerName: "Status", width: 120 },
-
     {
       field: "actions",
       headerName: "Actions",
@@ -250,28 +243,28 @@ const SalesInvoiceRegister = () => {
   // ================= UI =================
   return (
     <>
-         <Box
-      sx={{
-        display: "flex",
-        justifyContent: "flex-end",
-        mb: 2,
-      }}
-    >
-      <Button
-        variant="outlined"
-        color="success"
-        onClick={() =>
-          exportToExcel({
-            fileName: "customer-trial.xlsx",
-            sheetName: "Customer Trial",
-            columns,
-            rows,
-          })
-        }
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          mb: 2,
+        }}
       >
-        Export Excel
-      </Button>
-    </Box>
+        <Button
+          variant="outlined"
+          color="success"
+          onClick={() =>
+            exportToExcel({
+              fileName: "customer-trial.xlsx",
+              sheetName: "Customer Trial",
+              columns,
+              rows,
+            })
+          }
+        >
+          Export Excel
+        </Button>
+      </Box>
       <Box sx={{ height: 500, width: "100%" }}>
 
         {loading ? (
@@ -317,7 +310,7 @@ const SalesInvoiceRegister = () => {
         </Alert>
 
       </Snackbar>
-      
+
     </>
   );
 };
