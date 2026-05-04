@@ -32,20 +32,41 @@ const SalesInvoiceRegister = () => {
   };
 
   // ================= FETCH DATA =================
-  const fetchData = async () => {
-    try {
-      const res = await axios.get("/api/salesInvoiceREgister");
-      const data = res.data.data.map((item, index) => ({
+const fetchData = async () => {
+  try {
+    const res = await axios.get("/api/salesInvoiceREgister");
+
+    const data = res.data.data.map((item, index) => {
+      const customerObj = item.customer || {};
+
+      const username = customerObj.username?.trim() || "";
+      const custName = customerObj.custName?.trim() || "";
+
+      let customerName = "N/A";
+
+      // both available
+      if (username && custName) {
+        customerName = `${username} (${custName})`;
+      }
+      // only customer name
+      else if (custName) {
+        customerName = custName;
+      }
+      // only username
+      else if (username) {
+        customerName = username;
+      }
+
+      return {
         id: index + 1,
         parentId: item.parentId,
         itemId: item.itemId,
         transactionType: item.transactionType,
         invoiceNo: item.invoiceNo,
         invoiceDate: new Date(item.invoiceDate).toLocaleDateString(),
-        customer:
-          item.customer?.username ||
-          item.customer?.custName ||
-          "N/A",
+
+        customer: customerName,
+
         branch: item.branch?.name || "N/A",
         itemName: item.item?.itemName || "N/A",
         qty: item.qty,
@@ -55,17 +76,20 @@ const SalesInvoiceRegister = () => {
         taxAmount: item.taxAmount || 0,
         invoiceAmount: item.invoiceAmount,
         paymentStatus: item.paymentStatus,
-      }));
+      };
+    });
 
-      setRows(data);
-      setTotal(res.data.totalAmount || 0);
-    } catch (error) {
-      console.error(error);
-      showSnackbar("Error fetching data", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+    console.log(data);
+
+    setRows(data);
+    setTotal(res.data.totalAmount || 0);
+  } catch (error) {
+    console.error(error);
+    showSnackbar("Error fetching data", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchData();
@@ -255,8 +279,8 @@ const SalesInvoiceRegister = () => {
           color="success"
           onClick={() =>
             exportToExcel({
-              fileName: "customer-trial.xlsx",
-              sheetName: "Customer Trial",
+              fileName: "SalesInvoiceRegister.xlsx",
+              sheetName: "Sales Invoice Register",
               columns,
               rows,
             })

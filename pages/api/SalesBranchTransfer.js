@@ -15,56 +15,56 @@ export default async function handler(req, res) {
     // =====================================================
     // GET TRANSFERS
     // =====================================================
-    if (method === "GET") {
-      const { invoiceNumber, pending } = req.query;
+if (method === "GET") {
+  const transfers = await SaleBranchTransfer.find()
+    .populate("fromBranch")
+    .populate("toBranch")
+    .populate("items.item")
+    .populate("agent")
+    .sort({ createdAt: -1 });
 
-      if (invoiceNumber) {
-        const invoice = await SaleBranchTransfer.findOne({ invoiceNumber })
-          .populate("branch")
-          .populate("items.item")
-          .populate("agent");
-        if (!invoice)
-          return res.status(404).json({ message: "Transfer not found" });
-          return res.status(200).json({
-          message: "Transfer fetched",
-          data: invoice,
-        });
-      }
+  const register = [];
 
-      if (customerId && pending === "true") {
-        if (!mongoose.Types.ObjectId.isValid(customerId))
-          return res.status(400).json({ message: "Invalid customerId" });
+  transfers.forEach((doc) => {
+    doc.items.forEach((row) => {
+      register.push({
+        id: row._id.toString(),
 
-        const invoices = await SaleBranchTransfer.find({
-          customer: customerId,
-          paymentStatus: { $ne: "PAID" },
-        })
-          .select(
-            "invoiceNumber invoiceDate netAmount paidAmount balanceAmount paymentStatus paymentMode"
-          )
-          .sort({ invoiceDate: 1 });
+        parentId: doc._id,
+        itemId: row._id,
 
-        return res.status(200).json({
-          message: "Pending transfers fetched",
-          count: invoices.length,
-          data: invoices,
-        });
-      }
+        invoiceNo: doc.invoiceNumber,
+        invoiceDate: doc.invoiceDate,
 
-      const invoices = await SaleBranchTransfer.find()
-        .sort({ createdAt: -1 })
-        .populate("branch")
-        // .populate("customer")
-        .populate("items.item")
-        .populate("agent");
+        fromBranch: doc.fromBranch?.name || "N/A",
+        toBranch: doc.toBranch?.name || "N/A",
 
-      return res.status(200).json({
-        message: `Fetched ${invoices.length} transfers`,
-        count: invoices.length,
-        data: invoices,
+        itemName: row.item?.itemName || "N/A",
+
+        qty: row.quantity,
+        uom: row.unit || "pcs",
+        rate: row.rate || 0,
+
+        taxPercent: row.gstPercentage || 0,
+        taxAmount: row.gstAmount || 0,
+
+        amount: row.total || 0,
+
+        paymentStatus: doc.paymentStatus || "UNPAID",
       });
-    }
+    });
+  });
 
+  const totalAmount = register.reduce(
+    (sum, r) => sum + Number(r.amount || 0),
+    0
+  );
+
+  return res.status(200).json({
+    data: register,
+    totalAmount,
+  });
+}
     // =====================================================
     // POST (CREATE TRANSFER)
     // =====================================================

@@ -1,10 +1,14 @@
+// pages/api/salesInvoice.js
+
 import mongoose from "mongoose";
 import dbConnect from "@/lib/db";
+
 import SalesInvoice from "@/models/SalesInvoice";
-import Item from "@/models/Item";
-import Branch from "@/models/Branch";
 import Customer from "@/models/Customer";
+import Branch from "@/models/Branch";
+import Item from "@/models/Item";
 import Agent from "@/models/Agent";
+
 export default async function handler(req, res) {
   await dbConnect();
 
@@ -12,301 +16,295 @@ export default async function handler(req, res) {
     const method = req.method;
 
     // =====================================================
-    // GET INVOICES
+    // GET ALL / SINGLE / PENDING
     // =====================================================
     if (method === "GET") {
       const { invoiceNumber, customerId, pending } = req.query;
 
+      // Single Invoice
       if (invoiceNumber) {
         const invoice = await SalesInvoice.findOne({ invoiceNumber })
-          .populate("branch")
           .populate("customer")
+          .populate("branch")
+          .populate("agent")
           .populate("items.item");
 
-        if (!invoice)
+        if (!invoice) {
           return res.status(404).json({ message: "Invoice not found" });
+        }
 
-        return res.status(200).json({ message: "Invoice fetched", data: invoice });
+        return res.status(200).json({
+          message: "Invoice fetched",
+          data: invoice,
+        });
       }
 
+      // Pending by customer
       if (customerId && pending === "true") {
-        if (!mongoose.Types.ObjectId.isValid(customerId))
-          return res.status(400).json({ message: "Invalid customerId" });
-
         const invoices = await SalesInvoice.find({
           customer: customerId,
           paymentStatus: { $ne: "PAID" },
         })
-          .select(
-            "invoiceNumber invoiceDate netAmount paidAmount balanceAmount paymentStatus paymentMode"
-          )
+          .populate("customer")
           .sort({ invoiceDate: 1 });
 
         return res.status(200).json({
-          message: "Pending invoices fetched",
           count: invoices.length,
           data: invoices,
         });
       }
 
+      // All invoices
       const invoices = await SalesInvoice.find()
         .sort({ createdAt: -1 })
-        .populate("branch")
         .populate("customer")
+        .populate("branch")
+        .populate("agent")
         .populate("items.item");
 
       return res.status(200).json({
-        message: `Fetched ${invoices.length} invoices`,
         count: invoices.length,
         data: invoices,
       });
     }
 
     // =====================================================
-    // POST (CREATE NEW INVOICE)
-    // =====================================================
-    // if (method === "POST") {
-    //   const { invoiceNumber, invoiceDate, customer, branch, items, paymentMode, gstType } = req.body;
-
-    //   if (!customer || !branch || !items || items.length === 0) {
-    //     return res.status(400).json({ message: "Customer, branch, and items are required" });
-    //   }
-
-    //   // 🔹 Auto-generate invoiceNumber if not provided
-    //   let newInvoiceNumber = invoiceNumber;
-    //   if (!invoiceNumber) {
-    //     const lastInvoice = await SalesInvoice.findOne().sort({ createdAt: -1 }).select("invoiceNumber");
-    //     if (lastInvoice && lastInvoice.invoiceNumber) {
-    //       const match = lastInvoice.invoiceNumber.match(/\d+$/); // extract last number
-    //       const lastNum = match ? parseInt(match[0], 10) : 0;
-    //       const nextNum = lastNum + 1;
-    //       newInvoiceNumber = nextNum.toString().padStart(3, "0"); // e.g., "001", "002"
-    //     } else {
-    //       newInvoiceNumber = "001"; // first invoice
-    //     }
-    //   }
-
-    //   // 🔹 Validate branch
-    //   if (!mongoose.Types.ObjectId.isValid(branch))
-    //     return res.status(400).json({ message: "Invalid branch ID" });
-    //   const branchExists = await Branch.findById(branch);
-    //   if (!branchExists) return res.status(404).json({ message: "Branch not found" });
-
-    //   // 🔹 Validate customer
-    //   if (!mongoose.Types.ObjectId.isValid(customer))
-    //     return res.status(400).json({ message: "Invalid customer ID" });
-    //   const customerExists = await Customer.findById(customer);
-    //   if (!customerExists)
-    //     return res.status(404).json({ message: "Customer not found" });
-
-    //   // 🔹 Enrich items
-    //   const enrichedItems = await Promise.all(
-    //     items.map(async (i, index) => {
-    //       const { item, quantity, rate, unit, gstPercentage } = i;
-    //       if (!item || !quantity) throw new Error(`Missing item or quantity at row ${index + 1}`);
-
-    //       const itemDoc = await Item.findById(item);
-    //       if (!itemDoc) throw new Error(`Item not found: ${item}`);
-
-    //       const finalRate = rate ?? itemDoc.rate ?? 0;
-    //       const finalUnit = unit ?? itemDoc.stockUnit ?? "pcs";
-    //       const gstPerc = gstPercentage ? parseFloat(gstPercentage) : parseFloat(itemDoc.gstPercentage || 0);
-
-    //       const total = quantity * finalRate;
-    //       const gstAmount = (total * gstPerc) / 100;
-
-    //       return { item, quantity, unit: finalUnit, rate: finalRate, gstPercentage: gstPerc, gstAmount, total };
-    //     })
-    //   );
-
-    //   const totalAmount = enrichedItems.reduce((s, i) => s + i.total, 0);
-    //   const totalGST = enrichedItems.reduce((s, i) => s + i.gstAmount, 0);
-    //   const netAmount = totalAmount + totalGST;
-
-    //   const newInvoice = await SalesInvoice.create({
-    //     invoiceNumber: newInvoiceNumber,
-    //     invoiceDate: invoiceDate || Date.now(),
-    //     customer,
-
-
-    //     branch,
-    //     paymentMode: paymentMode || "CASH",
-    //     items: enrichedItems,
-    //     totalAmount,
-    //     totalGST,
-    //     netAmount,
-    //     paidAmount: 0,
-    //     balanceAmount: netAmount,
-    //     paymentStatus: "UNPAID",
-    //     gstType: gstType || "TAX_INVOICE",
-    //   });
-
-    //   await newInvoice.populate("branch");
-    //   await newInvoice.populate("customer");
-    //   await newInvoice.populate("items.item");
-
-    //   return res.status(201).json({ message: "Sales invoice created successfully", data: newInvoice });
-    // }
-
-    // =====================================================
-    // POST (CREATE NEW INVOICE)
-    // =====================================================
-    // =====================================================
-    // POST (CREATE NEW INVOICE)
+    // CREATE NEW INVOICE
     // =====================================================
     if (method === "POST") {
       const {
         invoiceNumber,
         invoiceDate,
         customer,
+        customerDetails,
         branch,
         items,
         paymentMode,
         gstType,
-        customerDetails, // 🔥 for Jaze
         agent,
       } = req.body;
 
-      if (!customer || !branch || !items || items.length === 0) {
+      if (!customer || !branch || !items?.length) {
         return res.status(400).json({
-          message: "Customer, branch, and items are required",
+          message: "Customer, branch and items required",
         });
       }
 
       // =====================================================
-      // 🔹 AUTO GENERATE INVOICE NUMBER
+      // AUTO INVOICE NUMBER
       // =====================================================
       let newInvoiceNumber = invoiceNumber;
 
-      if (!invoiceNumber) {
-        const lastInvoice = await SalesInvoice.findOne()
+      if (!newInvoiceNumber) {
+        const last = await SalesInvoice.findOne()
           .sort({ createdAt: -1 })
           .select("invoiceNumber");
 
-        if (lastInvoice?.invoiceNumber) {
-          const match = lastInvoice.invoiceNumber.match(/\d+$/);
-          const lastNum = match ? parseInt(match[0], 10) : 0;
-          newInvoiceNumber = String(lastNum + 1).padStart(3, "0");
+        if (last?.invoiceNumber) {
+          const num = parseInt(last.invoiceNumber) + 1;
+          newInvoiceNumber = String(num).padStart(3, "0");
         } else {
           newInvoiceNumber = "001";
         }
       }
 
       // =====================================================
-      // 🔹 VALIDATE BRANCH
+      // VALIDATE BRANCH
       // =====================================================
-      if (!mongoose.Types.ObjectId.isValid(branch)) {
-        return res.status(400).json({ message: "Invalid branch ID" });
+      const branchDoc = await Branch.findById(branch);
+
+      if (!branchDoc) {
+        return res.status(404).json({
+          message: "Branch not found",
+        });
       }
 
-      const branchExists = await Branch.findById(branch);
-      if (!branchExists) {
-        return res.status(404).json({ message: "Branch not found" });
-      }
-
       // =====================================================
-      // 🔥 RESOLVE CUSTOMER (MANUAL + JAZE)
+      // RESOLVE CUSTOMER
+      // =====================================================
+
+
+
+      // Jaze customer
+      // =====================================================
+      // RESOLVE CUSTOMER
       // =====================================================
       let customerDoc = null;
 
-      // ✅ CASE 1: Manual customer (Mongo ID)
+      // -------------------------------------
+      // Manual customer
+      // -------------------------------------
       if (mongoose.Types.ObjectId.isValid(customer)) {
         customerDoc = await Customer.findById(customer);
       }
 
-      // ✅ CASE 2: Jaze customer
+      // -------------------------------------
+      // Jaze customer
+      // -------------------------------------
       if (!customerDoc) {
         const jazeId = String(customer);
+        const d = customerDetails || {};
 
-        // 🔍 Check if already stored
         customerDoc = await Customer.findOne({
           jazeCustomerId: jazeId,
         });
 
-        // 🔥 Create if not exists
+        // create first time
         if (!customerDoc) {
-          const details = customerDetails || {};
-
           customerDoc = await Customer.create({
             jazeCustomerId: jazeId,
-            custName: details.custName || "Jaze User",
+
+            username: d.username || "",
+
+            custName:
+              d.custName ||
+              d.username ||
+              "Jaze User",
+
             code: `JZ-${Date.now()}`,
-            phone: details.phone || "9999999999",
-            email: details.email || "noemail@test.com",
-            city: details.city || "NA",
-            location: details.location || "NA",
-            gst: details.gst || "NA",
-            company: details.company || "",
+
+            phone:
+              d.phone ||
+              "9999999999",
+
+            email:
+              d.email ||
+              "noemail@test.com",
+
+            city:
+              d.city || "NA",
+
+            location:
+              d.location || "NA",
+
+            gst:
+              d.gst || "",
+
+            company:
+              d.company || "",
           });
+        }
+
+        // update existing old record
+        else {
+          customerDoc.username =
+            d.username ||
+            customerDoc.username;
+
+          customerDoc.custName =
+            d.custName ||
+            customerDoc.custName;
+
+          customerDoc.phone =
+            d.phone ||
+            customerDoc.phone;
+
+          customerDoc.email =
+            d.email ||
+            customerDoc.email;
+
+          customerDoc.city =
+            d.city ||
+            customerDoc.city;
+
+          customerDoc.location =
+            d.location ||
+            customerDoc.location;
+
+          customerDoc.gst =
+            d.gst ||
+            customerDoc.gst;
+
+          customerDoc.company =
+            d.company ||
+            customerDoc.company;
+
+          await customerDoc.save();
         }
       }
 
       if (!customerDoc) {
-        return res.status(404).json({ message: "Customer not found" });
+        return res.status(404).json({
+          message: "Customer not found",
+        });
       }
 
+
+
+      // =====================================================
+      // AGENT
+      // =====================================================
       let agentDoc = null;
 
       if (agent && mongoose.Types.ObjectId.isValid(agent)) {
         agentDoc = await Agent.findById(agent);
-
-        if (!agentDoc) {
-          return res.status(404).json({ message: "Agent not found" });
-        }
       }
+
       // =====================================================
-      // 🔹 ENRICH ITEMS
+      // ITEMS
       // =====================================================
       const enrichedItems = await Promise.all(
-        items.map(async (i, index) => {
-          const { item, quantity, rate, unit, gstPercentage } = i;
+        items.map(async (row) => {
+          const itemDoc = await Item.findById(row.item);
 
-          if (!item || !quantity) {
-            throw new Error(`Missing item or quantity at row ${index + 1}`);
+          if (!itemDoc) {
+            throw new Error("Item not found");
           }
 
-          const itemDoc = await Item.findById(item);
-          if (!itemDoc) throw new Error(`Item not found: ${item}`);
+          const qty = Number(row.quantity);
+          const rate = Number(row.rate || itemDoc.rate || 0);
+          const gstPercentage = Number(
+            row.gstPercentage || itemDoc.gstPercentage || 0
+          );
 
-          const finalRate = rate ?? itemDoc.rate ?? 0;
-          const finalUnit = unit ?? itemDoc.stockUnit ?? "pcs";
-          const gstPerc = gstPercentage
-            ? parseFloat(gstPercentage)
-            : parseFloat(itemDoc.gstPercentage || 0);
-
-          const total = quantity * finalRate;
-          const gstAmount = (total * gstPerc) / 100;
+          const basic = qty * rate;
+          const gstAmount = (basic * gstPercentage) / 100;
+          const total = basic + gstAmount;
 
           return {
-            item,
-            quantity,
-            unit: finalUnit,
-            rate: finalRate,
-            gstPercentage: gstPerc,
+            item: row.item,
+            quantity: qty,
+            unit: row.unit || itemDoc.stockUnit || "pcs",
+            rate,
+            gstPercentage,
             gstAmount,
             total,
           };
         })
       );
 
-      // =====================================================
-      // 🔹 TOTALS
-      // =====================================================
-      const totalAmount = enrichedItems.reduce((s, i) => s + i.total, 0);
-      const totalGST = enrichedItems.reduce((s, i) => s + i.gstAmount, 0);
-      const netAmount = totalAmount + totalGST;
+      const totalAmount = enrichedItems.reduce(
+        (sum, i) => sum + i.total,
+        0
+      );
+
+      const totalGST = enrichedItems.reduce(
+        (sum, i) => sum + i.gstAmount,
+        0
+      );
+
+      const netAmount = totalAmount;
 
       // =====================================================
-      // 🔹 CREATE INVOICE
+      // SAVE
       // =====================================================
-      const newInvoice = await SalesInvoice.create({
+      const invoice = await SalesInvoice.create({
         invoiceNumber: newInvoiceNumber,
         invoiceDate: invoiceDate || Date.now(),
-        agent: agentDoc?._id || null,
-        customer: customerDoc._id, // ✅ ALWAYS MONGO ID
+
+        customer: customerDoc._id,
+        customerName:
+          customerDoc.username ||
+          customerDoc.custName,
+
+        jazeCustomerId:
+          customerDoc.jazeCustomerId || "",
 
         branch,
+        agent: agentDoc?._id || null,
+
         paymentMode: paymentMode || "CASH",
+        gstType: gstType || "TAX_INVOICE",
 
         items: enrichedItems,
 
@@ -317,75 +315,79 @@ export default async function handler(req, res) {
         paidAmount: 0,
         balanceAmount: netAmount,
         paymentStatus: "UNPAID",
-
-        gstType: gstType || "TAX_INVOICE",
       });
 
-      await newInvoice.populate("branch");
-      await newInvoice.populate("customer");
-      await newInvoice.populate("items.item");
-      await newInvoice.populate("agent");
+      await invoice.populate("customer");
+      await invoice.populate("branch");
+      await invoice.populate("agent");
+      await invoice.populate("items.item");
+
       return res.status(201).json({
-        message: "Sales invoice created successfully",
-        data: newInvoice,
+        message: "Invoice created",
+        data: invoice,
       });
     }
+
     // =====================================================
-    // PUT (UPDATE INVOICE BY ID)
+    // UPDATE
     // =====================================================
     if (method === "PUT") {
       const { id } = req.query;
-      const { items, paymentMode, gstType, invoiceDate } = req.body;
-
-      if (!id || !mongoose.Types.ObjectId.isValid(id))
-        return res.status(400).json({ message: "Invalid invoice ID" });
 
       const invoice = await SalesInvoice.findById(id);
-      if (!invoice) return res.status(404).json({ message: "Invoice not found" });
 
-      if (items) invoice.items = items;
-      if (paymentMode) invoice.paymentMode = paymentMode;
-      if (gstType) invoice.gstType = gstType;
-      if (invoiceDate) invoice.invoiceDate = invoiceDate;
-
-      if (items) {
-        invoice.totalAmount = items.reduce((s, i) => s + i.total, 0);
-        invoice.totalGST = items.reduce((s, i) => s + i.gstAmount, 0);
-        invoice.netAmount = invoice.totalAmount + invoice.totalGST;
-        invoice.balanceAmount = invoice.netAmount - invoice.paidAmount;
+      if (!invoice) {
+        return res.status(404).json({
+          message: "Invoice not found",
+        });
       }
 
-      await invoice.save();
-      await invoice.populate("branch");
-      await invoice.populate("customer");
-      await invoice.populate("items.item");
+      Object.assign(invoice, req.body);
 
-      return res.status(200).json({ message: "Invoice updated", data: invoice });
+      await invoice.save();
+
+      return res.status(200).json({
+        message: "Updated successfully",
+      });
     }
 
     // =====================================================
-    // DELETE (DELETE INVOICE BY ID)
+    // DELETE
     // =====================================================
     if (method === "DELETE") {
       const { id } = req.query;
 
-      if (!id || !mongoose.Types.ObjectId.isValid(id))
-        return res.status(400).json({ message: "Invalid invoice ID" });
-
       const invoice = await SalesInvoice.findById(id);
-      if (!invoice) return res.status(404).json({ message: "Invoice not found" });
+
+      if (!invoice) {
+        return res.status(404).json({
+          message: "Invoice not found",
+        });
+      }
 
       if (invoice.paymentStatus !== "UNPAID") {
-        return res.status(400).json({ message: "Cannot delete paid or partially paid invoice" });
+        return res.status(400).json({
+          message:
+            "Cannot delete paid invoice",
+        });
       }
 
       await invoice.deleteOne();
-      return res.status(200).json({ message: "Invoice deleted successfully" });
+
+      return res.status(200).json({
+        message: "Deleted successfully",
+      });
     }
 
-    return res.status(405).json({ message: "Method not allowed" });
+    return res.status(405).json({
+      message: "Method not allowed",
+    });
   } catch (error) {
-    console.error("❌ SalesInvoice API error:", error);
-    return res.status(500).json({ message: "Server error", error: error.message });
+    console.error(error);
+
+    return res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
   }
 }

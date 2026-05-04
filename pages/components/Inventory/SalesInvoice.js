@@ -107,6 +107,79 @@ export default function SalesInvoice() {
     setRows(rows.filter(r => r.rowId !== rowId));
   };
   // ================= SAVE INVOICE =================
+  // const handleSaveInvoice = async () => {
+  //   if (rows.length === 0) {
+  //     showSnackbar("Add at least one item to save invoice", "error");
+  //     return;
+  //   }
+
+  //   if (!formState.branch || !formState.customer) {
+  //     showSnackbar("Please fill branch, customer", "error");
+  //     return;
+  //   }
+
+  //   try {
+  //     const payload = {
+  //       invoiceNumber: formState.invoiceNo || undefined,
+  //       invoiceDate: formState.date || new Date().toISOString().slice(0, 10),
+  //       customer: formState.customer,
+  //         customerDetails: jazeCustomerDetails || null,
+
+  //       // ✅ ADD THIS
+  //       agent: formState.agent || null,
+  //       branch: formState.branch,
+  //       gstType: formState.gstType || "TAX_INVOICE", // ✅ ADD THIS
+  //       paymentMode: formState.cashCredit || "CASH", // ✅ ADD THIS
+
+  //       items: rows.map(r => ({
+  //         item: r._id,
+  //         quantity: r.quantity,
+  //         rate: r.rate,
+  //         unit: r.unit || "pcs",
+  //         gstPercentage: r.gstPercentage || 0,
+  //         gstAmount: r.gstAmount || 0,
+  //         total: r.total || 0,
+  //       })),
+
+  //       totalAmount: totals.totalAmount,
+  //       totalGST: totals.totalGST,
+  //       netAmount: totals.roundedNetAmount,
+  //       roundOff: totals.roundOff,
+  //       totalAmount: rows.reduce((sum, r) => sum + r.total, 0),
+  //       totalGST: rows.reduce((sum, r) => sum + r.gstAmount, 0),
+  //       netAmount: rows.reduce((sum, r) => sum + r.total + r.gstAmount, 0),
+  //       paymentStatus: formState.paymentStatus || "UNPAID",
+  //     };
+  //     await axios.post("/api/salesInvoice", payload);
+  //     console.log(payload,"customer name")
+  //     showSnackbar("Invoice saved successfully", "success");
+
+  //     setRows([]);
+  //     setFormState({
+  //       gstType: "",
+  //       cashCredit: "",
+  //       branch: "",
+  //       customer: "",
+  //       email: "",
+  //       date: new Date().toISOString().slice(0, 10),
+  //       invoiceNo: "",
+  //       refNo: "",
+  //       refDate: "",
+  //       agent: "",
+  //       tax: "",
+  //       paymentStatus: "UNPAID",
+  //     });
+  //     setSelectedBranch(null);
+  //     setSelectedItem("");
+  //     setQuantity(1);
+  //     setRate(0);
+  //     setAmount(0);
+  //     setSelectedUnit("");
+  //   } catch (err) {
+  //     console.error("Error saving invoice:", err.response?.data || err.message);
+  //     showSnackbar("Error saving invoice", "error");
+  //   }
+  // };
   const handleSaveInvoice = async () => {
     if (rows.length === 0) {
       showSnackbar("Add at least one item to save invoice", "error");
@@ -119,46 +192,131 @@ export default function SalesInvoice() {
     }
 
     try {
+      // 🔥 detect if selected customer is Jaze user
+      const selectedCustomer = customers.find(
+        (c) => String(c._id) === String(formState.customer)
+      );
+
+      const isJazeUser =
+        selectedCustomer &&
+        !String(formState.customer).match(/^[0-9a-fA-F]{24}$/);
+
       const payload = {
         invoiceNumber: formState.invoiceNo || undefined,
-        invoiceDate: formState.date || new Date().toISOString().slice(0, 10),
-        customer: formState.customer,
-        // ✅ ADD THIS
-        agent: formState.agent || null,
-        branch: formState.branch,
-        gstType: formState.gstType || "TAX_INVOICE", // ✅ ADD THIS
-        paymentMode: formState.cashCredit || "CASH", // ✅ ADD THIS
 
-        items: rows.map(r => ({
+        invoiceDate:
+          formState.date ||
+          new Date().toISOString().slice(0, 10),
+
+        customer: formState.customer,
+
+        // 🔥 send only for Jaze user
+        customerDetails: isJazeUser
+          ? {
+            customerId: jazeCustomerDetails?.customerId,
+            username:
+              jazeCustomerDetails?.username ||
+              selectedCustomer?.username ||
+              "",
+
+            custName:
+              jazeCustomerDetails?.custName ||
+              selectedCustomer?.custName ||
+              "",
+
+            email:
+              jazeCustomerDetails?.email ||
+              selectedCustomer?.email ||
+              "",
+
+            phone:
+              jazeCustomerDetails?.phone ||
+              selectedCustomer?.phone ||
+              "",
+
+            city:
+              jazeCustomerDetails?.city || "",
+
+            location:
+              jazeCustomerDetails?.location || "",
+
+            gst:
+              jazeCustomerDetails?.gst || "",
+
+            company:
+              jazeCustomerDetails?.company || "",
+          }
+          : null,
+
+        agent: formState.agent || null,
+
+        branch: formState.branch,
+
+        gstType:
+          formState.gstType || "TAX_INVOICE",
+
+        paymentMode:
+          formState.cashCredit || "CASH",
+
+        items: rows.map((r) => ({
           item: r._id,
           quantity: r.quantity,
           rate: r.rate,
           unit: r.unit || "pcs",
-          gstPercentage: r.gstPercentage || 0,
-          gstAmount: r.gstAmount || 0,
+          gstPercentage:
+            r.gstPercentage || 0,
+          gstAmount:
+            r.gstAmount || 0,
           total: r.total || 0,
         })),
 
-        totalAmount: totals.totalAmount,
-        totalGST: totals.totalGST,
-        netAmount: totals.roundedNetAmount,
-        roundOff: totals.roundOff,
-        totalAmount: rows.reduce((sum, r) => sum + r.total, 0),
-        totalGST: rows.reduce((sum, r) => sum + r.gstAmount, 0),
-        netAmount: rows.reduce((sum, r) => sum + r.total + r.gstAmount, 0),
-        paymentStatus: formState.paymentStatus || "UNPAID",
+        totalAmount: rows.reduce(
+          (sum, r) => sum + Number(r.total || 0),
+          0
+        ),
+
+        totalGST: rows.reduce(
+          (sum, r) =>
+            sum + Number(r.gstAmount || 0),
+          0
+        ),
+
+        netAmount: rows.reduce(
+          (sum, r) =>
+            sum +
+            Number(r.total || 0) +
+            Number(r.gstAmount || 0),
+          0
+        ),
+
+        paymentStatus:
+          formState.paymentStatus ||
+          "UNPAID",
       };
-      await axios.post("/api/salesInvoice", payload);
-      showSnackbar("Invoice saved successfully", "success");
-      // Reset form for next invoice
+
+      console.log(payload, "FINAL PAYLOAD");
+
+      await axios.post(
+        "/api/salesInvoice",
+        payload
+      );
+
+      showSnackbar(
+        "Invoice saved successfully",
+        "success"
+      );
+
       setRows([]);
+
       setFormState({
         gstType: "",
         cashCredit: "",
         branch: "",
         customer: "",
         email: "",
-        date: new Date().toISOString().slice(0, 10),
+        date: new Date()
+          .toISOString()
+          .slice(0, 10),
         invoiceNo: "",
         refNo: "",
         refDate: "",
@@ -166,18 +324,26 @@ export default function SalesInvoice() {
         tax: "",
         paymentStatus: "UNPAID",
       });
+
       setSelectedBranch(null);
       setSelectedItem("");
       setQuantity(1);
       setRate(0);
       setAmount(0);
       setSelectedUnit("");
+
     } catch (err) {
-      console.error("Error saving invoice:", err.response?.data || err.message);
-      showSnackbar("Error saving invoice", "error");
+      console.error(
+        "Error saving invoice:",
+        err.response?.data || err.message
+      );
+
+      showSnackbar(
+        "Error saving invoice",
+        "error"
+      );
     }
   };
-
   const handleAddItemToGrid = () => {
     if (!selectedItem) {
       showSnackbar("Please select an item", "error");
@@ -294,6 +460,87 @@ export default function SalesInvoice() {
     setSelectedUnit("");
     setFormState(prev => ({ ...prev, tax: "" }));
   };
+  // const fetchUserDetails = async (phoneNumber) => {
+  //   if (!phoneNumber) return;
+
+  //   try {
+  //     const res = await axios.get(
+  //       `/api/jazeApi?type=phone&value=${phoneNumber}`
+  //     );
+
+  //     let responseData = res.data;
+  //     console.log(responseData)
+  //     if (responseData?.data) {
+  //       responseData = responseData.data;
+  //     }
+
+  //     if (!Array.isArray(responseData)) {
+  //       responseData = [responseData];
+  //     }
+
+  //     const userBlock = responseData.find(
+  //       (item) => item?.User
+  //     );
+
+  //     if (!userBlock?.User) {
+  //       console.warn("User not found");
+  //       return;
+  //     }
+
+  //     const user = userBlock.User;
+  //     const gstNumber =
+  //       userBlock.UserSetting?.gstNumber || "";
+
+  //     const customerObj = {
+  //       _id: String(user.id),
+  //       username: user.username || "",
+  //       custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+  //       email: user.email || "",
+  //       phone: user.phone || "",
+  //     };
+
+  //     // Add in dropdown list
+  //     setCustomers((prev) => {
+  //       const exists = prev.find(
+  //         (c) =>
+  //           String(c._id) === customerObj._id
+  //       );
+
+  //       if (exists) return prev;
+
+  //       return [...prev, customerObj];
+  //     });
+
+  //     // Select customer
+  //     setFormState((prev) => ({
+  //       ...prev,
+  //       customer: customerObj._id,
+  //       email: customerObj.email,
+  //     }));
+
+  //     // Store extra details
+  //     setJazeCustomerDetails({
+  //       customerId: customerObj._id,
+  //       username: customerObj.username,
+  //       custName: customerObj.custName,
+  //       phone: user.phone || "",
+  //       email: user.email || "",
+  //       city: user.address_city || "",
+  //       location: user.address_line1 || "",
+  //       gst: gstNumber,
+  //       company: user.company_name || "",
+  //     });
+
+  //     console.log(
+  //       "✅ Jaze customer set successfully",
+  //       customerObj._id
+  //     );
+
+  //   } catch (err) {
+  //     console.error(err);
+  //   }
+  // };
+
   const fetchUserDetails = async (phoneNumber) => {
     if (!phoneNumber) return;
 
@@ -303,15 +550,18 @@ export default function SalesInvoice() {
       );
 
       let responseData = res.data;
-      console.log(responseData)
+console.log(responseData,"data ")
+      // if wrapped in { data: [...] }
       if (responseData?.data) {
         responseData = responseData.data;
       }
 
+      // always make array
       if (!Array.isArray(responseData)) {
         responseData = [responseData];
       }
 
+      // find block which contains User object
       const userBlock = responseData.find(
         (item) => item?.User
       );
@@ -322,22 +572,30 @@ export default function SalesInvoice() {
       }
 
       const user = userBlock.User;
+
+      // find UserSetting block separately
+      const settingBlock = responseData.find(
+        (item) => item?.UserSetting
+      );
+
       const gstNumber =
-        userBlock.UserSetting?.gstNumber || "";
+        settingBlock?.UserSetting?.gstNumber || "";
 
       const customerObj = {
         _id: String(user.id),
         username: user.username || "",
-        custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
+        custName:
+          `${user.name || ""} ${user.last_name || ""}`.trim() ||
+          user.username ||
+          "Jaze User",
         email: user.email || "",
         phone: user.phone || "",
       };
 
-      // Add in dropdown list
+      // dropdown add
       setCustomers((prev) => {
         const exists = prev.find(
-          (c) =>
-            String(c._id) === customerObj._id
+          (c) => String(c._id) === customerObj._id
         );
 
         if (exists) return prev;
@@ -345,96 +603,32 @@ export default function SalesInvoice() {
         return [...prev, customerObj];
       });
 
-      // Select customer
+      // select customer
       setFormState((prev) => ({
         ...prev,
         customer: customerObj._id,
         email: customerObj.email,
       }));
 
-      // Store extra details
+      // backend save payload
       setJazeCustomerDetails({
         customerId: customerObj._id,
-        username: customerObj.username,
-        custName: customerObj.custName,
-        phone: user.phone || "",
-        email: user.email || "",
+        username: customerObj.username, // testing1
+        custName: customerObj.custName, // office test
+        phone: customerObj.phone,
+        email: customerObj.email,
         city: user.address_city || "",
         location: user.address_line1 || "",
         gst: gstNumber,
         company: user.company_name || "",
       });
 
-      console.log(
-        "✅ Jaze customer set successfully",
-        customerObj._id
-      );
+      console.log("✅ Jaze customer set:", customerObj);
 
     } catch (err) {
       console.error(err);
     }
   };
-
-  // const fetchUserDetails = async (phoneNumber) => {
-  //   if (!phoneNumber) {
-  //     console.log("No phone number entered");
-  //     return;
-  //   }
-
-  //   try {
-  //     const res = await axios.get(
-  //       `/api/jazeApi?type=phone&value=${phoneNumber}`
-  //     );
-
-  //     console.log("RAW API RESPONSE:", res.data);
-
-  //     let responseData = res.data;
-
-  //     // ✅ unwrap if needed
-  //     if (responseData?.data) {
-  //       responseData = responseData.data;
-  //     }
-
-  //     if (!Array.isArray(responseData)) {
-  //       responseData = [responseData];
-  //     }
-
-  //     // ✅ find user block
-  //     const userBlock = responseData.find((item) => item?.User);
-
-  //     if (!userBlock?.User) {
-  //       console.warn("User not found in API response");
-  //       return;
-  //     }
-
-  //     const user = userBlock.User;
-  //     const gstNumber = userBlock.UserSetting?.gstNumber || "";
-
-  //     // ✅ SET CUSTOMER (IMPORTANT)
-  //     setFormState((prev) => ({
-  //       ...prev,
-  //       customer: String(user.id), // Jaze ID
-  //       email: user.email || "",
-  //     }));
-
-  //     // ✅ STORE FULL DETAILS (for backend)
-  //     setJazeCustomerDetails({
-  //       customerId: String(user.id),
-  //       custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
-  //       phone: user.phone || "",
-  //       email: user.email || "",
-  //       city: user.address_city || "",
-  //       location: user.address_line1 || "",
-  //       gst: gstNumber || "",
-  //       company: user.company_name || "",
-  //     });
-
-  //     console.log("✅ Jaze customer set successfully",user.id);
-
-  //   } catch (err) {
-  //     console.error("Error fetching AirJaldi user:", err);
-  //   }
-  // };
   const combinedRows = rows.filter((row) =>
     Object.values(row).some(
       (value) =>
@@ -480,7 +674,6 @@ export default function SalesInvoice() {
               </TextField>
 
               <Autocomplete
-
                 {...commonFieldProps}
                 options={branches}
                 value={selectedBranch}

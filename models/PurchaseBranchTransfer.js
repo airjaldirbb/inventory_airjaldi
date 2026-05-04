@@ -5,11 +5,11 @@ const purchaseBranchTransfer = new mongoose.Schema(
     invoiceNumber: { type: String, required: true, unique: true },
     invoiceDate: { type: Date, default: Date.now },
 
-    customer: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
-      required: true,
-    },
+    // customer: {
+    //   type: mongoose.Schema.Types.ObjectId,
+    //   ref: "Customer",
+    //   required: true,
+    // },
     // 🔥 OPTIONAL (for tracking external source)
 
     jazeCustomerId: {
@@ -18,10 +18,16 @@ const purchaseBranchTransfer = new mongoose.Schema(
       sparse: true,
     },
 
-    branch: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Branch",
-    },
+      fromBranch: {
+         type: mongoose.Schema.Types.ObjectId,
+         ref: "Branch",
+         required: true,
+       },
+       toBranch: {
+         type: mongoose.Schema.Types.ObjectId,
+         ref: "Branch",
+         required: true,
+       },
     agent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Agent",

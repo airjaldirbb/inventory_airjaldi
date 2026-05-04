@@ -39,21 +39,28 @@ export default function VendorTrial() {
 
   return (
     <Box sx={{ width: "100%" }}>
-       <Button
-        variant="outlined"
-        color="success"
-        sx={{ mb: 2 }}
-        onClick={() =>
-          exportToExcel({
-            fileName: "vendor-trial.xlsx",
-            sheetName: "Vendor Trial",
-            columns,
-            rows,
-          })
-        }
+     <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          mb: 2,
+        }}
       >
-        Export Excel
-      </Button>
+        <Button
+          variant="outlined"
+          color="success"
+          onClick={() =>
+            exportToExcel({
+              fileName: "vendor-trial.xlsx",
+              sheetName: "Vendor Trial",
+              columns,
+              rows,
+            })
+          }
+        >
+          Export Excel
+        </Button>
+      </Box>
 
       {loading ? (
         <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>

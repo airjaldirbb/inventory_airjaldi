@@ -14,8 +14,8 @@ const salesInvoiceSchema = new mongoose.Schema(
 
     jazeCustomerId: {
       type: String,
-      unique: true,
-      sparse: true,
+      default: "",
+      index: true,
     },
 
     branch: {

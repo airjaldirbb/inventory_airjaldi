@@ -41,13 +41,13 @@ const materialReceiptSchema = new mongoose.Schema(
     },
     receiptDate: {
       type: Date,
-      required: true,
+      required: false,
       index: true,
     },
     receiptNo: {
       type: String,
       required: true,
-      unique: true,
+      unique: false,
     },
     party: {
       type: String,

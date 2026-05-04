@@ -3,7 +3,6 @@ import dbConnect from "@/lib/db";
 import PurchaseBranchTransfer from "@/models/PurchaseBranchTransfer";
 import Item from "@/models/Item";
 import Branch from "@/models/Branch";
-import Customer from "@/models/Customer";
 import Agent from "@/models/Agent";
 
 export default async function handler(req, res) {
@@ -13,236 +12,185 @@ export default async function handler(req, res) {
     const method = req.method;
 
     // =====================================================
-    // GET TRANSFERS
+    // ✅ GET TRANSFERS (REGISTER FORMAT)
     // =====================================================
     if (method === "GET") {
-      const { invoiceNumber, customerId, pending } = req.query;
-
-      if (invoiceNumber) {
-        const invoice = await PurchaseBranchTransfer.findOne({ invoiceNumber })
-          .populate("branch")
-          .populate("customer")
-          .populate("items.item")
-          .populate("agent");
-
-        if (!invoice)
-          return res.status(404).json({ message: "Transfer not found" });
-
-        return res.status(200).json({
-          message: "Transfer fetched",
-          data: invoice,
-        });
-      }
-
-      if (customerId && pending === "true") {
-        if (!mongoose.Types.ObjectId.isValid(customerId))
-          return res.status(400).json({ message: "Invalid customerId" });
-
-        const invoices = await PurchaseBranchTransfer.find({
-          customer: customerId,
-          paymentStatus: { $ne: "PAID" },
-        })
-          .select(
-            "invoiceNumber invoiceDate netAmount paidAmount balanceAmount paymentStatus paymentMode"
-          )
-          .sort({ invoiceDate: 1 });
-
-        return res.status(200).json({
-          message: "Pending transfers fetched",
-          count: invoices.length,
-          data: invoices,
-        });
-      }
-
-      const invoices = await PurchaseBranchTransfer.find()
-        .sort({ createdAt: -1 })
-        .populate("branch")
-        .populate("customer")
+      const transfers = await PurchaseBranchTransfer.find()
+        .populate("fromBranch")
+        .populate("toBranch")
         .populate("items.item")
-        .populate("agent");
+        .populate("agent")
+        .sort({ createdAt: -1 });
+
+      const register = [];
+
+      transfers.forEach((doc) => {
+        doc.items.forEach((row) => {
+          register.push({
+            id: row._id.toString(),
+
+            parentId: doc._id,
+            itemId: row._id,
+
+            invoiceNo: doc.invoiceNumber,
+            invoiceDate: doc.invoiceDate,
+
+            fromBranch: doc.fromBranch?.name || "N/A",
+            toBranch: doc.toBranch?.name || "N/A",
+
+            itemName: row.item?.itemName || "N/A",
+
+            qty: row.quantity,
+            uom: row.unit || "pcs",
+            rate: row.rate || 0,
+
+            taxPercent: row.gstPercentage || 0,
+            taxAmount: row.gstAmount || 0,
+
+            amount: row.total || 0,
+
+            paymentStatus: doc.paymentStatus || "UNPAID",
+          });
+        });
+      });
+
+      const totalAmount = register.reduce(
+        (sum, r) => sum + Number(r.amount || 0),
+        0
+      );
 
       return res.status(200).json({
-        message: `Fetched ${invoices.length} transfers`,
-        count: invoices.length,
-        data: invoices,
+        data: register,
+        totalAmount,
       });
     }
 
     // =====================================================
-    // POST (CREATE TRANSFER)
+    // ✅ POST (CREATE TRANSFER)
     // =====================================================
-      
-      if (method === "POST") {
-        const {
-          invoiceNumber,
-          invoiceDate,
-          customer,
-          fromBranch,
-          toBranch,
-          items,
-          paymentMode,
-          gstType,
-          customerDetails,
-          agent,
-        } = req.body;
-  
-        if ( !fromBranch || !toBranch || !items || items.length === 0) {
-          return res.status(400).json({
-            message: "fromBranch, toBranch and items are required",
-          });
-        }
-  
-        // 🔹 AUTO GENERATE INVOICE NUMBER
-        let newInvoiceNumber = invoiceNumber;
-  
-        if (!invoiceNumber) {
-          const lastInvoice = await SaleBranchTransfer.findOne()
-            .sort({ createdAt: -1 })
-            .select("invoiceNumber");
-  
-          if (lastInvoice?.invoiceNumber) {
-            const match = lastInvoice.invoiceNumber.match(/\d+$/);
-            const lastNum = match ? parseInt(match[0], 10) : 0;
-            newInvoiceNumber = String(lastNum + 1).padStart(3, "0");
-          } else {
-            newInvoiceNumber = "001";
-          }
-        }
-  
-        // 🔹 VALIDATE BRANCH
-  
-        const fromBranchExists = await Branch.findById(fromBranch);
-        const toBranchExists = await Branch.findById(toBranch);
-  
-        if (!fromBranchExists) {
-          return res.status(404).json({ message: "From Branch not found" });
-        }
-  
-        if (!toBranchExists) {
-          return res.status(404).json({ message: "To Branch not found" });
-        }
-  
-        if (fromBranch === toBranch) {
-          return res.status(400).json({
-            message: "From and To branch cannot be same",
-          });
-        }
-  
-        // 🔥 CUSTOMER LOGIC SAME
-        let customerDoc = null;
-  
-        if (mongoose.Types.ObjectId.isValid(customer)) {
-          customerDoc = await Customer.findById(customer);
-        }
-  
-        if (!customerDoc) {
-          const jazeId = String(customer);
-  
-          customerDoc = await Customer.findOne({
-            jazeCustomerId: jazeId,
-          });
-  
-          if (!customerDoc) {
-            const details = customerDetails || {};
-  
-            customerDoc = await Customer.create({
-              jazeCustomerId: jazeId,
-              custName: details.custName || "Jaze User",
-              code: `JZ-${Date.now()}`,
-              phone: details.phone || "9999999999",
-              email: details.email || "noemail@test.com",
-              city: details.city || "NA",
-              location: details.location || "NA",
-              gst: details.gst || "NA",
-              company: details.company || "",
-            });
-          }
-        }
-  
-        if (!customerDoc) {
-          return res.status(404).json({ message: "Customer not found" });
-        }
-  
-        // 🔹 AGENT
-        let agentDoc = null;
-  
-        if (agent && mongoose.Types.ObjectId.isValid(agent)) {
-          agentDoc = await Agent.findById(agent);
-  
-          if (!agentDoc) {
-            return res.status(404).json({ message: "Agent not found" });
-          }
-        }
-  
-        // 🔹 ENRICH ITEMS (SAME LOGIC)
-        const enrichedItems = await Promise.all(
-          items.map(async (i, index) => {
-            const { item, quantity, rate, unit, gstPercentage } = i;
-  
-            if (!item || !quantity) {
-              throw new Error(`Missing item at row ${index + 1}`);
-            }
-  
-            const itemDoc = await Item.findById(item);
-            if (!itemDoc) throw new Error(`Item not found`);
-  
-            const finalRate = rate ?? itemDoc.rate ?? 0;
-            const finalUnit = unit ?? itemDoc.stockUnit ?? "pcs";
-            const gstPerc = gstPercentage
-              ? parseFloat(gstPercentage)
-              : parseFloat(itemDoc.gstPercentage || 0);
-  
-            const total = quantity * finalRate;
-            const gstAmount = (total * gstPerc) / 100;
-  
-            return {
-              item,
-              quantity,
-              unit: finalUnit,
-              rate: finalRate,
-              gstPercentage: gstPerc,
-              gstAmount,
-              total,
-            };
-          })
-        );
-  
-        const totalAmount = enrichedItems.reduce((s, i) => s + i.total, 0);
-        const totalGST = enrichedItems.reduce((s, i) => s + i.gstAmount, 0);
-        const netAmount = totalAmount + totalGST;
-  
-        // 🔹 CREATE
-        const newTransfer = await SaleBranchTransfer.create({
-          invoiceNumber: newInvoiceNumber,
-          invoiceDate: invoiceDate || Date.now(),
-          agent: agentDoc?._id || null,
-  
-          fromBranch, // ✅
-          toBranch,   // ✅
-  
-          paymentMode: paymentMode || "CASH",
-          items: enrichedItems,
-          totalAmount,
-          totalGST,
-          netAmount,
-          paidAmount: 0,
-          balanceAmount: netAmount,
-          paymentStatus: "UNPAID",
-          gstType: gstType || "TAX_INVOICE",
-        });
-        // await newTransfer.populate("branch");
-        await newTransfer.populate("fromBranch");
-        await newTransfer.populate("toBranch");
-        // await newTransfer.populate("customer");
-        await newTransfer.populate("items.item");
-        await newTransfer.populate("agent");
-  
-        return res.status(201).json({
-          message: "Sales Transfer created successfully",
-          data: newTransfer,
+    if (method === "POST") {
+      const {
+        invoiceNumber,
+        invoiceDate,
+        fromBranch,
+        toBranch,
+        items,
+        paymentMode,
+        gstType,
+        agent,
+      } = req.body;
+
+      if (!fromBranch || !toBranch || !items?.length) {
+        return res.status(400).json({
+          message: "fromBranch, toBranch and items are required",
         });
       }
-  
+
+      // ✅ AUTO INVOICE NUMBER
+      let newInvoiceNumber = invoiceNumber;
+
+      if (!invoiceNumber) {
+        const lastInvoice = await PurchaseBranchTransfer.findOne()
+          .sort({ createdAt: -1 })
+          .select("invoiceNumber");
+
+        if (lastInvoice?.invoiceNumber) {
+          const num = parseInt(lastInvoice.invoiceNumber) + 1;
+          newInvoiceNumber = String(num).padStart(3, "0");
+        } else {
+          newInvoiceNumber = "001";
+        }
+      }
+
+      // ✅ VALIDATE BRANCH
+      const fromBranchExists = await Branch.findById(fromBranch);
+      const toBranchExists = await Branch.findById(toBranch);
+
+      if (!fromBranchExists) {
+        return res.status(404).json({ message: "From Branch not found" });
+      }
+
+      if (!toBranchExists) {
+        return res.status(404).json({ message: "To Branch not found" });
+      }
+
+      if (fromBranch === toBranch) {
+        return res.status(400).json({
+          message: "From and To branch cannot be same",
+        });
+      }
+
+      // ✅ AGENT
+      let agentDoc = null;
+      if (agent && mongoose.Types.ObjectId.isValid(agent)) {
+        agentDoc = await Agent.findById(agent);
+      }
+
+      // ✅ ITEMS
+      const enrichedItems = await Promise.all(
+        items.map(async (i) => {
+          const itemDoc = await Item.findById(i.item);
+          if (!itemDoc) throw new Error("Item not found");
+
+          const qty = Number(i.quantity);
+          const rate = Number(i.rate || itemDoc.rate || 0);
+          const gstPercentage = Number(
+            i.gstPercentage || itemDoc.gstPercentage || 0
+          );
+
+          const basic = qty * rate;
+          const gstAmount = (basic * gstPercentage) / 100;
+
+          return {
+            item: i.item,
+            quantity: qty,
+            unit: i.unit || itemDoc.stockUnit || "pcs",
+            rate,
+            gstPercentage,
+            gstAmount,
+            total: basic + gstAmount,
+          };
+        })
+      );
+
+      const totalAmount = enrichedItems.reduce((s, i) => s + i.total, 0);
+      const totalGST = enrichedItems.reduce((s, i) => s + i.gstAmount, 0);
+      const netAmount = totalAmount;
+
+      // ✅ CREATE (FIXED MODEL)
+      const newTransfer = await PurchaseBranchTransfer.create({
+        invoiceNumber: newInvoiceNumber,
+        invoiceDate: invoiceDate || Date.now(),
+
+        fromBranch,
+        toBranch,
+        agent: agentDoc?._id || null,
+
+        paymentMode: paymentMode || "CASH",
+        gstType: gstType || "TAX_INVOICE",
+
+        items: enrichedItems,
+
+        totalAmount,
+        totalGST,
+        netAmount,
+
+        paidAmount: 0,
+        balanceAmount: netAmount,
+        paymentStatus: "UNPAID",
+      });
+
+      await newTransfer.populate("fromBranch");
+      await newTransfer.populate("toBranch");
+      await newTransfer.populate("items.item");
+      await newTransfer.populate("agent");
+
+      return res.status(201).json({
+        message: "Purchase Transfer created successfully",
+        data: newTransfer,
+      });
+    }
+
     return res.status(405).json({ message: "Method not allowed" });
 
   } catch (error) {

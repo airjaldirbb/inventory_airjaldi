@@ -1,18 +1,12 @@
 // pages/api/salesInvoiceREgister.js
 
 import dbConnect from "@/lib/db";
-import MaterialReceipt from "@/models/MaterialReceipt";
-import MaterialIssue from "@/models/MaterialIssue";
-import StockAdjustment from "@/models/StockAdjustment";
 import SalesInvoice from "@/models/SalesInvoice";
-import PurchaseBill from "@/models/PurchaseBill";
 
 // force model registration
 import "@/models/Branch";
 import "@/models/Item";
 import "@/models/Customer";
-import "@/models/Vendor";
-import "@/models/User";
 
 /* =========================================================
    HELPERS
@@ -30,6 +24,26 @@ const calcTotal = (items = []) =>
       ),
     0
   );
+
+// 🔥 customer display helper
+const getCustomerName = (customer) => {
+  if (!customer) return "N/A";
+
+  const username = customer.username || "";
+  const custName = customer.custName || "";
+
+  // if old bad data
+  if (custName === "Jaze User") {
+    return username || "N/A";
+  }
+
+  // both available
+  if (username && custName) {
+    return `${username} (${custName})`;
+  }
+
+  return custName || username || "N/A";
+};
 
 /* =========================================================
    API HANDLER
@@ -50,7 +64,8 @@ export default async function handler(req, res) {
       const sales = await SalesInvoice.find()
         .populate("branch")
         .populate("customer")
-        .populate("items.item");
+        .populate("items.item")
+        .sort({ createdAt: -1 });
 
       sales.forEach((doc) => {
         if (!doc.branch) return;
@@ -68,23 +83,21 @@ export default async function handler(req, res) {
             invoiceNo: doc.invoiceNumber,
             invoiceDate: doc.invoiceDate,
 
-           
-            customer: doc.customer
-              ? {
-                _id: doc.customer._id,
-                custName: doc.customer.custName,
-                username: doc.customer.username || "",
-              }
-              : null,
+            customer: {
+              _id: doc.customer?._id || "",
+              name: getCustomerName(doc.customer),
+              custName: doc.customer?.custName || "",
+              username: doc.customer?.username || "",
+            },
 
             branch: {
-              _id: doc.branch._id,
-              name: doc.branch.name,
+              _id: doc.branch?._id || "",
+              name: doc.branch?.name || "N/A",
             },
 
             item: {
-              _id: row.item._id,
-              itemName: row.item.itemName,
+              _id: row.item?._id || "",
+              itemName: row.item?.itemName || "N/A",
             },
 
             qty: row.quantity,
@@ -112,7 +125,7 @@ export default async function handler(req, res) {
     }
 
     /* =====================================================
-       POST : CREATE NEW SALES INVOICE ITEM
+       POST
     ===================================================== */
     if (method === "POST") {
       const {
@@ -148,18 +161,9 @@ export default async function handler(req, res) {
         unit,
       });
 
-      doc.totalAmount = doc.items.reduce(
-        (sum, row) => sum + Number(row.total || 0),
-        0
-      );
+      doc.totalAmount = calcTotal(doc.items);
 
-      await SalesInvoice.updateOne(
-        { _id: parentId },
-        {
-          items: doc.items,
-          totalAmount: doc.totalAmount,
-        }
-      );
+      await doc.save();
 
       return res.status(201).json({
         message: "Item added successfully",
@@ -168,21 +172,13 @@ export default async function handler(req, res) {
     }
 
     /* =====================================================
-       PUT : UPDATE SALES ITEM
+       PUT
     ===================================================== */
     if (method === "PUT") {
       const { id, itemId } = req.query;
       const { qty, rate } = req.body;
 
-      if (!id || !itemId) {
-        return res.status(400).json({
-          message:
-            "id and itemId are required",
-        });
-      }
-
-      const doc =
-        await SalesInvoice.findById(id);
+      const doc = await SalesInvoice.findById(id);
 
       if (!doc) {
         return res.status(404).json({
@@ -191,9 +187,7 @@ export default async function handler(req, res) {
       }
 
       doc.items = doc.items.map((row) => {
-        if (
-          row._id.toString() !== itemId
-        )
+        if (row._id.toString() !== itemId)
           return row;
 
         const updatedQty = Number(
@@ -211,8 +205,7 @@ export default async function handler(req, res) {
           (basic *
             Number(
               row.gstPercentage || 0
-            )) /
-          100;
+            )) / 100;
 
         return {
           ...row._doc,
@@ -223,33 +216,22 @@ export default async function handler(req, res) {
         };
       });
 
-      doc.totalAmount = calcTotal(
-        doc.items
-      );
+      doc.totalAmount = calcTotal(doc.items);
 
       await doc.save();
 
       return res.status(200).json({
-        message:
-          "Updated successfully",
-        totalAmount:
-          doc.totalAmount,
+        message: "Updated successfully",
+        totalAmount: doc.totalAmount,
       });
     }
 
     /* =====================================================
-       DELETE : REMOVE ITEM
+       DELETE
     ===================================================== */
     if (method === "DELETE") {
       const { parentId, itemId } =
         req.body;
-
-      if (!parentId || !itemId) {
-        return res.status(400).json({
-          message:
-            "parentId and itemId required",
-        });
-      }
 
       const doc =
         await SalesInvoice.findById(
@@ -267,26 +249,18 @@ export default async function handler(req, res) {
           row._id.toString() !== itemId
       );
 
-      doc.totalAmount = calcTotal(
-        doc.items
-      );
+      doc.totalAmount = calcTotal(doc.items);
 
       await doc.save();
 
       return res.status(200).json({
-        message:
-          "Deleted successfully",
-        totalAmount:
-          doc.totalAmount,
+        message: "Deleted successfully",
+        totalAmount: doc.totalAmount,
       });
     }
 
-    /* =====================================================
-       INVALID METHOD
-    ===================================================== */
     return res.status(405).json({
-      message:
-        "Method not allowed",
+      message: "Method not allowed",
     });
   } catch (error) {
     console.error(error);

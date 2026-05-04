@@ -36,31 +36,41 @@ export default function CustomerTrial() {
   ];
 
   return (
-    <div style={{ height: 600, width: "100%" }}>
-      <Button
-        variant="outlined"
-        color="success"
-        sx={{ mb: 2 }}
-        onClick={() =>
-          exportToExcel({
-            fileName: "customer-trial.xlsx",
-            sheetName: "Customer Trial",
-            columns,
-            rows,
-          })
-        }
+    <>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "flex-end",
+          mb: 2,
+        }}
       >
-        Export Excel
-      </Button>
+        <Button
+          variant="outlined"
+          color="success"
+          onClick={() =>
+            exportToExcel({
+              fileName: "Customer-trial.xlsx",
+              sheetName: "Customer Trial",
+              columns,
+              rows,
+            })
+          }
+        >
+          Export Excel
+        </Button>
+      </Box>
+      <Box sx={{ height: 500, width: "100%" }}>
+        <DataGrid
+          rows={rows}
+          columns={columns}
+          pageSize={10}
+          getRowId={(row) => row.id}
+          autoHeight
+          disableSelectionOnClick
+        />
+      </Box>
 
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        pageSize={10}
-        getRowId={(row) => row.id} 
-        autoHeight
-        disableSelectionOnClick
-      />
+
 
       {/* Total row */}
       <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end", gap: 4, pr: 2 }}>
@@ -68,6 +78,6 @@ export default function CustomerTrial() {
         <Typography><strong>Total Credit:</strong> {totals.credit.toLocaleString()}</Typography>
         <Typography><strong>Total Closing:</strong> {totals.closingBalance.toLocaleString()}</Typography>
       </Box>
-    </div>
+    </>
   );
 }
