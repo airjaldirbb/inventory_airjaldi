@@ -23,6 +23,18 @@ const paymentReceiptSchema = new mongoose.Schema(  {
           ref: "SalesInvoice",
         },
         amountPaid: Number,  
+        paymentMode:{
+          type:String,
+          enum:["Credit","Cash", "Online"],
+          
+        },
+        referenceNo:{
+          type:String,
+          default:""
+        },
+        paymentDate:{
+          type:Date
+        }
       },
     ],
 
@@ -31,11 +43,11 @@ const paymentReceiptSchema = new mongoose.Schema(  {
     // ---- New Field ----  
     cashBankAccount: { type: String }, // dropdown: Cash/Bank Ledgers
 
-    mode: {
-      type: String,
-      enum: ["CASH", "UPI", "BANK TRANSFER", "CHEQUE"],
-      default: "CASH",
-    },
+    // mode: {
+    //   type: String,
+    //   enum: ["CASH", "UPI", "BANK TRANSFER", "CHEQUE"],
+    //   default: "CASH",
+    // },
 
     // ---- New Fields ----
     chequeNo: { type: String },

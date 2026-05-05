@@ -10,7 +10,7 @@ import {
   Snackbar,
   Alert, Box,
   Container,
-  Stack
+  Stack, MenuItem
 } from "@mui/material";
 import axios from "axios";
 import { DataGrid } from "@mui/x-data-grid";
@@ -21,7 +21,7 @@ export default function PaymentReceiptForm() {
   const [customers, setCustomers] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
-
+  const paymentModes = ["Credit", "Cash", "Online"];
   const [form, setForm] = useState({
     receiptNumber: `RCPT-${Date.now()}`,
     receiptDate: new Date().toISOString().split("T")[0],
@@ -146,31 +146,7 @@ export default function PaymentReceiptForm() {
       showSnackbar("Customer, Branch, and at least one invoice are required", "warning");
       return;
     }
-    // const invalidInvoice = form.invoices.find(
-    //   (inv) => !inv.referenceNo || inv.referenceNo.trim() === ""
-    // );
 
-    // if (invalidInvoice) {
-    //   showSnackbar("Reference No is required for all invoices", "error");
-    //   return;
-    // }
-    // const payload = {
-    //   receiptNumber: form.receiptNumber,
-    //   receiptDate: form.receiptDate,
-    //   branch: form.branch,
-    //   customerId: form.customerId,
-    //   customerName: form.customerName,
-    //   totalReceived: form.totalReceived,
-    //   invoices: form.invoices.map((i) => ({
-    //     invoiceId: i.invoiceId,
-    //     invoiceNumber: i.invoiceNumber,
-    //     invoiceDate: i.invoiceDate,
-    //     amountPaid: i.amountPaid,
-    //     referenceNo: i.referenceNo,
-    //     paymentDate: i.paymentDate,
-    //     paymentMode: i.salesPaymentMode, // keep original mode
-    //   })),
-    // };
     const payload = {
       receiptNumber: form.receiptNumber,
       receiptDate: form.receiptDate,
@@ -178,9 +154,12 @@ export default function PaymentReceiptForm() {
       customer: form.customerId, // ✅ FIXED KEY
 
       invoices: form.invoices.map((i) => ({
-        invoiceId: i.invoiceId, // must be Mongo _id
-        referenceNo: i.referenceNo,
+        invoiceId: i.invoiceId,
         amountPaid: Number(i.amountPaid),
+        paymentMode: i.paymentMode || "Credit",
+        referenceNo:
+          i.paymentMode === "Credit" ? "" : i.referenceNo || "",
+        paymentDate: i.paymentDate,
       })),
 
       totalReceived: Number(form.totalReceived),
@@ -209,7 +188,7 @@ export default function PaymentReceiptForm() {
   };
 
   return (
-    <Paper sx={{ p: 5, maxWidth: "auto", mx: "auto", minHeight: "100" }}>
+    <Paper sx={{ p: 5, maxWidth: "1200", mx: "auto", minHeight: "100vh" }}>
       <Typography variant="h4" gutterBottom sx={{ textAlign: 'center', margin: '1rem' }}>
         Payment Receipt
       </Typography>
@@ -223,7 +202,7 @@ export default function PaymentReceiptForm() {
           {...commonFieldProps}
           size="small"
           sx={{
-            minWidth: 180,
+
             '& input::-webkit-calendar-picker-indicator': {
               filter: 'invert(1)', // 🔥 makes icon white in dark mode
               cursor: 'pointer',
@@ -292,95 +271,150 @@ export default function PaymentReceiptForm() {
             Invoices for {form.customerName}
           </Typography>
 
-          <Box sx={{ height: 400, width: "100%" }}>
-            <DataGrid
-              rows={form.invoices.map((invoice, index) => ({
-                id: invoice.invoiceId,
-                rowIndex: index,
-                ...invoice,
-              }))}
-              columns={[
-                {
-                  field: "customerId",
-                  headerName: "Customer ID",
-                  flex: 1,
-                },
-                {
-                  field: "invoiceNumber",
-                  headerName: "Invoice No",
-                  flex: 1,
-                },
-                {
-                  field: "invoiceDate",
-                  headerName: "Invoice Date",
-                  flex: 1,
-                },
-                {
-                  field: "salesPaymentMode",
-                  headerName: "Payment Mode",
-                  flex: 1,
-                },
-                {
-                  field: "referenceNo",
-                  headerName: "Reference No.",
-                  flex: 1,
-                },
-                {
-                  field: "amountDue",
-                  headerName: "Amount Due",
-                  flex: 1,
-                },
-                {
-                  field: "amountPaid",
-                  headerName: "Amount Paid",
-                  flex: 1,
-                  renderCell: (params) => (
-                    <TextField
-                      type="number"
-                      size="small"
-                      value={params.row.amountPaid || ""}
-                      onChange={(e) =>
-                        updateInvoiceField(
-                          params.row.rowIndex,
-                          "amountPaid",
-                          e.target.value
-                        )
-                      }
-                    />
-                  ),
-                },
-                {
-                  field: "paymentDate",
-                  headerName: "Payment Date",
-                  flex: 1,
-                  renderCell: (params) => (
-                    <TextField
-                      type="date"
-                      size="small"
-                      value={params.row.paymentDate || ""}
-                      onChange={(e) =>
-                        updateInvoiceField(
-                          params.row.rowIndex,
-                          "paymentDate",
-                          e.target.value
-                        )
-                      }
-                    />
-                  ),
-                },
-              ]}
-              pageSizeOptions={[5, 10]}
-              disableRowSelectionOnClick
-            />
+          <Box sx={{ overflowX: "auto", width: "100%" }}>
+            <Box sx={{ minWidth: 800 }}>
+              <DataGrid
+                rows={form.invoices.map((invoice, index) => ({
+                  id: invoice.invoiceId,
+                  rowIndex: index,
+                  ...invoice,
+                }))}
+                columns={[
+                  {
+                    field: "customerId",
+                    headerName: "Customer ID",
+                    flex: 1,
+                  },
+                  {
+                    field: "invoiceNumber",
+                    headerName: "Invoice No",
+                    flex: 1,
+                  },
+                  {
+                    field: "invoiceDate",
+                    headerName: "Invoice Date",
+                    flex: 1,
+                  },
+                  {
+                    field: "paymentMode",
+                    headerName: "Payment Mode",
+                    flex: 1,
+                    renderCell: (params) => (
+                      <TextField
+                        select
+                        size="small"
+                        fullWidth
+                        value={params.row.paymentMode || "Credit"}
+                        onChange={(e) => {
+                          const value = e.target.value;
+
+                          updateInvoiceField(
+                            params.row.rowIndex,
+                            "paymentMode",
+                            value
+                          );
+
+                          // Clear reference if Credit
+                          if (value === "Credit") {
+                            updateInvoiceField(
+                              params.row.rowIndex,
+                              "referenceNo",
+                              ""
+                            );
+                          }
+                        }}
+                      >
+                        {paymentModes.map((mode) => (
+                          <MenuItem key={mode} value={mode}>
+                            {mode}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+                    ),
+                  },
+                  {
+                    field: "referenceNo",
+                    headerName: "Reference No.",
+                    flex: 1,
+                    renderCell: (params) => {
+                      const disabled = params.row.paymentMode === "Credit";
+
+                      return (
+                        <TextField
+                          size="small"
+                          fullWidth
+                          disabled={disabled}
+                          value={params.row.referenceNo || ""}
+                          onChange={(e) =>
+                            updateInvoiceField(
+                              params.row.rowIndex,
+                              "referenceNo",
+                              e.target.value
+                            )
+                          }
+                        />
+                      );
+                    },
+                  },
+                  {
+                    field: "amountDue",
+                    headerName: "Amount Due",
+                    flex: 1,
+                  },
+                  {
+                    field: "amountPaid",
+                    headerName: "Amount Paid",
+                    flex: 1,
+                    renderCell: (params) => (
+                      <TextField
+                        type="number"
+                        size="small"
+                        value={params.row.amountPaid || ""}
+                        onChange={(e) =>
+                          updateInvoiceField(
+                            params.row.rowIndex,
+                            "amountPaid",
+                            e.target.value
+                          )
+                        }
+                      />
+                    ),
+                  },
+                  {
+                    field: "paymentDate",
+                    headerName: "Payment Date",
+                    flex: 1,
+                    renderCell: (params) => (
+                      <TextField
+                        type="date"
+                        size="small"
+                        value={params.row.paymentDate || ""}
+                        onChange={(e) =>
+                          updateInvoiceField(
+                            params.row.rowIndex,
+                            "paymentDate",
+                            e.target.value
+                          )
+                        }
+                      />
+                    ),
+                  },
+                ]}
+                pageSizeOptions={[5, 10]}
+                disableRowSelectionOnClick
+              />
+            </Box>
+
           </Box>
 
           <Typography sx={{ mt: 2, textAlign: "right", fontWeight: "bold" }}>
             Total Received: ₹{form.totalReceived.toFixed(2)}
           </Typography>
-
-          <Button variant="outlined" sx={{ mt: 2, float: 'right' }} onClick={saveReceipt}>
-            Save Payment Receipt
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: { xs: "center", md: "flex-end" } }}>
+            <Button variant="outlined" sx={{ mt: 2 }} onClick={saveReceipt}>
+              Save Payment Receipt
+            </Button>
+          </Box>
         </>
       )}
 
