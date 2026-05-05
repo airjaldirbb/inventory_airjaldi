@@ -50,19 +50,64 @@ export default function ItemMasterGrid() {
     fetchItems();
   }, []);
 
-  // Add new item
-  const handleAddItem = async () => {
-    try {
-      await axios.post("/api/item", newItem);
-      setSnackbar({ open: true, message: "Item added", severity: "success" });
-      setAddOpen(false);
-      setNewItem({ Name: "", Code: "", HSN_Code: "", Category_Name: "", Group: "", BAR_CODE_TRACKING: "DISABLE", stockUnit: "Pcs" });
-      fetchItems();
-    } catch (err) {
-      console.error(err);
-      setSnackbar({ open: true, message: "Failed to add item", severity: "error" });
+
+const handleAddItem = async () => {
+  try {
+    // ✅ Frontend validation (prevents silent failure)
+    if (!newItem.Name || !newItem.Code || !newItem.Group) {
+      return setSnackbar({
+        open: true,
+        message: "Name, Code & Group are required",
+        severity: "error"
+      });
     }
-  };
+
+    // ✅ Clean payload (matches API expectations exactly)
+    const payload = {
+      Name: newItem.Name.trim(),
+      Code: newItem.Code.trim(),
+      HSN_Code: newItem.HSN_Code?.trim() || "",
+      Category_Name: newItem.Category_Name?.trim() || "",
+      Group: newItem.Group,
+      BAR_CODE_TRACKING: newItem.BAR_CODE_TRACKING,
+      stockUnit: newItem.stockUnit
+    };
+
+    console.log("Sending payload:", payload);
+
+    const res = await axios.post("/api/item", payload);
+
+    setSnackbar({
+      open: true,
+      message: res.data.message || "Item added",
+      severity: "success"
+    });
+
+    setAddOpen(false);
+
+    // ✅ Reset with valid defaults
+    setNewItem({
+      Name: "",
+      Code: "",
+      HSN_Code: "",
+      Category_Name: "",
+      Group: "Consumption", // ✅ IMPORTANT
+      BAR_CODE_TRACKING: "DISABLE",
+      stockUnit: "Pcs"
+    });
+
+    fetchItems();
+
+  } catch (err) {
+    console.error("ADD ERROR:", err.response?.data || err.message);
+
+    setSnackbar({
+      open: true,
+      message: err.response?.data?.message || "Failed to add item",
+      severity: "error"
+    });
+  }
+};
 
   // Update item
   const handleUpdateItem = async (id, row) => {
@@ -138,11 +183,11 @@ export default function ItemMasterGrid() {
   return (
     <Box sx={{ p: 3 }}>
       <Typography variant="h5" fontWeight="bold" gutterBottom>
-        Item Master (CRUD Grid)
+        Item Master
       </Typography>
 
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-        <Button variant="outlined" onClick={() => setAddOpen(true)}><AddIcon/>Add Items to Inventory</Button>
+        <Button variant="outlined" onClick={() => setAddOpen(true)}><AddIcon />Add Items to Inventory</Button>
         <Button variant="outlined" color="success" onClick={fetchItems}>Refresh</Button>
       </Stack>
 

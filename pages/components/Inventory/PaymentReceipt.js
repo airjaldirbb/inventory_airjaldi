@@ -17,7 +17,6 @@ import { DataGrid } from "@mui/x-data-grid";
 
 export default function PaymentReceiptForm() {
   const commonFieldProps = { size: "small", fullWidth: true };
-
   const [branches, setBranches] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState(null);
@@ -85,7 +84,7 @@ export default function PaymentReceiptForm() {
           pending: true,
         },
       });
-
+      console.log(res, "fetch invoices")
       // const invoiceData = res.data.data || [];
 
       // ✅ FILTER CREDIT ONLY
@@ -109,7 +108,7 @@ export default function PaymentReceiptForm() {
         salesPaymentMode: inv.paymentMode.toUpperCase(),
         amountDue: inv.balanceAmount || inv.netAmount,
         amountPaid: inv.balanceAmount || inv.netAmount,
-        // referenceNo: "",
+        referenceNo: "",
         paymentDate: new Date().toISOString().split("T")[0],
       }));
 
@@ -180,6 +179,7 @@ export default function PaymentReceiptForm() {
 
       invoices: form.invoices.map((i) => ({
         invoiceId: i.invoiceId, // must be Mongo _id
+        referenceNo: i.referenceNo,
         amountPaid: Number(i.amountPaid),
       })),
 
@@ -318,6 +318,11 @@ export default function PaymentReceiptForm() {
                 {
                   field: "salesPaymentMode",
                   headerName: "Payment Mode",
+                  flex: 1,
+                },
+                {
+                  field: "referenceNo",
+                  headerName: "Reference No.",
                   flex: 1,
                 },
                 {

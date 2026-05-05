@@ -46,7 +46,7 @@ import PurchaseBranchTransferReg from "./components/Inventory/PurchaseBranchTran
 ===================================================== */
 const TAB_REGISTRY = {
   analytics: { label: "Dashboard Analytics", component: <AnalyticsContent /> },
-  itemMaster: { label: "Item Master", component: <ItemMaster /> },
+  // itemMaster: { label: "Item Master", component: <ItemMaster /> },
   itemList: { label: "Item List", component: <ItemList /> },
   materialIssue: { label: "Material Issue", component: <MaterialIssue /> },
   materialReceipt: { label: "Material Receipt", component: <MaterialReceipt /> },

@@ -10,7 +10,7 @@ const salesInvoiceSchema = new mongoose.Schema(
       ref: "Customer",
       required: true,
     },
-    // 🔥 OPTIONAL (for tracking external source)
+ 
 
     jazeCustomerId: {
       type: String,
