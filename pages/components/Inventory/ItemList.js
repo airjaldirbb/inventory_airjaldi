@@ -51,63 +51,63 @@ export default function ItemMasterGrid() {
   }, []);
 
 
-const handleAddItem = async () => {
-  try {
-    // ✅ Frontend validation (prevents silent failure)
-    if (!newItem.Name || !newItem.Code || !newItem.Group) {
-      return setSnackbar({
+  const handleAddItem = async () => {
+    try {
+      // ✅ Frontend validation (prevents silent failure)
+      if (!newItem.Name || !newItem.Code || !newItem.Group) {
+        return setSnackbar({
+          open: true,
+          message: "Name, Code & Group are required",
+          severity: "error"
+        });
+      }
+
+      // ✅ Clean payload (matches API expectations exactly)
+      const payload = {
+        Name: newItem.Name.trim(),
+        Code: newItem.Code.trim(),
+        HSN_Code: newItem.HSN_Code?.trim() || "",
+        Category_Name: newItem.Category_Name?.trim() || "",
+        Group: newItem.Group,
+        BAR_CODE_TRACKING: newItem.BAR_CODE_TRACKING,
+        stockUnit: newItem.stockUnit
+      };
+
+      console.log("Sending payload:", payload);
+
+      const res = await axios.post("/api/item", payload);
+
+      setSnackbar({
         open: true,
-        message: "Name, Code & Group are required",
+        message: res.data.message || "Item added",
+        severity: "success"
+      });
+
+      setAddOpen(false);
+
+      // ✅ Reset with valid defaults
+      setNewItem({
+        Name: "",
+        Code: "",
+        HSN_Code: "",
+        Category_Name: "",
+        Group: "Consumption", // ✅ IMPORTANT
+        BAR_CODE_TRACKING: "DISABLE",
+        stockUnit: "Pcs"
+      });
+
+      fetchItems();
+
+    } catch (err) {
+      console.error("ADD ERROR:", err.response?.data || err.message);
+
+      setSnackbar({
+        open: true,
+        message: err.response?.data?.message || "Failed to add item",
         severity: "error"
       });
     }
-
-    // ✅ Clean payload (matches API expectations exactly)
-    const payload = {
-      Name: newItem.Name.trim(),
-      Code: newItem.Code.trim(),
-      HSN_Code: newItem.HSN_Code?.trim() || "",
-      Category_Name: newItem.Category_Name?.trim() || "",
-      Group: newItem.Group,
-      BAR_CODE_TRACKING: newItem.BAR_CODE_TRACKING,
-      stockUnit: newItem.stockUnit
-    };
-
-    console.log("Sending payload:", payload);
-
-    const res = await axios.post("/api/item", payload);
-
-    setSnackbar({
-      open: true,
-      message: res.data.message || "Item added",
-      severity: "success"
-    });
-
-    setAddOpen(false);
-
-    // ✅ Reset with valid defaults
-    setNewItem({
-      Name: "",
-      Code: "",
-      HSN_Code: "",
-      Category_Name: "",
-      Group: "Consumption", // ✅ IMPORTANT
-      BAR_CODE_TRACKING: "DISABLE",
-      stockUnit: "Pcs"
-    });
-
-    fetchItems();
-
-  } catch (err) {
-    console.error("ADD ERROR:", err.response?.data || err.message);
-
-    setSnackbar({
-      open: true,
-      message: err.response?.data?.message || "Failed to add item",
-      severity: "error"
-    });
-  }
-};
+  };
 
   // Update item
   const handleUpdateItem = async (id, row) => {
@@ -191,18 +191,21 @@ const handleAddItem = async () => {
         <Button variant="outlined" color="success" onClick={fetchItems}>Refresh</Button>
       </Stack>
 
-      <Box sx={{ height: 600, width: "100%" }}>
-        <DataGrid
-          rows={items}
-          columns={columns}
-          getRowId={(row) => row._id}
-          pageSize={10}
-          disableRowSelectionOnClick
-          processRowUpdate={(updatedRow) => {
-            handleUpdateItem(updatedRow._id, updatedRow);
-            return updatedRow;
-          }}
-        />
+      <Box sx={{ overflowX: "auto", width: "100%" }}>
+        <Box sx={{ minWidth: 1000 }}>
+          <DataGrid
+            rows={items}
+            columns={columns}
+            getRowId={(row) => row._id}
+            pageSize={10}
+            disableRowSelectionOnClick
+            processRowUpdate={(updatedRow) => {
+              handleUpdateItem(updatedRow._id, updatedRow);
+              return updatedRow;
+            }}
+          />
+        </Box>
+
       </Box>
 
       {/* Add Item Dialog */}

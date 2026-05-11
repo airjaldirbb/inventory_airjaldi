@@ -6,8 +6,10 @@ import {
   Grid,
   Paper,
   Typography,
+  Box,
 } from "@mui/material";
-import { DataGrid } from "@mui/x-data-grid";
+import { DataGrid } from '@mui/x-data-grid';
+
 
 import axios from "axios";
 import { Autocomplete } from "@mui/material";
@@ -134,22 +136,20 @@ const BillPayment = () => {
   ];
 
   return (
-    <Container maxWidth="xl">
+    <>
       <Typography variant="h5" gutterBottom>
         Bill Payment
       </Typography>
 
       {/* FORM */}
-      <Paper sx={{ p: 3, mb: 4 }}>
-        <Grid container spacing={2}>
+      <Paper sx={{ p: 3, mb: 4, width: "100%" }}>
+        <Grid container spacing={2}  columns={{ xs: 4, sm: 8, md: 12 }}>
           {/* Branch Autocomplete */}
-          <Grid item xs={6}>
-
+          <Grid item xs={12} sm={6}>
             <Autocomplete
               {...commonFieldProps}
 
               sx={{
-                minWidth: 180,
 
                 '& input::-webkit-calendar-picker-indicator': {
                   filter: 'invert(1)', // 🔥 makes icon white in dark mode
@@ -174,131 +174,119 @@ const BillPayment = () => {
             />
           </Grid>
 
-          <Grid item xs={6}>
-            <TextField
-             {...commonFieldProps}
+          <Grid item xs={12} sm={6}>            <TextField
+            {...commonFieldProps}
 
-              sx={{
-                minWidth: 180,
+            sx={{
 
-                '& input::-webkit-calendar-picker-indicator': {
-                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                  cursor: 'pointer',
-                },
-              }}
-              fullWidth
-              type="date"
-              label="Date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-            />
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                cursor: 'pointer',
+              },
+            }}
+            fullWidth
+            type="date"
+            label="Date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            InputLabelProps={{ shrink: true }}
+          />
           </Grid>
 
-          <Grid item xs={6}>
-            <TextField
-             {...commonFieldProps}
+          <Grid item xs={12} sm={6}>            <TextField
+            {...commonFieldProps}
 
-              sx={{
-                minWidth: 180,
+            sx={{
 
-                '& input::-webkit-calendar-picker-indicator': {
-                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                  cursor: 'pointer',
-                },
-              }}
-              fullWidth
-              label="Cash / Bank A/C"
-              name="cashBank"
-              value={formData.cashBank}
-              onChange={handleChange}
-            />
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                cursor: 'pointer',
+              },
+            }}
+            fullWidth
+            label="Cash / Bank A/C"
+            name="cashBank"
+            value={formData.cashBank}
+            onChange={handleChange}
+          />
           </Grid>
 
-          <Grid item xs={6}>
-            <TextField
-             {...commonFieldProps}
+          <Grid item xs={12} sm={6}>            <TextField
+            {...commonFieldProps}
 
-              sx={{
-                minWidth: 180,
+            sx={{
 
-                '& input::-webkit-calendar-picker-indicator': {
-                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                  cursor: 'pointer',
-                },
-              }}
-              fullWidth
-              type="number"
-              label="Amount"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-            />
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                cursor: 'pointer',
+              },
+            }}
+            fullWidth
+            type="number"
+            label="Amount"
+            name="amount"
+            value={formData.amount}
+            onChange={handleChange}
+          />
           </Grid>
 
-          <Grid item xs={6}>
-            <TextField
-             {...commonFieldProps}
+          <Grid item xs={12} sm={6}>            <TextField
+            {...commonFieldProps}
 
-              sx={{
-                minWidth: 180,
+            sx={{
 
-                '& input::-webkit-calendar-picker-indicator': {
-                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                  cursor: 'pointer',
-                },
-              }}
-              fullWidth
-              label="Reference No"
-              name="refNo"
-              value={formData.refNo}
-              onChange={handleChange}
-            />
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                cursor: 'pointer',
+              },
+            }}
+            fullWidth
+            label="Reference No"
+            name="refNo"
+            value={formData.refNo}
+            onChange={handleChange}
+          />
           </Grid>
 
-          <Grid item xs={6}>
-            <TextField
-             {...commonFieldProps}
+          <Grid item xs={12} sm={6}>            <TextField
+            {...commonFieldProps}
 
-              sx={{
-                minWidth: 180,
+            sx={{
 
-                '& input::-webkit-calendar-picker-indicator': {
-                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                  cursor: 'pointer',
-                },
-              }}
-              fullWidth
-              type="date"
-              label="Reference Date"
-              name="refDate"
-              value={formData.refDate}
-              onChange={handleChange}
-              InputLabelProps={{ shrink: true }}
-            />
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                cursor: 'pointer',
+              },
+            }}
+            fullWidth
+            type="date"
+            label="Reference Date"
+            name="refDate"
+            value={formData.refDate}
+            onChange={handleChange}
+            InputLabelProps={{ shrink: true }}
+          />
           </Grid>
 
-          <Grid item xs={12}>
-            <TextField
-             {...commonFieldProps}
+          <Grid item xs={12} sm={6}>            <TextField
+            {...commonFieldProps}
 
-              sx={{
-                minWidth: 180,
+            sx={{
 
-                '& input::-webkit-calendar-picker-indicator': {
-                  filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                  cursor: 'pointer',
-                },
-              }}
-              fullWidth
-              multiline
-              rows={2}
-              label="Remark"
-              name="remark"
-              value={formData.remark}
-              onChange={handleChange}
-            />
+              '& input::-webkit-calendar-picker-indicator': {
+                filter: 'invert(1)', // 🔥 makes icon white in dark mode
+                cursor: 'pointer',
+              },
+            }}
+            fullWidth
+            multiline
+            rows={2}
+            label="Remark"
+            name="remark"
+            value={formData.remark}
+            onChange={handleChange}
+          />
           </Grid>
 
           <Grid item xs={12}>
@@ -314,15 +302,23 @@ const BillPayment = () => {
         Saved Records
       </Typography>
 
-      <Paper>
+      <Box sx={{ overflowX: "auto", width: "100%"}}>
         <DataGrid
           rows={records}
           columns={columns}
           getRowId={(row) => row._id}
-          autoHeight
+          initialState={{
+            pagination: {
+              paginationModel: {
+                pageSize: 5,
+              },
+            },
+          }}
+          pageSizeOptions={[5]}
         />
-      </Paper>
-    </Container>
+      </Box>
+    </>
+
   );
 };
 

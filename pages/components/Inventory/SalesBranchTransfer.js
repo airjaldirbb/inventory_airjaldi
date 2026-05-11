@@ -153,6 +153,7 @@ export default function SalesBranchTransfer() {
         netAmount: rows.reduce((sum, r) => sum + r.total + r.gstAmount, 0),
         paymentStatus: formState.paymentStatus || "UNPAID",
       };
+      
       await axios.post("/api/SalesBranchTransfer", payload);
       showSnackbar("Invoice saved successfully", "success");
       // Reset form for next invoice

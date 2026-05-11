@@ -312,9 +312,20 @@ export default async function handler(req, res) {
         totalGST,
         netAmount,
 
-        paidAmount: 0,
-        balanceAmount: netAmount,
-        paymentStatus: "UNPAID",
+        paidAmount:
+          paymentMode === "CASH"
+            ? netAmount
+            : 0,
+
+        balanceAmount:
+          paymentMode === "CASH"
+            ? 0
+            : netAmount,
+
+        paymentStatus:
+          paymentMode === "CASH"
+            ? "PAID"
+            : "UNPAID",
       });
 
       await invoice.populate("customer");

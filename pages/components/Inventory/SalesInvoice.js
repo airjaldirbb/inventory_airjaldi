@@ -13,13 +13,14 @@ import {
   DialogContent,
   DialogActions,
   Snackbar,
-  Alert, Typography, Container
+  Alert, Typography, Container, FormControlLabel, Checkbox
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { Autocomplete } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
+import { CleaningServices } from "@mui/icons-material";
 
 export default function SalesInvoice() {
   const dispatch = useDispatch();
@@ -48,7 +49,6 @@ export default function SalesInvoice() {
     refDate: "",
     agent: "",
     tax: "",
-    paymentStatus: "UNPAID",
   });
 
   // ========== DROPDOWN DATA ==========
@@ -57,6 +57,8 @@ export default function SalesInvoice() {
   const [customers, setCustomers] = useState([]);
   const [items, setItems] = useState([]);
   const [agents, setAgents] = useState([]);
+  const [manualAmount, setManualAmount] = useState("");
+  const [isManualAmount, setIsManualAmount] = useState(false);
 
   // ========== SALES INVOICE ROWS ==========
   const [rows, setRows] = useState([]);
@@ -83,7 +85,13 @@ export default function SalesInvoice() {
   useEffect(() => {
     // axios.get("/api/branch").then(res => setBranches(res.data)).catch(err => console.error(err));
     axios.get("/api/customer").then(res => setCustomers(res.data)).catch(err => console.error(err));
-    axios.get("/api/AgentDropDown").then(res => setAgents(res.data.data || [])).catch(err => console.error(err));
+    axios.get("/api/AgentDropDown").
+      then(res => setAgents(res.data.data || [])
+
+      ).
+      catch(err =>
+        console.error(err));
+
   }, []);
 
   // Load items when branch changes
@@ -95,91 +103,39 @@ export default function SalesInvoice() {
   }, [formState.branch]);
 
   // ================= CALCULATE AMOUNT =================
+  // useEffect(() => {
+  //   const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
+  //   const gstAmount = (quantity * rate * gstPercentage) / 100;
+  //   setAmount(quantity * rate + gstAmount);
+  // }, [quantity, rate, formState.tax]);
+
+  // useEffect(() => {
+  //   if (!isManualAmount) {
+  //     setAmount(quantity * rate);
+  //   }
+  // }, [quantity, rate, isManualAmount]);
+
   useEffect(() => {
-    const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
-    const gstAmount = (quantity * rate * gstPercentage) / 100;
-    setAmount(quantity * rate + gstAmount);
-  }, [quantity, rate, formState.tax]);
+    if (!isManualAmount) {
+      const gstPercentage = parseFloat(
+        (formState.tax || "0").replace("%", "")
+      );
 
+      const basic = quantity * rate;
+      const gstAmount = (basic * gstPercentage) / 100;
 
+      setAmount(basic + gstAmount);
+    }
+  }, [
+    quantity,
+    rate,
+    formState.tax,
+    isManualAmount,
+  ]);
   // ================= DELETE ROW =================
   const handleDeleteRow = (rowId) => {
     setRows(rows.filter(r => r.rowId !== rowId));
   };
-  // ================= SAVE INVOICE =================
-  // const handleSaveInvoice = async () => {
-  //   if (rows.length === 0) {
-  //     showSnackbar("Add at least one item to save invoice", "error");
-  //     return;
-  //   }
-
-  //   if (!formState.branch || !formState.customer) {
-  //     showSnackbar("Please fill branch, customer", "error");
-  //     return;
-  //   }
-
-  //   try {
-  //     const payload = {
-  //       invoiceNumber: formState.invoiceNo || undefined,
-  //       invoiceDate: formState.date || new Date().toISOString().slice(0, 10),
-  //       customer: formState.customer,
-  //         customerDetails: jazeCustomerDetails || null,
-
-  //       // ✅ ADD THIS
-  //       agent: formState.agent || null,
-  //       branch: formState.branch,
-  //       gstType: formState.gstType || "TAX_INVOICE", // ✅ ADD THIS
-  //       paymentMode: formState.cashCredit || "CASH", // ✅ ADD THIS
-
-  //       items: rows.map(r => ({
-  //         item: r._id,
-  //         quantity: r.quantity,
-  //         rate: r.rate,
-  //         unit: r.unit || "pcs",
-  //         gstPercentage: r.gstPercentage || 0,
-  //         gstAmount: r.gstAmount || 0,
-  //         total: r.total || 0,
-  //       })),
-
-  //       totalAmount: totals.totalAmount,
-  //       totalGST: totals.totalGST,
-  //       netAmount: totals.roundedNetAmount,
-  //       roundOff: totals.roundOff,
-  //       totalAmount: rows.reduce((sum, r) => sum + r.total, 0),
-  //       totalGST: rows.reduce((sum, r) => sum + r.gstAmount, 0),
-  //       netAmount: rows.reduce((sum, r) => sum + r.total + r.gstAmount, 0),
-  //       paymentStatus: formState.paymentStatus || "UNPAID",
-  //     };
-  //     await axios.post("/api/salesInvoice", payload);
-  //     console.log(payload,"customer name")
-  //     showSnackbar("Invoice saved successfully", "success");
-
-  //     setRows([]);
-  //     setFormState({
-  //       gstType: "",
-  //       cashCredit: "",
-  //       branch: "",
-  //       customer: "",
-  //       email: "",
-  //       date: new Date().toISOString().slice(0, 10),
-  //       invoiceNo: "",
-  //       refNo: "",
-  //       refDate: "",
-  //       agent: "",
-  //       tax: "",
-  //       paymentStatus: "UNPAID",
-  //     });
-  //     setSelectedBranch(null);
-  //     setSelectedItem("");
-  //     setQuantity(1);
-  //     setRate(0);
-  //     setAmount(0);
-  //     setSelectedUnit("");
-  //   } catch (err) {
-  //     console.error("Error saving invoice:", err.response?.data || err.message);
-  //     showSnackbar("Error saving invoice", "error");
-  //   }
-  // };
   const handleSaveInvoice = async () => {
     if (rows.length === 0) {
       showSnackbar("Add at least one item to save invoice", "error");
@@ -289,9 +245,7 @@ export default function SalesInvoice() {
           0
         ),
 
-        paymentStatus:
-          formState.paymentStatus ||
-          "UNPAID",
+
       };
 
       console.log(payload, "FINAL PAYLOAD");
@@ -322,7 +276,7 @@ export default function SalesInvoice() {
         refDate: "",
         agent: "",
         tax: "",
-        paymentStatus: "UNPAID",
+
       });
 
       setSelectedBranch(null);
@@ -351,9 +305,18 @@ export default function SalesInvoice() {
     }
 
     const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
-    const itemTotal = quantity * rate;
-    const gstAmount = (itemTotal * gstPercentage) / 100;
+    // const itemTotal = quantity * rate;
+    const basicAmount = isManualAmount
+      ? amount
+      : quantity * rate;
+
+    const gstAmount =
+      (basicAmount * gstPercentage) / 100;
+
+    const itemTotal =
+      basicAmount + gstAmount;
     const selectedAgent = agents.find(a => a._id === formState.agent);
+
     const newRow = {
       ...selectedItem,
       quantity,
@@ -460,86 +423,6 @@ export default function SalesInvoice() {
     setSelectedUnit("");
     setFormState(prev => ({ ...prev, tax: "" }));
   };
-  // const fetchUserDetails = async (phoneNumber) => {
-  //   if (!phoneNumber) return;
-
-  //   try {
-  //     const res = await axios.get(
-  //       `/api/jazeApi?type=phone&value=${phoneNumber}`
-  //     );
-
-  //     let responseData = res.data;
-  //     console.log(responseData)
-  //     if (responseData?.data) {
-  //       responseData = responseData.data;
-  //     }
-
-  //     if (!Array.isArray(responseData)) {
-  //       responseData = [responseData];
-  //     }
-
-  //     const userBlock = responseData.find(
-  //       (item) => item?.User
-  //     );
-
-  //     if (!userBlock?.User) {
-  //       console.warn("User not found");
-  //       return;
-  //     }
-
-  //     const user = userBlock.User;
-  //     const gstNumber =
-  //       userBlock.UserSetting?.gstNumber || "";
-
-  //     const customerObj = {
-  //       _id: String(user.id),
-  //       username: user.username || "",
-  //       custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
-  //       email: user.email || "",
-  //       phone: user.phone || "",
-  //     };
-
-  //     // Add in dropdown list
-  //     setCustomers((prev) => {
-  //       const exists = prev.find(
-  //         (c) =>
-  //           String(c._id) === customerObj._id
-  //       );
-
-  //       if (exists) return prev;
-
-  //       return [...prev, customerObj];
-  //     });
-
-  //     // Select customer
-  //     setFormState((prev) => ({
-  //       ...prev,
-  //       customer: customerObj._id,
-  //       email: customerObj.email,
-  //     }));
-
-  //     // Store extra details
-  //     setJazeCustomerDetails({
-  //       customerId: customerObj._id,
-  //       username: customerObj.username,
-  //       custName: customerObj.custName,
-  //       phone: user.phone || "",
-  //       email: user.email || "",
-  //       city: user.address_city || "",
-  //       location: user.address_line1 || "",
-  //       gst: gstNumber,
-  //       company: user.company_name || "",
-  //     });
-
-  //     console.log(
-  //       "✅ Jaze customer set successfully",
-  //       customerObj._id
-  //     );
-
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
 
   const fetchUserDetails = async (phoneNumber) => {
     if (!phoneNumber) return;
@@ -550,7 +433,7 @@ export default function SalesInvoice() {
       );
 
       let responseData = res.data;
-console.log(responseData,"data ")
+      console.log(responseData, "data ")
       // if wrapped in { data: [...] }
       if (responseData?.data) {
         responseData = responseData.data;
@@ -922,7 +805,37 @@ console.log(responseData,"data ")
           />
           <TextField fullWidth type="number" label="Quantity" sx={{ mt: 2 }} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} />
           <TextField fullWidth type="number" label="Rate" sx={{ mt: 2 }} value={rate} onChange={(e) => setRate(parseFloat(e.target.value))} />
-          <TextField fullWidth label="Amount" sx={{ mt: 2 }} value={amount.toFixed(2)} InputProps={{ readOnly: true }} />
+          {/* <TextField fullWidth label="Amount" sx={{ mt: 2 }}
+            value={amount.toFixed(2)}
+            InputProps={{ readOnly: true }} /> */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isManualAmount}
+                onChange={(e) => {
+                  setIsManualAmount(e.target.checked);
+
+                  // restore auto calculation when unchecked
+                  if (!e.target.checked) {
+                    setAmount(quantity * rate);
+                  }
+                }}
+              />
+            }
+            label="Manual Amount"
+          />
+
+          <TextField
+            fullWidth
+            type="number"
+            label="Amount"
+            sx={{ mt: 2 }}
+            value={amount}
+            onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+            InputProps={{
+              readOnly: !isManualAmount,
+            }}
+          />
           <TextField select fullWidth label="Tax" sx={{ mt: 2 }} value={formState.tax} onChange={(e) => setFormState({ ...formState, tax: e.target.value })}>
             {["5%", "12%", "18%", "28%"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
           </TextField>
