@@ -86,4 +86,4 @@ const saleBranchTransfer = new mongoose.Schema(
 
 
 export default mongoose.models.SalesTransfer ||
-  mongoose.model("SalesTransfer", saleBranchTransfer);
+  mongoose.model("fer", saleBranchTransfer);

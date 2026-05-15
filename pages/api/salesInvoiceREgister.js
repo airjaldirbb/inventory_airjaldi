@@ -8,10 +8,6 @@ import "@/models/Branch";
 import "@/models/Item";
 import "@/models/Customer";
 
-/* =========================================================
-   HELPERS
-========================================================= */
-
 const calcTotal = (items = []) =>
   items.reduce(
     (sum, item) =>
@@ -25,7 +21,6 @@ const calcTotal = (items = []) =>
     0
   );
 
-// 🔥 customer display helper
 const getCustomerName = (customer) => {
   if (!customer) return "N/A";
 
@@ -45,9 +40,6 @@ const getCustomerName = (customer) => {
   return custName || username || "N/A";
 };
 
-/* =========================================================
-   API HANDLER
-========================================================= */
 
 export default async function handler(req, res) {
   await dbConnect();

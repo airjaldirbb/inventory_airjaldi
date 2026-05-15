@@ -106,80 +106,6 @@ export default function SalesInvoice() {
   const handleDeleteRow = (rowId) => {
     setRows(rows.filter(r => r.rowId !== rowId));
   };
-  // ================= SAVE INVOICE =================
-  // const handleSaveInvoice = async () => {
-  //   if (rows.length === 0) {
-  //     showSnackbar("Add at least one item to save invoice", "error");
-  //     return;
-  //   }
-
-  //   if (!formState.branch || !formState.customer) {
-  //     showSnackbar("Please fill branch, customer", "error");
-  //     return;
-  //   }
-
-  //   try {
-  //     const payload = {
-  //       invoiceNumber: formState.invoiceNo || undefined,
-  //       invoiceDate: formState.date || new Date().toISOString().slice(0, 10),
-  //       customer: formState.customer,
-  //         customerDetails: jazeCustomerDetails || null,
-
-  //       // ✅ ADD THIS
-  //       agent: formState.agent || null,
-  //       branch: formState.branch,
-  //       gstType: formState.gstType || "TAX_INVOICE", // ✅ ADD THIS
-  //       paymentMode: formState.cashCredit || "CASH", // ✅ ADD THIS
-
-  //       items: rows.map(r => ({
-  //         item: r._id,
-  //         quantity: r.quantity,
-  //         rate: r.rate,
-  //         unit: r.unit || "pcs",
-  //         gstPercentage: r.gstPercentage || 0,
-  //         gstAmount: r.gstAmount || 0,
-  //         total: r.total || 0,
-  //       })),
-
-  //       totalAmount: totals.totalAmount,
-  //       totalGST: totals.totalGST,
-  //       netAmount: totals.roundedNetAmount,
-  //       roundOff: totals.roundOff,
-  //       totalAmount: rows.reduce((sum, r) => sum + r.total, 0),
-  //       totalGST: rows.reduce((sum, r) => sum + r.gstAmount, 0),
-  //       netAmount: rows.reduce((sum, r) => sum + r.total + r.gstAmount, 0),
-  //       paymentStatus: formState.paymentStatus || "UNPAID",
-  //     };
-  //     await axios.post("/api/salesInvoice", payload);
-  //     console.log(payload,"customer name")
-  //     showSnackbar("Invoice saved successfully", "success");
-
-  //     setRows([]);
-  //     setFormState({
-  //       gstType: "",
-  //       cashCredit: "",
-  //       branch: "",
-  //       customer: "",
-  //       email: "",
-  //       date: new Date().toISOString().slice(0, 10),
-  //       invoiceNo: "",
-  //       refNo: "",
-  //       refDate: "",
-  //       agent: "",
-  //       tax: "",
-  //       paymentStatus: "UNPAID",
-  //     });
-  //     setSelectedBranch(null);
-  //     setSelectedItem("");
-  //     setQuantity(1);
-  //     setRate(0);
-  //     setAmount(0);
-  //     setSelectedUnit("");
-  //   } catch (err) {
-  //     console.error("Error saving invoice:", err.response?.data || err.message);
-  //     showSnackbar("Error saving invoice", "error");
-  //   }
-  // };
   const handleSaveInvoice = async () => {
     if (rows.length === 0) {
       showSnackbar("Add at least one item to save invoice", "error");
@@ -294,7 +220,6 @@ export default function SalesInvoice() {
           "UNPAID",
       };
 
-      console.log(payload, "FINAL PAYLOAD");
 
       await axios.post(
         "/api/salesInvoice",
@@ -460,86 +385,6 @@ export default function SalesInvoice() {
     setSelectedUnit("");
     setFormState(prev => ({ ...prev, tax: "" }));
   };
-  // const fetchUserDetails = async (phoneNumber) => {
-  //   if (!phoneNumber) return;
-
-  //   try {
-  //     const res = await axios.get(
-  //       `/api/jazeApi?type=phone&value=${phoneNumber}`
-  //     );
-
-  //     let responseData = res.data;
-  //     console.log(responseData)
-  //     if (responseData?.data) {
-  //       responseData = responseData.data;
-  //     }
-
-  //     if (!Array.isArray(responseData)) {
-  //       responseData = [responseData];
-  //     }
-
-  //     const userBlock = responseData.find(
-  //       (item) => item?.User
-  //     );
-
-  //     if (!userBlock?.User) {
-  //       console.warn("User not found");
-  //       return;
-  //     }
-
-  //     const user = userBlock.User;
-  //     const gstNumber =
-  //       userBlock.UserSetting?.gstNumber || "";
-
-  //     const customerObj = {
-  //       _id: String(user.id),
-  //       username: user.username || "",
-  //       custName: `${user.name || ""} ${user.last_name || ""}`.trim(),
-  //       email: user.email || "",
-  //       phone: user.phone || "",
-  //     };
-
-  //     // Add in dropdown list
-  //     setCustomers((prev) => {
-  //       const exists = prev.find(
-  //         (c) =>
-  //           String(c._id) === customerObj._id
-  //       );
-
-  //       if (exists) return prev;
-
-  //       return [...prev, customerObj];
-  //     });
-
-  //     // Select customer
-  //     setFormState((prev) => ({
-  //       ...prev,
-  //       customer: customerObj._id,
-  //       email: customerObj.email,
-  //     }));
-
-  //     // Store extra details
-  //     setJazeCustomerDetails({
-  //       customerId: customerObj._id,
-  //       username: customerObj.username,
-  //       custName: customerObj.custName,
-  //       phone: user.phone || "",
-  //       email: user.email || "",
-  //       city: user.address_city || "",
-  //       location: user.address_line1 || "",
-  //       gst: gstNumber,
-  //       company: user.company_name || "",
-  //     });
-
-  //     console.log(
-  //       "✅ Jaze customer set successfully",
-  //       customerObj._id
-  //     );
-
-  //   } catch (err) {
-  //     console.error(err);
-  //   }
-  // };
 
   const fetchUserDetails = async (phoneNumber) => {
     if (!phoneNumber) return;
@@ -550,7 +395,6 @@ export default function SalesInvoice() {
       );
 
       let responseData = res.data;
-console.log(responseData,"data ")
       // if wrapped in { data: [...] }
       if (responseData?.data) {
         responseData = responseData.data;
@@ -623,7 +467,6 @@ console.log(responseData,"data ")
         company: user.company_name || "",
       });
 
-      console.log("✅ Jaze customer set:", customerObj);
 
     } catch (err) {
       console.error(err);

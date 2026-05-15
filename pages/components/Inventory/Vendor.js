@@ -61,7 +61,6 @@ export default function VendorPage() {
     setLoading(true);
     try {
       const res = await axios.get("/api/vendorApi");
-      console.log(res, "vendro")
       setVendors(res.data);
     } catch (err) {
       console.error("Error fetching vendors:", err);
@@ -70,9 +69,7 @@ export default function VendorPage() {
     }
   };
 
-  // useEffect(() => {
-  //   fetchVendors();
-  // }, []);
+
   const handleDeleteVendor = async (_id) => {
     if (!window.confirm("Are you sure you want to delete this vendor?")) return;
 
