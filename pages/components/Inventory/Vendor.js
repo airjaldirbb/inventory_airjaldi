@@ -61,7 +61,6 @@ export default function VendorPage() {
     setLoading(true);
     try {
       const res = await axios.get("/api/vendorApi");
-      console.log(res, "vendro")
       setVendors(res.data);
     } catch (err) {
       console.error("Error fetching vendors:", err);

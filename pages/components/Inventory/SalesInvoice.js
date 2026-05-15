@@ -248,7 +248,6 @@ export default function SalesInvoice() {
 
       };
 
-      console.log(payload, "FINAL PAYLOAD");
 
       await axios.post(
         "/api/salesInvoice",
@@ -433,7 +432,6 @@ export default function SalesInvoice() {
       );
 
       let responseData = res.data;
-      console.log(responseData, "data ")
       // if wrapped in { data: [...] }
       if (responseData?.data) {
         responseData = responseData.data;
@@ -506,7 +504,6 @@ export default function SalesInvoice() {
         company: user.company_name || "",
       });
 
-      console.log("✅ Jaze customer set:", customerObj);
 
     } catch (err) {
       console.error(err);

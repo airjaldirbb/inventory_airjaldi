@@ -181,7 +181,6 @@ export default function Customer() {
   // Inside Customer component
   const fetchUserDetails = async (phoneNumber) => {
     if (!phoneNumber) {
-      console.log("No phone number entered");
       return;
     }
 

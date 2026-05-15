@@ -84,7 +84,6 @@ export default function PaymentReceiptForm() {
           pending: true,
         },
       });
-      console.log(res, "fetch invoices")
       // const invoiceData = res.data.data || [];
 
       // ✅ FILTER CREDIT ONLY

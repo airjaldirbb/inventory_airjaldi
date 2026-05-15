@@ -88,7 +88,6 @@ export default function SalesBranchTransfer() {
     axios.get(`/api/item?branch=${formState.fromBranch}`)
       .then(res => {
         setItems(res.data.data || []);
-        console.log("Items:", res.data);
       })
       .catch(err => console.error(err));
 

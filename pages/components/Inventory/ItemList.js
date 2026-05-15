@@ -73,7 +73,6 @@ export default function ItemMasterGrid() {
         stockUnit: newItem.stockUnit
       };
 
-      console.log("Sending payload:", payload);
 
       const res = await axios.post("/api/item", payload);
 

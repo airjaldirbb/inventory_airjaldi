@@ -7,7 +7,6 @@ export default async function handler(req, res) {
   if (req.method === "GET") {
     try {
       const agents = await Agent.find().sort({ name: 1 });
-      console.log(agents,"agent")
       return res.status(200).json({ data: agents });
     } catch (err) {
       return res.status(500).json({ error: err.message });

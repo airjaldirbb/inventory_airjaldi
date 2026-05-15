@@ -79,7 +79,6 @@ const fetchData = async () => {
       };
     });
 
-    console.log(data);
 
     setRows(data);
     setTotal(res.data.totalAmount || 0);
