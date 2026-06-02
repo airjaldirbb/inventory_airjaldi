@@ -5,7 +5,7 @@ import MaterialIssue from "@/models/MaterialIssue";
 import SalesInvoice from "@/models/SalesInvoice";
 import Item from "@/models/Item";
 import mongoose from "mongoose";
-
+import PurchaseBill from "@/models/PurchaseBill";
 export default async function handler(req, res) {
   await dbConnect();
 
@@ -68,9 +68,29 @@ export default async function handler(req, res) {
     const salesMap = {};
     salesAgg.forEach((x) => (salesMap[x._id.toString()] = x.total));
 
+    const pbAgg = await PurchaseBill.aggregate([
+      { $unwind: "$items" },
+      {
+        $match: {
+          ...(branch ? { branch: new mongoose.Types.ObjectId(branch) } : {}),
+        },
+      },
+      {
+        $group: {
+          _id: "$items.item",
+          total: { $sum: "$items.quantity" },
+        },
+      },
+    ]);
+    const pbMap = {};
+    pbAgg.forEach((x) => (pbMap[x._id.toString()] = x.total));
     // 3️⃣ Merge results
     const stockData = items.map((item) => {
-      const stockIn = (poMap[item._id.toString()] || 0) + (mrMap[item._id.toString()] || 0);
+      // const stockIn = (poMap[item._id.toString()] || 0) + (mrMap[item._id.toString()] + (pbMap[item.itemName] || 0));
+      const stockIn =
+        (poMap[item._id.toString()] || 0) +
+        (mrMap[item._id.toString()] || 0) +
+        (pbMap[item.itemName] || 0);
       const stockOut = (miMap[item._id.toString()] || 0) + (salesMap[item._id.toString()] || 0);
       const openingQty = 0;
       const balanceQty = openingQty + stockIn - stockOut;

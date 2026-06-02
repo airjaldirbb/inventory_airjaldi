@@ -182,7 +182,11 @@ export default function MaterialIssue() {
         Material Issue
       </Typography>
 
-      <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
+      <Stack
+        direction={{ xs: "column", sm: "row" }}
+        spacing={2}
+        sx={{ mb: 2 }}
+      >
         <TextField
           label="Branch ★"
           select
@@ -191,12 +195,12 @@ export default function MaterialIssue() {
           onChange={(e) => setSelectedBranch(e.target.value)}
           {...commonFieldProps}
           sx={{
-                  minWidth: 180,
-                  '& input::-webkit-calendar-picker-indicator': {
-                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                    cursor: 'pointer',
-                  },
-                }}
+
+            '& input::-webkit-calendar-picker-indicator': {
+              filter: 'invert(1)', // 🔥 makes icon white in dark mode
+              cursor: 'pointer',
+            },
+          }}
         >
           {branches.map((b) => (
             <MenuItem key={b._id} value={b._id}>
@@ -210,14 +214,14 @@ export default function MaterialIssue() {
           fullWidth
           value={issuedTo}
           onChange={(e) => setIssuedTo(e.target.value)}
-              {...commonFieldProps}
+          {...commonFieldProps}
           sx={{
-                  minWidth: 180,
-                  '& input::-webkit-calendar-picker-indicator': {
-                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                    cursor: 'pointer',
-                  },
-                }}
+
+            '& input::-webkit-calendar-picker-indicator': {
+              filter: 'invert(1)', // 🔥 makes icon white in dark mode
+              cursor: 'pointer',
+            },
+          }}
 
         />
 
@@ -227,14 +231,14 @@ export default function MaterialIssue() {
           fullWidth
           value={issueDate}
           onChange={(e) => setIssueDate(e.target.value)}
-              {...commonFieldProps}
+          {...commonFieldProps}
           sx={{
-                  minWidth: 180,
-                  '& input::-webkit-calendar-picker-indicator': {
-                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                    cursor: 'pointer',
-                  },
-                }}
+
+            '& input::-webkit-calendar-picker-indicator': {
+              filter: 'invert(1)', // 🔥 makes icon white in dark mode
+              cursor: 'pointer',
+            },
+          }}
         />
 
         <TextField
@@ -242,31 +246,36 @@ export default function MaterialIssue() {
           fullWidth
           value={issueNo}
           onChange={(e) => setIssueNo(e.target.value)}
-              {...commonFieldProps}
+          {...commonFieldProps}
           sx={{
-                  minWidth: 180,
-                  '& input::-webkit-calendar-picker-indicator': {
-                    filter: 'invert(1)', // 🔥 makes icon white in dark mode
-                    cursor: 'pointer',
-                  },
-                }}
+
+            '& input::-webkit-calendar-picker-indicator': {
+              filter: 'invert(1)', // 🔥 makes icon white in dark mode
+              cursor: 'pointer',
+            },
+          }}
         />
 
       </Stack>
 
       <Stack direction="row" justifyContent="space-between" sx={{ mb: 2 }}>
-        <Typography variant="h6">Issued Items</Typography>
-        <Button variant="outlined" onClick={handleAddRow}><AddIcon/>Add Items to inventory</Button>
+        {/* <Typography variant="h6">Issued Items</Typography> */}
+        <Button variant="outlined" onClick={handleAddRow}><AddIcon />Add Items to inventory</Button>
       </Stack>
+      <Box sx={{ overflowX: "auto", width: "100%" }}>
+        <Box sx={{ minWidth: 400 }}>
 
-      <DataGrid
-        rows={rows}
-        columns={columns}
-        autoHeight
-        getRowId={(row) => row.id}
-        disableRowSelectionOnClick
-        pageSize={5}
-      />
+          <DataGrid
+            rows={rows}
+            columns={columns}
+            autoHeight
+            getRowId={(row) => row.id}
+            disableRowSelectionOnClick
+            pageSize={5}
+          />
+        </Box>
+      </Box>
+
 
       <Box sx={{ mt: 2, textAlign: "right" }}>
         <Typography variant="subtitle1">

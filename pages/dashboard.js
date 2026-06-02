@@ -224,10 +224,10 @@ function AnalyticsContent() {
         <Typography variant="h4" align="center" gutterBottom fontWeight={600} color="#fff">
           Dashboard Analytics
         </Typography>
-        <Paper sx={{ p: 3, mb: 3 }}>
-          <Typography variant="h4" align="center" gutterBottom fontWeight={600}>Bar Chart Insights</Typography>
-          <Grid container justifyContent="center">
-            <Grid item xs={12} sm={6}>
+        <Paper sx={{p:2}} >
+          <Typography variant="h4" align="center" gutterBottom fontWeight={500}>Bar Chart Insights</Typography>
+          <Grid container justifyContent="center"  >
+            <Grid item xs={12} sm={6}  >
               <KendoGrid />
             </Grid>
           </Grid>

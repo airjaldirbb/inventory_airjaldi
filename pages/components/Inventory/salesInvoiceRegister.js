@@ -80,15 +80,16 @@ const SalesInvoiceRegister = () => {
       });
 
 
-      setRows(data);
-      setTotal(res.data.totalAmount || 0);
-    } catch (error) {
-      console.error(error);
-      showSnackbar("Error fetching data", "error");
-    } finally {
-      setLoading(false);
-    }
-  };
+
+    setRows(data);
+    setTotal(res.data.totalAmount || 0);
+  } catch (error) {
+    console.error(error);
+    showSnackbar("Error fetching data", "error");
+  } finally {
+    setLoading(false);
+  }
+};
 
   useEffect(() => {
     fetchData();

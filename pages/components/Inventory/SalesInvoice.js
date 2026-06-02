@@ -13,13 +13,14 @@ import {
   DialogContent,
   DialogActions,
   Snackbar,
-  Alert, Typography, Container
+  Alert, Typography, Container, FormControlLabel, Checkbox
 } from "@mui/material";
 import AddIcon from '@mui/icons-material/Add';
 import { Autocomplete } from "@mui/material";
 import { DataGrid } from "@mui/x-data-grid";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
+import { CleaningServices } from "@mui/icons-material";
 
 export default function SalesInvoice() {
   const dispatch = useDispatch();
@@ -48,7 +49,6 @@ export default function SalesInvoice() {
     refDate: "",
     agent: "",
     tax: "",
-    paymentStatus: "UNPAID",
   });
 
   // ========== DROPDOWN DATA ==========
@@ -57,6 +57,8 @@ export default function SalesInvoice() {
   const [customers, setCustomers] = useState([]);
   const [items, setItems] = useState([]);
   const [agents, setAgents] = useState([]);
+  const [manualAmount, setManualAmount] = useState("");
+  const [isManualAmount, setIsManualAmount] = useState(false);
 
   // ========== SALES INVOICE ROWS ==========
   const [rows, setRows] = useState([]);
@@ -83,7 +85,13 @@ export default function SalesInvoice() {
   useEffect(() => {
     // axios.get("/api/branch").then(res => setBranches(res.data)).catch(err => console.error(err));
     axios.get("/api/customer").then(res => setCustomers(res.data)).catch(err => console.error(err));
-    axios.get("/api/AgentDropDown").then(res => setAgents(res.data.data || [])).catch(err => console.error(err));
+    axios.get("/api/AgentDropDown").
+      then(res => setAgents(res.data.data || [])
+
+      ).
+      catch(err =>
+        console.error(err));
+
   }, []);
 
   // Load items when branch changes
@@ -95,13 +103,35 @@ export default function SalesInvoice() {
   }, [formState.branch]);
 
   // ================= CALCULATE AMOUNT =================
+  // useEffect(() => {
+  //   const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
+  //   const gstAmount = (quantity * rate * gstPercentage) / 100;
+  //   setAmount(quantity * rate + gstAmount);
+  // }, [quantity, rate, formState.tax]);
+
+  // useEffect(() => {
+  //   if (!isManualAmount) {
+  //     setAmount(quantity * rate);
+  //   }
+  // }, [quantity, rate, isManualAmount]);
+
   useEffect(() => {
-    const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
-    const gstAmount = (quantity * rate * gstPercentage) / 100;
-    setAmount(quantity * rate + gstAmount);
-  }, [quantity, rate, formState.tax]);
+    if (!isManualAmount) {
+      const gstPercentage = parseFloat(
+        (formState.tax || "0").replace("%", "")
+      );
 
+      const basic = quantity * rate;
+      const gstAmount = (basic * gstPercentage) / 100;
 
+      setAmount(basic + gstAmount);
+    }
+  }, [
+    quantity,
+    rate,
+    formState.tax,
+    isManualAmount,
+  ]);
   // ================= DELETE ROW =================
   const handleDeleteRow = (rowId) => {
     setRows(rows.filter(r => r.rowId !== rowId));
@@ -215,9 +245,7 @@ export default function SalesInvoice() {
           0
         ),
 
-        paymentStatus:
-          formState.paymentStatus ||
-          "UNPAID",
+
       };
 
 
@@ -247,7 +275,7 @@ export default function SalesInvoice() {
         refDate: "",
         agent: "",
         tax: "",
-        paymentStatus: "UNPAID",
+
       });
 
       setSelectedBranch(null);
@@ -276,9 +304,18 @@ export default function SalesInvoice() {
     }
 
     const gstPercentage = parseFloat((formState.tax || "0").replace("%", ""));
-    const itemTotal = quantity * rate;
-    const gstAmount = (itemTotal * gstPercentage) / 100;
+    // const itemTotal = quantity * rate;
+    const basicAmount = isManualAmount
+      ? amount
+      : quantity * rate;
+
+    const gstAmount =
+      (basicAmount * gstPercentage) / 100;
+
+    const itemTotal =
+      basicAmount + gstAmount;
     const selectedAgent = agents.find(a => a._id === formState.agent);
+
     const newRow = {
       ...selectedItem,
       quantity,
@@ -765,7 +802,37 @@ export default function SalesInvoice() {
           />
           <TextField fullWidth type="number" label="Quantity" sx={{ mt: 2 }} value={quantity} onChange={(e) => setQuantity(parseInt(e.target.value))} />
           <TextField fullWidth type="number" label="Rate" sx={{ mt: 2 }} value={rate} onChange={(e) => setRate(parseFloat(e.target.value))} />
-          <TextField fullWidth label="Amount" sx={{ mt: 2 }} value={amount.toFixed(2)} InputProps={{ readOnly: true }} />
+          {/* <TextField fullWidth label="Amount" sx={{ mt: 2 }}
+            value={amount.toFixed(2)}
+            InputProps={{ readOnly: true }} /> */}
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={isManualAmount}
+                onChange={(e) => {
+                  setIsManualAmount(e.target.checked);
+
+                  // restore auto calculation when unchecked
+                  if (!e.target.checked) {
+                    setAmount(quantity * rate);
+                  }
+                }}
+              />
+            }
+            label="Manual Amount"
+          />
+
+          <TextField
+            fullWidth
+            type="number"
+            label="Amount"
+            sx={{ mt: 2 }}
+            value={amount}
+            onChange={(e) => setAmount(parseFloat(e.target.value) || 0)}
+            InputProps={{
+              readOnly: !isManualAmount,
+            }}
+          />
           <TextField select fullWidth label="Tax" sx={{ mt: 2 }} value={formState.tax} onChange={(e) => setFormState({ ...formState, tax: e.target.value })}>
             {["5%", "12%", "18%", "28%"].map(opt => <MenuItem key={opt} value={opt}>{opt}</MenuItem>)}
           </TextField>

@@ -32,7 +32,7 @@ const CustomerSchema = new mongoose.Schema(
 
     gst: {
       type: String,
-      required: true,
+      required: false,
       default: "NA"
     },
     company: {
