@@ -31,7 +31,13 @@ export default function CustomerTrial() {
     { field: "company", headerName: "Network", flex: 1 },
     { field: "debit", headerName: "Debit (Sales)", type: "number", flex: 1 },
     { field: "credit", headerName: "Credit (Receipt)", type: "number", flex: 1 },
-    { field: "closingBalance", headerName: "Closing Balance", type: "number", flex: 1 },
+    // { field: "closingBalance", headerName: "Closing Balance", type: "number", flex: 1 },
+    {
+      field: "closingBalance",
+      headerName: "Closing Balance",
+      flex: 1,
+      renderCell: (params) => params.value ?? "",
+    },
     { field: "balanceType", headerName: "Balance Type", flex: 1 },
   ];
 

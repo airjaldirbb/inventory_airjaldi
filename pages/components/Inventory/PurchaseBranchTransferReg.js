@@ -12,27 +12,21 @@ const PurchaseBranchTransferReg = () => {
   const fetchData = async () => {
     try {
       const res = await axios.get("/api/PurchaseBranchTransfer");
+      console.log("branch transfer latest",res)
 
       const data = res.data.data.map((item, index) => ({
         id: index + 1,
-
         invoiceNo: item.invoiceNo,
         invoiceDate: new Date(item.invoiceDate).toLocaleDateString(),
-
         fromBranch: item.fromBranch || "N/A",
         toBranch: item.toBranch || "N/A",
-
         itemName: item.itemName || "N/A",
-
         qty: item.qty,
         uom: item.uom,
         rate: item.rate,
-
         taxPercent: item.taxPercent,
         taxAmount: item.taxAmount || 0,
-
         amount: Number(item.amount || 0).toFixed(2),
-
         status: item.paymentStatus || "UNPAID",
       }));
 
@@ -54,22 +48,15 @@ const PurchaseBranchTransferReg = () => {
   const columns = [
     { field: "invoiceNo", headerName: "Invoice No", width: 120 },
     { field: "invoiceDate", headerName: "Invoice Date", width: 140 },
-
     { field: "fromBranch", headerName: "From Branch", width: 180 },
     { field: "toBranch", headerName: "To Branch", width: 180 },
-
     { field: "itemName", headerName: "Item Name", width: 200 },
-
     { field: "qty", headerName: "Qty", width: 90 },
     { field: "uom", headerName: "UOM", width: 90 },
-
     { field: "rate", headerName: "Rate", width: 100 },
-
     { field: "taxPercent", headerName: "Tax %", width: 90 },
     { field: "taxAmount", headerName: "Tax Amt", width: 110 },
-
     { field: "amount", headerName: "Amount", width: 120 },
-
     { field: "status", headerName: "Status", width: 120 },
   ];
 

@@ -48,9 +48,6 @@ export default function AllReports({ addTab }) {
               >
                 Sales Branch Transfer Register
               </Link>
-
-
-
             </CardContent>
           </Card>
         </Grid>
@@ -94,9 +91,7 @@ export default function AllReports({ addTab }) {
               <Typography variant="h6" gutterBottom>
                 Inventory Reports
               </Typography>
-
               <Divider sx={{ mb: 1 }} />
-
               <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5 }}>
                 <Link
                   component="button"

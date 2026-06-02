@@ -16,12 +16,13 @@ export default async function handler(req, res) {
     // =====================================================
     if (method === "GET") {
       const transfers = await PurchaseBranchTransfer.find()
+      
         .populate("fromBranch")
         .populate("toBranch")
         .populate("items.item")
         .populate("agent")
         .sort({ createdAt: -1 });
-
+console.log("Transfers:", transfers);
       const register = [];
 
       transfers.forEach((doc) => {

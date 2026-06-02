@@ -48,7 +48,7 @@ export default async function handler(req, res) {
     const method = req.method;
 
     /* =====================================================
-       GET : SALES REGISTER
+      GET : SALES REGISTER
     ===================================================== */
     if (method === "GET") {
       const register = [];
@@ -97,9 +97,19 @@ export default async function handler(req, res) {
             rate: row.rate || 0,
             taxPercent: row.gstPercentage || 0,
             taxAmount: row.gstAmount || 0,
-            invoiceAmount: row.total || 0,
+            // invoiceAmount: row.total || 0,
+            invoiceAmount:
+              doc.netAmount > 0
+                ? ((row.total || 0) / doc.netAmount) * (doc.balanceAmount || 0)
+                : 0,
+            // paymentStatus:
+            //   doc.paymentStatus || "PENDING",
             paymentStatus:
-              doc.paymentStatus || "PENDING",
+              doc.balanceAmount <= 0
+                ? "PAID"
+                : doc.paidAmount > 0
+                  ? "PARTIAL"
+                  : "UNPAID",
           });
         });
       });
@@ -117,7 +127,7 @@ export default async function handler(req, res) {
     }
 
     /* =====================================================
-       POST
+      POST
     ===================================================== */
     if (method === "POST") {
       const {
@@ -164,7 +174,7 @@ export default async function handler(req, res) {
     }
 
     /* =====================================================
-       PUT
+      PUT
     ===================================================== */
     if (method === "PUT") {
       const { id, itemId } = req.query;
@@ -219,7 +229,7 @@ export default async function handler(req, res) {
     }
 
     /* =====================================================
-       DELETE
+      DELETE
     ===================================================== */
     if (method === "DELETE") {
       const { parentId, itemId } =

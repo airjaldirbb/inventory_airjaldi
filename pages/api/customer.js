@@ -10,7 +10,7 @@ export default async function handler(req, res) {
   if (method === "POST") {
     // Create new customer
     try {
-      const { custName, phone, code, email, city, location,company, gst, user, ledger, serialTrackingEnabled } = req.body;
+      const { custName, phone, code, email, city, location, company, gst, user, ledger, serialTrackingEnabled } = req.body;
 
       // Validate required fields
       if (!custName || !phone) {
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
         email: email || "",
         city: city || "",
         location: location || "",
-          company: company || "",
+        company: company || "",
         gst: gst || "",
         user: user || "Tester",
         ledger: ledger || "General Ledger",
@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  } 
+  }
 
   else if (method === "GET") {
     // Get all customers or a single one by ID
@@ -54,7 +54,7 @@ export default async function handler(req, res) {
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  } 
+  }
 
   else if (method === "PUT") {
     // Update customer
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  } 
+  }
 
   else if (method === "DELETE") {
     // Delete customer
@@ -86,7 +86,7 @@ export default async function handler(req, res) {
     } catch (error) {
       res.status(400).json({ error: error.message });
     }
-  } 
+  }
 
   else {
     res.setHeader("Allow", ["GET", "POST", "PUT", "DELETE"]);

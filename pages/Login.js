@@ -41,7 +41,6 @@ const LoginPage = () => {
             left: 0,
             width: '100%',
             height: '100%',
-
             backgroundImage: 'url(/images/whyairjaldi.jpg)',
             backgroundAttachment: 'fixed',
             backgroundSize: 'cover',
