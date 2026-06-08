@@ -46,9 +46,16 @@ export default function KendoGrid() {
                    SALES
                    Sales Invoice Register
                 ========================= */
-                const sales =
-                    Number(salesRes?.data?.totalAmount) || 0;
+                // const sales =
+                //     Number(salesRes?.data?.invoiceAmount) || 0;
+                const sales = (salesRes?.data?.data || []).reduce((sum, item) => {
+                    const amount =
+                        Number(item.rate || 0) + Number(item.taxAmount || 0);
 
+                    return sum + amount;
+                }, 0);
+
+                setDashboardData(sales);
                 /* =========================
                    PURCHASES
                    Purchase Invoice Register
@@ -193,7 +200,7 @@ export default function KendoGrid() {
 
     return (
         <Box sx={{ justifyContent: "center", mt: "3rem" }}>
-            <Grid 
+            <Grid
                 container
                 spacing={2}
                 sx={{

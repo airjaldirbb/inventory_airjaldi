@@ -10,11 +10,14 @@ import {
   TextField,
 } from "@mui/material";
 import axios from "axios";
+import { exportToExcel } from "@/utils/exportToExcel";
 
 const SalesInvoiceRegister = () => {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
+  const [invoiceTotal, setInvoiceTotal] = useState(0);
+
   const [editingRowId, setEditingRowId] = useState(null);
   const [editValues, setEditValues] = useState({ qty: "", rate: "" });
   const [snackbar, setSnackbar] = useState({
@@ -37,6 +40,8 @@ const SalesInvoiceRegister = () => {
       const res = await axios.get("/api/salesInvoiceREgister");
       console.log(res.data.data);
       const data = res.data.data.map((item, index) => {
+
+
         const customerObj = item.customer || {};
 
         const username = customerObj.username?.trim() || "";
@@ -64,9 +69,7 @@ const SalesInvoiceRegister = () => {
           transactionType: item.transactionType,
           invoiceNo: item.invoiceNo,
           invoiceDate: new Date(item.invoiceDate).toLocaleDateString(),
-
           customer: customerName,
-
           branch: item.branch?.name || "N/A",
           itemName: item.item?.itemName || "N/A",
           qty: item.qty,
@@ -79,17 +82,22 @@ const SalesInvoiceRegister = () => {
         };
       });
 
+      const totalInvoiceAmt = data.reduce((sum, row) => {
+        const amount =
+          Number(row.rate || 0) + Number(row.taxAmount || 0);
 
-
-    setRows(data);
-    setTotal(res.data.totalAmount || 0);
-  } catch (error) {
-    console.error(error);
-    showSnackbar("Error fetching data", "error");
-  } finally {
-    setLoading(false);
-  }
-};
+        return sum + amount;
+      }, 0);
+      setInvoiceTotal(totalInvoiceAmt);
+      setRows(data);
+      setTotal(res.data.totalAmount || 0);
+    } catch (error) {
+      console.error(error);
+      showSnackbar("Error fetching data", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchData();
@@ -214,19 +222,19 @@ const SalesInvoiceRegister = () => {
     },
     { field: "taxPercent", headerName: "Tax %", width: 80 },
     { field: "taxAmount", headerName: "Tax Amt", width: 100 },
-    // {
-    //   field: "invoiceAmount",
-    //   headerName: "Amount",
-    //   width: 120,
-    //   renderCell: (params) => {
-    //     const rate = Number(params.row.rate || 0);
-    //     const taxAmount = Number(params.row.taxAmount || 0);
+    {
+      field: "invoiceAmt",
+      headerName: "Invoice Amount",
+      width: 120,
+      renderCell: (params) => {
+        const rate = Number(params.row.rate || 0);
+        const taxAmount = Number(params.row.taxAmount || 0);
 
-    //     const amount = rate + taxAmount;
+        const amount = rate + taxAmount;
 
-    //     return Math.abs(Number(amount.toFixed(2)));
-    //   },
-    // },
+        return Math.abs(Number(amount.toFixed(2)));
+      },
+    },
     {
       field: "invoiceAmount",
       headerName: "Outstanding Amount",
@@ -296,7 +304,7 @@ const SalesInvoiceRegister = () => {
           Export Excel
         </Button>
       </Box>
-      <Box sx={{ height: 500, width: "100%" }}>
+      <Box sx={{ height: 800, width: "100%" }}>
 
         {loading ? (
           <CircularProgress />
@@ -306,9 +314,11 @@ const SalesInvoiceRegister = () => {
             <DataGrid
               rows={rows}
               columns={columns}
-              pageSize={10}
+              // pageSize={0}
+            // pageSizeOptions={[5, 10, 25]}
               disableRowSelectionOnClick
             />
+            
 
             <Box
               sx={{
@@ -318,8 +328,11 @@ const SalesInvoiceRegister = () => {
                 mr: 2,
               }}
             >
-              <strong>Total Amount:</strong>&nbsp; {total.toLocaleString()}
+              <strong>Total Invoice Amount:   </strong>&nbsp;{invoiceTotal.toFixed(2)}&nbsp; &nbsp;
+
+              {/* <strong>Total Amount:</strong>&nbsp; {total.toLocaleString()} */}
             </Box>
+
           </>
         )}
       </Box>
