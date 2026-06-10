@@ -6,6 +6,35 @@ import CustomerTrial from "@/models/CustomerTrial";
 export default async function handler(req, res) {
   await dbConnect();
 
+
+  const { method } = req;
+  const { id } = req.query;
+
+  if (method === "DELETE") {
+    try {
+      console.log("DELETE ID:", id);
+
+      const deletedRecord = await Customer.findByIdAndDelete(id);
+
+      console.log("Deleted Record:", deletedRecord);
+
+      if (!deletedRecord) {
+        return res.status(404).json({
+          error: "Customer not found",
+        });
+      }
+
+      return res.status(200).json({
+        message: "Customer deleted successfully",
+      });
+    } catch (error) {
+      console.error("DELETE ERROR:", error);
+      return res.status(500).json({
+        error: error.message,
+        stack: error.stack,
+      });
+    }
+  }
   try {
     const customers = await Customer.find();
 
@@ -64,7 +93,7 @@ export default async function handler(req, res) {
 
         openingBalance,
         // debit: totalSales,
-          debit: outstanding,
+        debit: outstanding,
         credit: totalPaid,
 
         // Outstanding balance including opening balance
