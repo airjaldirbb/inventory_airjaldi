@@ -38,7 +38,7 @@ const SalesInvoiceRegister = () => {
   const fetchData = async () => {
     try {
       const res = await axios.get("/api/salesInvoiceREgister");
-      console.log(res.data.data);
+      // console.log(res.data.data);
       const data = res.data.data.map((item, index) => {
 
 
