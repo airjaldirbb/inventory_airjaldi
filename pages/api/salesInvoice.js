@@ -19,7 +19,7 @@ export default async function handler(req, res) {
     // GET ALL / SINGLE / PENDING
     // =====================================================
     if (method === "GET") {
-      const { invoiceNumber, customerId, pending } = req.query;
+      const { invoiceNumber, customerId, pending, jazeInvoiceNumber,   } = req.query;
 
       // Single Invoice
       if (invoiceNumber) {
@@ -290,6 +290,7 @@ export default async function handler(req, res) {
       // =====================================================
       const invoice = await SalesInvoice.create({
         invoiceNumber: newInvoiceNumber,
+          jazeInvoiceNumber: jazeInvoiceNumber || "",
         invoiceDate: invoiceDate || Date.now(),
 
         customer: customerDoc._id,

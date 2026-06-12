@@ -44,7 +44,7 @@ export default function SalesInvoice() {
     customer: "",
     email: "",
     date: new Date().toISOString().slice(0, 10),
-    invoiceNo: "",
+    // invoiceNo: "",
     refNo: "",
     refDate: "",
     agent: "",
@@ -158,7 +158,7 @@ export default function SalesInvoice() {
         !String(formState.customer).match(/^[0-9a-fA-F]{24}$/);
 
       const payload = {
-        invoiceNumber: formState.invoiceNo || undefined,
+        // invoiceNumber: formState.invoiceNo || undefined,
 
         invoiceDate:
           formState.date ||
@@ -270,7 +270,7 @@ export default function SalesInvoice() {
         date: new Date()
           .toISOString()
           .slice(0, 10),
-        invoiceNo: "",
+        // invoiceNo: "",
         refNo: "",
         refDate: "",
         agent: "",
@@ -643,15 +643,14 @@ export default function SalesInvoice() {
                 }
               />
 
+        
               <TextField
-                label="Invoice No (Optional)"
                 {...commonFieldProps}
-                value={formState.invoiceNo}
-                onChange={(e) =>
-                  setFormState({ ...formState, invoiceNo: e.target.value })
-                }
-              />
 
+                label="Invoice Number"
+                value={formState.invoiceNo || "Auto Generated"}
+                disabled
+              />
               <TextField
                 select
                 label="Agent"
@@ -849,3 +848,14 @@ export default function SalesInvoice() {
     </>
   );
 }
+
+
+    /*  <TextField
+                label="Invoice No (Optional)"
+                {...commonFieldProps}
+                value={formState.invoiceNo}
+                onChange={(e) =>
+                  setFormState({ ...formState, invoiceNo: e.target.value })
+                }
+              />
+              */

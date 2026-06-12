@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const salesInvoiceSchema = new mongoose.Schema(
   {
     invoiceNumber: { type: String, required: true, unique: true },
+
     invoiceDate: { type: Date, default: Date.now },
 
     customer: {
@@ -10,14 +11,18 @@ const salesInvoiceSchema = new mongoose.Schema(
       ref: "Customer",
       required: true,
     },
- 
+
 
     jazeCustomerId: {
       type: String,
       default: "",
       index: true,
     },
-
+    
+    jazeInvoiceNumber: {
+      type: String,
+      default: "",
+    },
     branch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Branch",

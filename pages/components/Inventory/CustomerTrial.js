@@ -3,9 +3,12 @@ import { Button, Box, Typography, Snackbar ,Alert} from "@mui/material";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { exportToExcel } from "@/utils/exportToExcel";
+import { DeleteOutlined } from "@mui/icons-material";
 
 export default function CustomerTrial() {
   const [rows, setRows] = useState([]);
+  const [DeleteOutlined, setDeleteId] =useState(null)
+  const [openDialog,setOpenDialog ] = useState(false)
   const [totals, setTotals] = useState({ debit: 0, credit: 0, closingBalance: 0 });
   const [snackbar, setSnackbar] = useState({
     open: false,
