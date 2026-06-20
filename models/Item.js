@@ -5,7 +5,6 @@ const itemSchema = new mongoose.Schema(
     itemName: { type: String, required: true, trim: true },
     itemCode: { type: String, required: true, trim: true, unique: true },
     barcodeValue: { type: String, trim: true, unique: true, sparse: true },
-
     barcodeTracking: {
       type: String,
       enum: ["ENABLE", "DISABLE"],
@@ -14,7 +13,6 @@ const itemSchema = new mongoose.Schema(
 
     hsnCode: { type: String, default: "Default" },
     categoryName: { type: String, default: "" },
-
     stockUnit: {
       type: String,
       enum: ["Kg", "Litre", "Piece", "Box", "Pcs", "Meter", "Mtr"],
@@ -33,7 +31,6 @@ const itemSchema = new mongoose.Schema(
 
     underGroup: {
       type: String,
-   
       default: "Assets",
     },
 

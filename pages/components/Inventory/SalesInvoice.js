@@ -136,167 +136,112 @@ export default function SalesInvoice() {
   const handleDeleteRow = (rowId) => {
     setRows(rows.filter(r => r.rowId !== rowId));
   };
-  const handleSaveInvoice = async () => {
-    if (rows.length === 0) {
-      showSnackbar("Add at least one item to save invoice", "error");
-      return;
-    }
+const handleSaveInvoice = async () => {
+  if (rows.length === 0) {
+    showSnackbar("Add at least one item", "error");
+    return;
+  }
 
-    if (!formState.branch || !formState.customer) {
-      showSnackbar("Please fill branch, customer", "error");
-      return;
-    }
+  if (!formState.branch || !formState.customer) {
+    showSnackbar("Please fill customer and branch", "error");
+    return;
+  }
 
-    try {
-      // 🔥 detect if selected customer is Jaze user
-      const selectedCustomer = customers.find(
-        (c) => String(c._id) === String(formState.customer)
-      );
+  try {
+    const isJazeUser = !!jazeCustomerDetails;
 
-      const isJazeUser =
-        selectedCustomer &&
-        !String(formState.customer).match(/^[0-9a-fA-F]{24}$/);
+    const payload = {
+      invoiceDate:
+        formState.date ||
+        new Date().toISOString().slice(0, 10),
 
-      const payload = {
-        // invoiceNumber: formState.invoiceNo || undefined,
+      customer: formState.customer,
 
-        invoiceDate:
-          formState.date ||
-          new Date().toISOString().slice(0, 10),
+      // jazeInvoiceNumber: isJazeUser
+      //   ? jazeCustomerDetails?.invoiceNumber
+      //   : null,
 
-        customer: formState.customer,
-
-        // 🔥 send only for Jaze user
-        customerDetails: isJazeUser
-          ? {
+      customerDetails: isJazeUser
+        ? {
             customerId: jazeCustomerDetails?.customerId,
-            username:
-              jazeCustomerDetails?.username ||
-              selectedCustomer?.username ||
-              "",
-
-            custName:
-              jazeCustomerDetails?.custName ||
-              selectedCustomer?.custName ||
-              "",
-
-            email:
-              jazeCustomerDetails?.email ||
-              selectedCustomer?.email ||
-              "",
-
-            phone:
-              jazeCustomerDetails?.phone ||
-              selectedCustomer?.phone ||
-              "",
-
-            city:
-              jazeCustomerDetails?.city || "",
-
-            location:
-              jazeCustomerDetails?.location || "",
-
-            gst:
-              jazeCustomerDetails?.gst || "",
-
-            company:
-              jazeCustomerDetails?.company || "",
+            username: jazeCustomerDetails?.username || "",
+            custName: jazeCustomerDetails?.custName || "",
+            email: jazeCustomerDetails?.email || "",
+            phone: jazeCustomerDetails?.phone || "",
+            city: jazeCustomerDetails?.city || "",
+            location: jazeCustomerDetails?.location || "",
+            gst: jazeCustomerDetails?.gst || "",
+            company: jazeCustomerDetails?.company || "",
           }
-          : null,
+        : null,
 
-        agent: formState.agent || null,
+      agent: formState.agent || null,
+      branch: formState.branch,
 
-        branch: formState.branch,
+      gstType:
+        formState.gstType || "TAX_INVOICE",
 
-        gstType:
-          formState.gstType || "TAX_INVOICE",
+      paymentMode:
+        formState.cashCredit || "CASH",
 
-        paymentMode:
-          formState.cashCredit || "CASH",
+      items: rows.map((r) => ({
+        item: r._id,
+        quantity: r.quantity,
+        rate: r.rate,
+        unit: r.unit || "pcs",
+        gstPercentage: r.gstPercentage || 0,
+        gstAmount: r.gstAmount || 0,
+        total: r.total || 0,
+      })),
+    };
 
-        items: rows.map((r) => ({
-          item: r._id,
-          quantity: r.quantity,
-          rate: r.rate,
-          unit: r.unit || "pcs",
-          gstPercentage:
-            r.gstPercentage || 0,
-          gstAmount:
-            r.gstAmount || 0,
-          total: r.total || 0,
-        })),
+    const res = await axios.post(
+      "/api/salesInvoice",
+      payload
+    );
 
-        totalAmount: rows.reduce(
-          (sum, r) => sum + Number(r.total || 0),
-          0
-        ),
+    showSnackbar(
+      res.data.message || "Invoice saved successfully",
+      "success"
+    );
 
-        totalGST: rows.reduce(
-          (sum, r) =>
-            sum + Number(r.gstAmount || 0),
-          0
-        ),
+    setRows([]);
 
-        netAmount: rows.reduce(
-          (sum, r) =>
-            sum +
-            Number(r.total || 0) +
-            Number(r.gstAmount || 0),
-          0
-        ),
+    setFormState({
+      gstType: "",
+      cashCredit: "",
+      branch: "",
+      customer: "",
+      email: "",
+      date: new Date().toISOString().slice(0, 10),
+      refNo: "",
+      refDate: "",
+      agent: "",
+      tax: "",
+    });
 
+    setSelectedBranch(null);
+    setSelectedItem(null);
+    setQuantity(1);
+    setRate(0);
+    setAmount(0);
+    setSelectedUnit("");
+    setPhone("");
+    setJazeCustomerDetails(null);
 
-      };
+  } catch (err) {
+    console.error(
+      "Error saving invoice:",
+      err.response?.data || err.message
+    );
 
-
-      await axios.post(
-        "/api/salesInvoice",
-        payload
-      );
-
-      showSnackbar(
-        "Invoice saved successfully",
-        "success"
-      );
-
-      setRows([]);
-
-      setFormState({
-        gstType: "",
-        cashCredit: "",
-        branch: "",
-        customer: "",
-        email: "",
-        date: new Date()
-          .toISOString()
-          .slice(0, 10),
-        // invoiceNo: "",
-        refNo: "",
-        refDate: "",
-        agent: "",
-        tax: "",
-
-      });
-
-      setSelectedBranch(null);
-      setSelectedItem("");
-      setQuantity(1);
-      setRate(0);
-      setAmount(0);
-      setSelectedUnit("");
-
-    } catch (err) {
-      console.error(
-        "Error saving invoice:",
-        err.response?.data || err.message
-      );
-
-      showSnackbar(
-        "Error saving invoice",
-        "error"
-      );
-    }
-  };
+    showSnackbar(
+      err.response?.data?.message ||
+      "Error saving invoice",
+      "error"
+    );
+  }
+};
   const handleAddItemToGrid = () => {
     if (!selectedItem) {
       showSnackbar("Please select an item", "error");
@@ -422,93 +367,89 @@ export default function SalesInvoice() {
     setSelectedUnit("");
     setFormState(prev => ({ ...prev, tax: "" }));
   };
+const fetchUserDetails = async (phoneNumber) => {
+  if (!phoneNumber) return;
 
-  const fetchUserDetails = async (phoneNumber) => {
-    if (!phoneNumber) return;
+  try {
+    const res = await axios.get(
+      `/api/jazeApi?type=phone&value=${phoneNumber}`
+    );
+ 
+    let responseData = res.data;
 
-    try {
-      const res = await axios.get(
-        `/api/jazeApi?type=phone&value=${phoneNumber}`
-      );
-
-      let responseData = res.data;
-      // if wrapped in { data: [...] }
-      if (responseData?.data) {
-        responseData = responseData.data;
-      }
-
-      // always make array
-      if (!Array.isArray(responseData)) {
-        responseData = [responseData];
-      }
-
-      // find block which contains User object
-      const userBlock = responseData.find(
-        (item) => item?.User
-      );
-
-      if (!userBlock?.User) {
-        console.warn("User not found");
-        return;
-      }
-
-      const user = userBlock.User;
-
-      // find UserSetting block separately
-      const settingBlock = responseData.find(
-        (item) => item?.UserSetting
-      );
-
-      const gstNumber =
-        settingBlock?.UserSetting?.gstNumber || "";
-
-      const customerObj = {
-        _id: String(user.id),
-        username: user.username || "",
-        custName:
-          `${user.name || ""} ${user.last_name || ""}`.trim() ||
-          user.username ||
-          "Jaze User",
-        email: user.email || "",
-        phone: user.phone || "",
-      };
-
-      // dropdown add
-      setCustomers((prev) => {
-        const exists = prev.find(
-          (c) => String(c._id) === customerObj._id
-        );
-
-        if (exists) return prev;
-
-        return [...prev, customerObj];
-      });
-
-      // select customer
-      setFormState((prev) => ({
-        ...prev,
-        customer: customerObj._id,
-        email: customerObj.email,
-      }));
-
-      // backend save payload
-      setJazeCustomerDetails({
-        customerId: customerObj._id,
-        username: customerObj.username, // testing1
-        custName: customerObj.custName, // office test
-        phone: customerObj.phone,
-        email: customerObj.email,
-        city: user.address_city || "",
-        location: user.address_line1 || "",
-        gst: gstNumber,
-        company: user.company_name || "",
-      });
-
-
-    } catch (err) {
-      console.error(err);
+    if (responseData?.data) {
+      responseData = responseData.data;
     }
-  };
+
+    if (!Array.isArray(responseData)) {
+      responseData = [responseData];
+    }
+
+    const userBlock = responseData.find(
+      (item) => item?.User
+    );
+
+    if (!userBlock?.User) {
+      showSnackbar("User not found", "error");
+      return;
+    }
+
+    const user = userBlock.User;
+
+    const settingBlock = responseData.find(
+      (item) => item?.UserSetting
+    );
+
+    const gstNumber =
+      settingBlock?.UserSetting?.gstNumber || "";
+
+    const customerObj = {
+      _id: String(user.id),
+      username: user.username || "",
+      custName:
+        `${user.name || ""} ${user.last_name || ""}`.trim() ||
+        user.username ||
+        "Jaze User",
+      email: user.email || "",
+      phone: user.phone || "",
+    };
+
+    setCustomers((prev) => {
+      const exists = prev.find(
+        (c) => String(c._id) === customerObj._id
+      );
+
+      if (exists) return prev;
+
+      return [...prev, customerObj];
+    });
+
+    setFormState((prev) => ({
+      ...prev,
+      customer: customerObj._id,
+      email: customerObj.email,
+    }));
+
+    setJazeCustomerDetails({
+      customerId: customerObj._id,
+      username: customerObj.username,
+      custName: customerObj.custName,
+      phone: customerObj.phone,
+      email: customerObj.email,
+      city: user.address_city || "",
+      location: user.address_line1 || "",
+      gst: gstNumber,
+      company: user.company_name || "",
+      invoiceNumber: user.invoice_number || null,
+    });
+
+    showSnackbar("Jaze customer loaded", "success");
+
+  } catch (err) {
+    console.error(err);
+    showSnackbar("Failed to fetch Jaze user", "error");
+  }
+};
   const combinedRows = rows.filter((row) =>
     Object.values(row).some(
       (value) =>

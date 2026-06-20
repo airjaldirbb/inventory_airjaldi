@@ -14,7 +14,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import CloseIcon from "@mui/icons-material/Close";
 import { Button } from '@mui/material';
-import { logout } from '@/store/authSlice';
+import { logoutUser } from '@/store/authSlice';
 import { useRouter } from 'next/router';
 import KendoGrid from '../KendoGrid';
 import PieCharts from '../PieCharts';
@@ -99,12 +99,20 @@ export default function Layout({ children, onMenuClick }) {
         setAnchorEl(event.currentTarget);
     };
 
-    const handleLogout = () => {
-        localStorage.removeItem("authToken");
-        dispatch(logout());
-        router.push("/Login");
-        handleClose();
+    const handleLogout = async () => {
+        const result = await dispatch(logoutUser());
+
+        if (logoutUser.fulfilled.match(result)) {
+            router.push("/Login");
+            handleClose();
+        }
     };
+    // const handleLogout = () => {
+    //     localStorage.removeItem("authToken");
+    //     dispatch(logout());
+    //     router.push("/Login");
+    //     handleClose();
+    // };
 
     const handleProfileUpdate = () => {
         router.push("/update-profile");

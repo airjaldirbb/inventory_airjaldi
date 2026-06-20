@@ -2,9 +2,33 @@ import mongoose from "mongoose";
 
 const salesInvoiceSchema = new mongoose.Schema(
   {
-    invoiceNumber: { type: String, required: true, unique: true },
+    // Single invoice field
+    // Manual → auto generated (001,002,003...)
+    // Jaze → API invoice number
+    invoiceNumber: {
+      type: String,
+      required: false,
+      unique: false,
+    },
 
-    invoiceDate: { type: Date, default: Date.now },
+    // Helps identify source
+    source: {
+      type: String,
+      enum: ["MANUAL", "JAZE"],
+      required: true,
+      default: "MANUAL",
+    },
+
+    // Optional only for Jaze customer
+    jazeCustomerId: {
+      type: String,
+      default: null,
+    },
+
+    invoiceDate: {
+      type: Date,
+      default: Date.now,
+    },
 
     customer: {
       type: mongoose.Schema.Types.ObjectId,
@@ -12,25 +36,16 @@ const salesInvoiceSchema = new mongoose.Schema(
       required: true,
     },
 
-
-    jazeCustomerId: {
-      type: String,
-      default: "",
-      index: true,
-    },
-    
-    jazeInvoiceNumber: {
-      type: String,
-      default: "",
-    },
     branch: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Branch",
     },
+
     agent: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Agent",
     },
+
     items: [
       {
         item: {
@@ -38,30 +53,64 @@ const salesInvoiceSchema = new mongoose.Schema(
           ref: "Item",
           required: true,
         },
-        quantity: { type: Number, required: true },
-        unit: { type: String, default: "" },
-        rate: { type: Number, required: true },
-        gstPercentage: { type: Number, default: 0 },
-        gstAmount: { type: Number, default: 0 },
-        total: { type: Number, default: 0 },
-
+        quantity: {
+          type: Number,
+          required: true,
+        },
+        unit: {
+          type: String,
+          default: "",
+        },
+        rate: {
+          type: Number,
+          required: true,
+        },
+        gstPercentage: {
+          type: Number,
+          default: 0,
+        },
+        gstAmount: {
+          type: Number,
+          default: 0,
+        },
+        total: {
+          type: Number,
+          default: 0,
+        },
       },
     ],
+
     paymentMode: {
       type: String,
       enum: ["CASH", "CREDIT"],
       default: "CASH",
     },
+
     gstType: {
       type: String,
       enum: ["TAX_INVOICE", "REGISTERED", "COMPOSITION"],
       default: "TAX_INVOICE",
     },
 
-    totalAmount: { type: Number, required: true, default: 0 },
-    totalGST: { type: Number, required: true, default: 0 },
-    netAmount: { type: Number, required: true, default: 0 },
-    paidAmount: { type: Number, default: 0 },
+    totalAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    totalGST: {
+      type: Number,
+      default: 0,
+    },
+
+    netAmount: {
+      type: Number,
+      default: 0,
+    },
+
+    paidAmount: {
+      type: Number,
+      default: 0,
+    },
 
     balanceAmount: {
       type: Number,
@@ -76,8 +125,9 @@ const salesInvoiceSchema = new mongoose.Schema(
       default: "UNPAID",
     },
   },
-
-  { timestamps: true }
+  {
+    timestamps: true,
+  }
 );
 
 export default mongoose.models.SalesInvoice ||

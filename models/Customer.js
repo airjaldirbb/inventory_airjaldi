@@ -14,7 +14,7 @@ const CustomerSchema = new mongoose.Schema(
 
     email: {
       type: String,
-      required: true,
+      required: false,
       default: "noemail@test.com"
     },
 
