@@ -94,22 +94,22 @@ export default function MaterialIssue() {
   };
 
   const handleSaveRow = () => {
-    if (!newRow.item) {
+    if  (!selectedItem){
       setSnackbar({ open: true, message: "Select an item.", severity: "error" });
       return;
     }
 
     const itemData = items.find((i) => i._id === newRow.item);
-    const entry = {
-      id: Date.now(),
-      itemId: itemData?._id,
-      itemName: itemData?.itemName || "",
-      qty: newRow.qty,
-      unit: newRow.unit,
-      rate: newRow.rate,
-      amount: newRow.qty * newRow.rate,
-      remarks: newRow.remarks,
-    };
+  const entry = {
+  id: Date.now(),
+  itemId: selectedItem._id,
+  itemName: selectedItem.itemName,
+  qty: newRow.qty,
+  unit: newRow.unit,
+  rate: newRow.rate,
+  amount: newRow.qty * newRow.rate,
+  remarks: newRow.remarks,
+};
 
     const updatedRows = [...rows, entry];
     setRows(updatedRows);
@@ -148,7 +148,7 @@ export default function MaterialIssue() {
       setSnackbar({ open: true, message: "Material issue saved successfully!", severity: "success" });
 
       // Refresh issues
-      const updatedList = await axios.get("/api/issue");
+      const updatedList = await axios.get("/api/issue",payload  );
       setIssues(updatedList.data.data);
       setRows([]);
       setTotalAmount(0);
