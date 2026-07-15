@@ -66,9 +66,10 @@ export default function MaterialIssue() {
   useEffect(() => {
     if (!selectedBranch) return;
     axios
-      .get(`http://localhost:3000/api/item?branch=${selectedBranch}`)
+      .get(`/api/item?branch=${selectedBranch}`)
       .then((res) => {
         setItems(res.data.data);
+        console.log(res.data.data)
       })
       .catch((err) => console.error("Error fetching items:", err));
   }, [selectedBranch]);
